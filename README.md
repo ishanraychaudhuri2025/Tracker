@@ -21,6 +21,22 @@ The Insights page includes a navigable calendar with per-day completed-task coun
 - **Responsive UI:** desktop sidebar, mobile layout, dark/light appearance, accessible labels, reduced-motion support.
 - **Local persistence:** habits, task state, and check-ins persist in this browser using `localStorage`.
 
+## Authentication and cloud sync
+
+Streako supports Supabase email/password accounts and stores each signed-in user's habits, recurring tasks, focus-session count, and appearance preferences in a user-scoped workspace row. Workspace access is enforced by PostgreSQL Row Level Security using `auth.uid()`.
+
+### Configure Supabase
+
+1. Create a Supabase project and copy its project URL and **publishable key** (or legacy anon key). Never place a secret/service-role key in browser environment variables.
+2. Apply `supabase/migrations/20261014000100_tracker_workspaces.sql` to the project database.
+3. Set these variables in local `.env` and in Vercel's Production, Preview, and Development environments:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_PUBLISHABLE_KEY` (or `VITE_SUPABASE_ANON_KEY` for legacy projects)
+4. In Supabase Authentication settings, ensure email/password is enabled and configure the production site URL and redirect allowlist to include the deployed Streako domain.
+5. Redeploy after adding the environment variables. New accounts may need to confirm their email, depending on the project's Auth settings.
+
+When cloud configuration is absent, the app remains in local-only mode rather than pretending account sync is active. Existing local workspace data is imported for the first signed-in account that has no cloud workspace. After that, workspaces are stored separately per account.
+
 ## Run locally
 
 Requirements: Node.js 20.19+ (Node 22 LTS is a good choice) and npm.
