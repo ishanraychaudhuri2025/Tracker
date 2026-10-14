@@ -2,6 +2,10 @@
 
 A research-informed, local-first habit and task tracker. This is an original implementation inspired by common streak-tracker patterns; it does not include Streako's proprietary source code, assets, or backend.
 
+## Monthly execution calendar
+
+The Insights page includes a navigable calendar with per-day completed-task counts, habit check-ins, month totals, and a selected-day checklist for reviewing and correcting past check-ins.
+
 ## What is here
 
 - **Planner:** selectable weekly and monthly calendars, date navigation, day-by-day activity summaries, and clickable checklists.
