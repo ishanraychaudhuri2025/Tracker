@@ -21,6 +21,10 @@ The Insights page includes a navigable calendar with per-day completed-task coun
 - **Responsive UI:** desktop sidebar, mobile layout, dark/light appearance, accessible labels, reduced-motion support.
 - **Local persistence:** habits, task state, and check-ins persist in this browser using `localStorage`.
 
+## Fresh-start workspaces
+
+Streako no longer seeds sample habits, tasks, completion history, or focus-session statistics. Every new account gets empty `habits` and `tasks` arrays with `focus_sessions = 0`. Existing workspace data was reset for the current rollout. Browser caches using the old `streako-elite-v1` key are cleared, and local guest data is never imported into a signed-in account.
+
 ## Authentication and cloud sync
 
 Streako supports Supabase email/password accounts and stores each signed-in user's habits, recurring tasks, focus-session count, and appearance preferences in a user-scoped workspace row. Workspace access is enforced by PostgreSQL Row Level Security using `auth.uid()`.

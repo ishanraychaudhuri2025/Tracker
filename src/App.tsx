@@ -12,7 +12,7 @@ import { PlannerPage, taskIsDone, taskOccursOn } from './Planner';
 import AuthScreen from './components/AuthScreen';
 import { supabase, supabaseConfigured } from './lib/supabase';
 
-const STORAGE_KEY = 'streako-elite-v1';
+const STORAGE_KEY = 'streako-elite-v2';
 const todayKey = () => toKey(new Date());
 const toKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 const shiftKey = (key: string, delta: number) => {
@@ -25,48 +25,6 @@ const categories: Category[] = ['Mind', 'Body', 'Craft', 'Life'];
 const frequencies: Frequency[] = ['Daily', 'Weekdays', 'Weekends', '3× / week'];
 const categoryTone: Record<Category, string> = { Mind: 'violet', Body: 'lime', Craft: 'orange', Life: 'blue' };
 const categoryEmoji: Record<Category, string> = { Mind: '◌', Body: '↗', Craft: '✳', Life: '⌂' };
-
-function seedHabits(): Habit[] {
-  const now = todayKey();
-  const seed = [
-    { id: 'h1', name: 'Read 10 pages', emoji: '📚', category: 'Mind' as Category, cue: 'After my first coffee', minimum: 'Read one page', frequency: 'Daily' as Frequency, color: 'violet' },
-    { id: 'h2', name: 'Move my body', emoji: '🏃', category: 'Body' as Category, cue: 'After I get dressed', minimum: 'Move for two minutes', frequency: 'Daily' as Frequency, color: 'lime' },
-    { id: 'h3', name: 'Build something', emoji: '⌘', category: 'Craft' as Category, cue: 'After lunch', minimum: 'Open the project and do one thing', frequency: 'Weekdays' as Frequency, color: 'orange' },
-    { id: 'h4', name: 'Plan tomorrow', emoji: '✍️', category: 'Life' as Category, cue: 'Before I close my laptop', minimum: 'Write the one priority', frequency: 'Daily' as Frequency, color: 'blue' },
-  ];
-  return seed.map((item, i) => {
-    const logs: Record<string, boolean> = {};
-    for (let back = 0; back < 42; back += 1) {
-      const key = shiftKey(now, -back);
-      if (item.frequency === 'Weekdays' && [0, 6].includes(new Date(`${key}T12:00:00`).getDay())) continue;
-      // Seed history is demonstration data; replace it simply by checking habits off or clearing the app data.
-      logs[key] = back === 0 ? i < 2 : ((back * 7 + i * 11) % (i === 1 ? 8 : 6)) !== 0;
-    }
-    return { ...item, logs, createdAt: shiftKey(now, -(28 + i * 4)) };
-  });
-}
-
-function seedTasks(): Task[] {
-  const today = todayKey();
-  return [
-    { id: 't1', title: 'Review lecture notes', completed: true, priority: 'Normal', estimate: 15, date: today, category: 'Study' as const, time: '09:00', recurrence: 'None' as const },
-    { id: 't2', title: 'Finish one project milestone', completed: false, priority: 'High', estimate: 45, date: today, category: 'Work' as const, time: '11:30', recurrence: 'None' as const },
-    { id: 't3', title: 'Prepare tomorrow’s top 3', completed: false, priority: 'Low', estimate: 10, date: today, category: 'Personal' as const, time: '18:00', recurrence: 'Daily' as const, completedDates: [] },
-  ];
-}
-
-function loadSaved<T>(key: 'habits' | 'tasks', seed: () => T): T {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved) as Partial<Record<'habits' | 'tasks', unknown>>;
-      if (Array.isArray(parsed[key])) return parsed[key] as T;
-    }
-  } catch {
-    // A malformed local save should never prevent the app from opening.
-  }
-  return seed();
-}
 
 function MomentumChart({ habits, today }: { habits: Habit[]; today: string }) {
   const [range, setRange] = useState<'7D' | '30D'>('7D');
@@ -158,29 +116,17 @@ function IconButton({ label, onClick, children, className = '' }: { label: strin
 }
 
 function App() {
-  const [habits, setHabits] = useState<Habit[]>(() => loadSaved('habits', seedHabits));
-  const [tasks, setTasks] = useState<Task[]>(() => loadSaved('tasks', seedTasks));
+  const [habits, setHabits] = useState<Habit[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [page, setPage] = useState<Page>('Today');
   const [filter, setFilter] = useState<'All' | Category>('All');
   const [showHabitModal, setShowHabitModal] = useState(false);
   const [habitDraft, setHabitDraft] = useState({ name: '', category: 'Craft' as Category, frequency: 'Daily' as Frequency, cue: '', minimum: '' });
-  const [dark, setDark] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      const preferences = saved ? (JSON.parse(saved) as { preferences?: { dark?: unknown } }).preferences : undefined;
-      return typeof preferences?.dark === 'boolean' ? preferences.dark : true;
-    } catch { return true; }
-  });
+  const [dark, setDark] = useState(true);
   const [focusRunning, setFocusRunning] = useState(false);
   const [focusPreset, setFocusPreset] = useState(25);
   const [focusSeconds, setFocusSeconds] = useState(25 * 60);
-  const [focusSessions, setFocusSessions] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      const snapshot = saved ? (JSON.parse(saved) as { focusSessions?: unknown }) : undefined;
-      return typeof snapshot?.focusSessions === 'number' ? snapshot.focusSessions : 0;
-    } catch { return 0; }
-  });
+  const [focusSessions, setFocusSessions] = useState(0);
   const [focusTaskId, setFocusTaskId] = useState<string | null>(null);
   const [toast, setToast] = useState('');
   const [authSession, setAuthSession] = useState<Session | null>(null);
@@ -190,6 +136,18 @@ function App() {
   const [cloudStatus, setCloudStatus] = useState(supabaseConfigured ? 'Connecting…' : 'Saved locally');
   const [cloudError, setCloudError] = useState('');
   const today = todayKey();
+
+  useEffect(() => {
+    // Remove pre-reset demo workspaces from this browser. Do not reuse these
+    // snapshots across accounts after the fresh-start reset.
+    const legacyKeys = new Set(['streako-elite-v1']);
+    for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+      const key = localStorage.key(index);
+      if (key && (legacyKeys.has(key) || key.startsWith('streako-elite-v1:'))) {
+        localStorage.removeItem(key);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const client = supabase;
@@ -219,36 +177,21 @@ function App() {
 
         let workspace = data;
         if (!workspace) {
-          const userSaved = localStorage.getItem(STORAGE_KEY + ':' + session.user.id);
-          const guestSaved = userSaved ? null : localStorage.getItem(STORAGE_KEY);
-          const importedGuestSnapshot = !userSaved && guestSaved !== null;
-          const candidate = userSaved ?? guestSaved;
-          let localSnapshot: { habits?: unknown; tasks?: unknown; focusSessions?: unknown; preferences?: unknown } = {};
-          try {
-            if (candidate) localSnapshot = JSON.parse(candidate);
-          } catch {
-            localSnapshot = {};
-          }
-          const habitsToImport = Array.isArray(localSnapshot.habits) ? localSnapshot.habits : seedHabits();
-          const tasksToImport = Array.isArray(localSnapshot.tasks) ? localSnapshot.tasks : seedTasks();
-          const focusToImport = typeof localSnapshot.focusSessions === 'number' ? localSnapshot.focusSessions : 0;
-          const preferencesToImport = localSnapshot.preferences && typeof localSnapshot.preferences === 'object'
-            ? localSnapshot.preferences
-            : { dark: true };
+          // Every new account starts with genuinely empty progress. Never import
+          // demo content or browser-local data into a different account.
           const { data: created, error: createError } = await client
             .from('tracker_workspaces')
             .insert({
               user_id: session.user.id,
-              habits: habitsToImport,
-              tasks: tasksToImport,
-              focus_sessions: focusToImport,
-              preferences: preferencesToImport,
+              habits: [],
+              tasks: [],
+              focus_sessions: 0,
+              preferences: { dark: true },
             })
             .select('habits, tasks, focus_sessions, preferences')
             .single();
           if (!active || version !== requestVersion) return;
           if (createError) throw createError;
-          if (importedGuestSnapshot) localStorage.removeItem(STORAGE_KEY);
           workspace = created;
         }
 
