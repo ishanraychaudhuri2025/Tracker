@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { CSSProperties, FormEvent, ReactNode } from 'react';
 import {
   Activity, ArrowDownRight, ArrowRight, ArrowUpRight, BarChart3, Bell, BookOpen,
-  CalendarDays, Check, CheckCheck, ChevronDown, CircleHelp, Clock3, Flame, Focus,
+  CalendarDays, CalendarRange, Check, CheckCheck, ChevronDown, CircleHelp, Clock3, Flame, Focus,
   Gauge, Leaf, ListTodo, Moon, MoreHorizontal, Plus, RotateCcw, Settings2, ShieldCheck,
   Sparkles, Sun, Target, Timer, Trophy, X, Zap,
 } from 'lucide-react';
