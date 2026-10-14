@@ -191,7 +191,8 @@ function App() {
   const today = todayKey();
 
   useEffect(() => {
-    if (!supabase) {
+    const client = supabase;
+    if (!client) {
       setAuthReady(true);
       setWorkspaceReady(true);
       setCloudStatus('Saved locally');
@@ -207,7 +208,7 @@ function App() {
       setCloudError('');
       setCloudStatus('Loading workspace…');
       try {
-        const { data, error } = await supabase
+        const { data, error } = await client
           .from('tracker_workspaces')
           .select('habits, tasks, focus_sessions, preferences')
           .eq('user_id', session.user.id)
@@ -232,7 +233,7 @@ function App() {
           const preferencesToImport = localSnapshot.preferences && typeof localSnapshot.preferences === 'object'
             ? localSnapshot.preferences
             : { dark: true };
-          const { data: created, error: createError } = await supabase
+          const { data: created, error: createError } = await client
             .from('tracker_workspaces')
             .insert({
               user_id: session.user.id,
@@ -268,7 +269,7 @@ function App() {
       }
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = client.auth.onAuthStateChange((event, session) => {
       if (event === 'INITIAL_SESSION') return;
       if (event === 'SIGNED_OUT' || !session) {
         requestVersion += 1;
@@ -285,7 +286,7 @@ function App() {
       }
     });
 
-    void supabase.auth.getSession().then(({ data, error }) => {
+    void client.auth.getSession().then(({ data, error }) => {
       if (!active) return;
       if (error) {
         setCloudError(error.message);
@@ -312,7 +313,8 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!supabaseConfigured || !supabase) {
+    const client = supabase;
+    if (!supabaseConfigured || !client) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, tasks, focusSessions, preferences: { dark } }));
       return undefined;
     }
@@ -322,7 +324,7 @@ function App() {
     localStorage.setItem(STORAGE_KEY + ':' + authSession.user.id, JSON.stringify(snapshot));
     setCloudStatus('Syncing…');
     const timeout = window.setTimeout(() => {
-      void supabase.from('tracker_workspaces').upsert({
+      void client.from('tracker_workspaces').upsert({
         user_id: authSession.user.id,
         habits,
         tasks,
@@ -483,7 +485,7 @@ function App() {
         <div className="sidebar-bottom">
           <div className="sidebar-tip"><div className="tip-icon"><Sparkles size={15} /></div><div><b>Small counts.</b><p>Never miss twice. Restart gently.</p></div></div>
           <div className="profile-row">
-            <span className="avatar">{authSession?.user.email?.slice(0, 2).toUpperCase() || 'IR'}</span><span className="profile-copy"><b>{authSession?.user.email?.split('@')[0] || 'Your workspace'}</b><small>{authSession ? 'Synced workspace' : 'Personal edition'}</small></span>{authSession && supabase ? <button type="button" className="profile-signout" aria-label="Sign out" title="Sign out" onClick={() => { void supabase.auth.signOut(); }}><LogOut size={15}/></button> : <MoreHorizontal size={18} className="muted-icon" />}
+            <span className="avatar">{authSession?.user.email?.slice(0, 2).toUpperCase() || 'IR'}</span><span className="profile-copy"><b>{authSession?.user.email?.split('@')[0] || 'Your workspace'}</b><small>{authSession ? 'Synced workspace' : 'Personal edition'}</small></span>{authSession && supabase ? <button type="button" className="profile-signout" aria-label="Sign out" title="Sign out" onClick={() => { void supabase?.auth.signOut(); }}><LogOut size={15}/></button> : <MoreHorizontal size={18} className="muted-icon" />}
           </div>
           <div className="sidebar-tools"><button type="button" onClick={() => setDark((current) => !current)}><span>{dark ? <Sun size={15} /> : <Moon size={15} />}</span>{dark ? 'Light appearance' : 'Dark appearance'}</button><button type="button" onClick={() => setToast(authSession ? 'Your workspace syncs to your account.' : 'Cloud auth is not connected yet.')}><Settings2 size={15} />Preferences</button>{!supabaseConfigured && <span className="local-mode-note">LOCAL MODE · CLOUD NOT CONNECTED</span>}</div>
         </div>
