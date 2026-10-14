@@ -3,12 +3,15 @@ import type { FormEvent } from 'react';
 import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck, Sparkles, Zap } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
-type AuthMode = 'signin' | 'signup' | 'reset';
+type AuthMode = 'signin' | 'signup' | 'reset' | 'update';
 
-export default function AuthScreen() {
-  const [mode, setMode] = useState<AuthMode>('signin');
+type AuthScreenProps = { initialMode?: AuthMode };
+
+export default function AuthScreen({ initialMode = 'signin' }: AuthScreenProps) {
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -24,7 +27,17 @@ export default function AuthScreen() {
     setError('');
     setNotice('');
     try {
-      if (mode === 'signup') {
+      if (mode === 'update') {
+        if (password !== confirmPassword) {
+          setError('The passwords do not match.');
+          return;
+        }
+        const { error: updateError } = await supabase.auth.updateUser({ password });
+        if (updateError) throw updateError;
+        setNotice('Password updated. Loading your workspace…');
+        setPassword('');
+        setConfirmPassword('');
+      } else if (mode === 'signup') {
         const { data, error: authError } = await supabase.auth.signUp({
           email: email.trim(),
           password,
@@ -89,20 +102,22 @@ export default function AuthScreen() {
       <div className="auth-form-column">
         <div className="auth-form-header">
           <span className="auth-form-icon"><LockKeyhole size={17}/></span>
-          <span className="auth-form-kicker">{mode === 'signup' ? 'START YOUR WORKSPACE' : mode === 'reset' ? 'ACCOUNT RECOVERY' : 'WELCOME BACK'}</span>
+          <span className="auth-form-kicker">{mode === 'signup' ? 'START YOUR WORKSPACE' : mode === 'reset' || mode === 'update' ? 'ACCOUNT RECOVERY' : 'WELCOME BACK'}</span>
         </div>
-        <h2>{mode === 'signup' ? 'Create your account' : mode === 'reset' ? 'Reset your password' : 'Sign in to Streako'}</h2>
-        <p className="auth-form-subtitle">{mode === 'signup' ? 'A calmer system starts with a clean slate.' : mode === 'reset' ? 'We’ll email you a secure reset link.' : 'Your next small win is waiting.'}</p>
+        <h2>{mode === 'signup' ? 'Create your account' : mode === 'reset' ? 'Reset your password' : mode === 'update' ? 'Choose a new password' : 'Sign in to Streako'}</h2>
+        <p className="auth-form-subtitle">{mode === 'signup' ? 'A calmer system starts with a clean slate.' : mode === 'reset' ? 'We’ll email you a secure reset link.' : mode === 'update' ? 'Choose a fresh password to secure your workspace.' : 'Your next small win is waiting.'}</p>
         <form onSubmit={submit} className="auth-form">
-          <label>Email address <span className="auth-input-wrap"><Mail size={15}/><input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" required maxLength={254}/></span></label>
-          {mode !== 'reset' && <label>Password <span className="auth-input-wrap"><LockKeyhole size={15}/><input type={showPassword ? 'text' : 'password'} autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} value={password} onChange={(event) => setPassword(event.target.value)} placeholder={mode === 'signup' ? 'At least 8 characters' : 'Enter your password'} minLength={8} maxLength={128} required/><button type="button" className="auth-password-toggle" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={15}/> : <Eye size={15}/>}</button></span></label>}
+          {mode !== 'update' && <label>Email address <span className="auth-input-wrap"><Mail size={15}/><input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" required maxLength={254}/></span></label>}
+          {mode !== 'reset' && <label>Password <span className="auth-input-wrap"><LockKeyhole size={15}/><input type={showPassword ? 'text' : 'password'} autoComplete={mode === 'signup' || mode === 'update' ? 'new-password' : 'current-password'} value={password} onChange={(event) => setPassword(event.target.value)} placeholder={mode === 'signup' || mode === 'update' ? 'At least 8 characters' : 'Enter your password'} minLength={8} maxLength={128} required/><button type="button" className="auth-password-toggle" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={15}/> : <Eye size={15}/>}</button></span></label>}
+          {mode === 'update' && <label>Confirm new password <span className="auth-input-wrap"><LockKeyhole size={15}/><input type="password" autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder="Repeat the new password" minLength={8} maxLength={128} required/></span></label>}
           {mode === 'signin' && <button type="button" className="auth-forgot" onClick={() => switchMode('reset')}>Forgot password?</button>}
           {error && <div role="alert" className="auth-message auth-error">{error}</div>}
           {notice && <div role="status" className="auth-message auth-success">{notice}</div>}
-          <button type="submit" className="auth-submit" disabled={busy}>{busy ? 'Please wait…' : mode === 'signup' ? 'Create account' : mode === 'reset' ? 'Send reset link' : 'Continue'} {!busy && <ArrowRight size={15}/>}</button>
+          <button type="submit" className="auth-submit" disabled={busy}>{busy ? 'Please wait…' : mode === 'signup' ? 'Create account' : mode === 'reset' ? 'Send reset link' : mode === 'update' ? 'Update password' : 'Continue'} {!busy && <ArrowRight size={15}/>}</button>
         </form>
         {mode === 'signup' ? <p className="auth-switch">Already have an account? <button type="button" onClick={() => switchMode('signin')}>Sign in</button></p>
           : mode === 'reset' ? <p className="auth-switch"><button type="button" onClick={() => switchMode('signin')}>Back to sign in</button></p>
+          : mode === 'update' ? <p className="auth-switch">Use a password you haven’t used here before.</p>
           : <p className="auth-switch">New to Streako? <button type="button" onClick={() => switchMode('signup')}>Create an account</button></p>}
         <div className="auth-secure-note"><ShieldCheck size={13}/> Secure account access · Encrypted in transit</div>
       </div>
