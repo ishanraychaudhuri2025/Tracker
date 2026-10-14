@@ -380,6 +380,64 @@ function App() {
   }, [toast]);
 
   useEffect(() => {
+    const content = document.querySelector('.main-content');
+    if (!content) return undefined;
+
+    const panels = Array.from(content.querySelectorAll<HTMLElement>([
+      '.analytics-metric-card',
+      '.analytics-chart-panel',
+      '.analytics-side-card',
+      '.analytics-table-panel',
+      '.panel',
+      '.hero-card',
+      '.weekly-tracker-panel',
+      '.planner-calendar-panel',
+      '.planner-summary-panel',
+      '.planner-activity-panel',
+      '.habits-library',
+      '.principle-card',
+      '.insight-activity',
+      '.research-note',
+      '.focus-large-panel',
+      '.choose-task-panel',
+      '.focus-rule-panel',
+    ].join(',')));
+
+    panels.forEach((panel, index) => {
+      panel.classList.add('scroll-reveal');
+      panel.style.setProperty('--reveal-delay', (Math.min(index % 4, 3) * 55) + 'ms');
+    });
+
+    const showAll = () => panels.forEach((panel) => panel.classList.add('is-visible'));
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) {
+      showAll();
+      return () => {
+        panels.forEach((panel) => {
+          panel.classList.remove('scroll-reveal', 'is-visible');
+          panel.style.removeProperty('--reveal-delay');
+        });
+      };
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -5% 0px' });
+
+    panels.forEach((panel) => observer.observe(panel));
+    return () => {
+      observer.disconnect();
+      panels.forEach((panel) => {
+        panel.classList.remove('scroll-reveal', 'is-visible');
+        panel.style.removeProperty('--reveal-delay');
+      });
+    };
+  }, [page]);
+
+  useEffect(() => {
     if (!showHabitModal) return undefined;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setShowHabitModal(false);
