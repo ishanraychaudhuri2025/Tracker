@@ -1627,3 +1627,64 @@ button, .planner-week-day, .planner-month-day { -webkit-touch-callout:none; }
  .analytics-table-footer { gap:9px;font-size:6px; }.analytics-footer { align-items:flex-start;flex-direction:column;font-size:6px; }
 }
 @media (prefers-reduced-motion:reduce) { .analytics-trend-path,.analytics-area-path { animation:none;stroke-dashoffset:0; }.analytics-metric-card,.analytics-chart-tabs button,.analytics-tick { transition:none; } }
+
+
+/* Streako visual refresh: midnight indigo, periwinkle and cool cyan */
+.app-shell {
+  --bg: #090b12;
+  --panel: #101421;
+  --panel-raised: #151b2b;
+  --panel-soft: #1b2235;
+  --border: #293149;
+  --border-soft: #20283b;
+  --text: #edf0fb;
+  --muted: #9aa5c0;
+  --subtle: #68748f;
+  --lime: #a9a2ff;
+  --lime-strong: #c0bbff;
+  --lime-soft: rgba(169, 162, 255, .12);
+  --orange: #f0b58b;
+  --violet: #c4a5ff;
+  --blue: #83c9f4;
+  --shadow: rgba(0, 0, 0, .28);
+}
+.app-shell.light-mode {
+  --bg: #f4f6fc;
+  --panel: #ffffff;
+  --panel-raised: #f8f9ff;
+  --panel-soft: #edf0fa;
+  --border: #dce1f0;
+  --border-soft: #e8ebf5;
+  --text: #20263a;
+  --muted: #66718c;
+  --subtle: #929bb0;
+  --lime: #6f70d8;
+  --lime-strong: #595bc4;
+  --lime-soft: rgba(111, 112, 216, .11);
+  --orange: #b96d3f;
+  --violet: #7957b8;
+  --blue: #3979bb;
+  --shadow: rgba(38, 50, 76, .08);
+}
+.brand-mark {
+  color: #f4f3ff;
+  background: linear-gradient(145deg, #9f9cff 0%, #716fe0 55%, #5969bc 100%);
+  box-shadow: 0 5px 22px rgba(126, 122, 235, .24), inset 0 1px 0 rgba(255,255,255,.45);
+  border: 1px solid rgba(218, 218, 255, .4);
+}
+.brand-lockup:hover .brand-mark {
+  box-shadow: 0 8px 28px rgba(126, 122, 235, .34);
+}
+.bolt-mark-svg { filter: drop-shadow(0 1px 1px rgba(22, 24, 54, .2)); }
+.primary-button {
+  color: #f8f8ff;
+  border-color: rgba(169, 162, 255, .72);
+  background: linear-gradient(135deg, #8986ee, #696dd0);
+  box-shadow: 0 5px 18px rgba(126, 122, 235, .16);
+}
+.primary-button:hover { filter: brightness(1.09); }
+.app-shell.light-mode .brand-mark { color: #fff; }
+.app-shell :is(.habit-checkbox.checked, .todo-box.checked, .mini-check.checked) {
+  color: #171a31;
+}
+.app-shell :is(button, .panel, .stat-card, .brand-mark) { transition-duration: .22s; }
