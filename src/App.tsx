@@ -7,6 +7,7 @@ import {
   Sparkles, Sun, Target, Timer, Trophy, X, Zap,
 } from 'lucide-react';
 import type { Category, Frequency, Habit, Page, Task } from './types';
+import { PlannerPage, taskIsDone, taskOccursOn } from './Planner';
 
 const STORAGE_KEY = 'streako-elite-v1';
 const todayKey = () => toKey(new Date());
@@ -45,9 +46,9 @@ function seedHabits(): Habit[] {
 function seedTasks(): Task[] {
   const today = todayKey();
   return [
-    { id: 't1', title: 'Review lecture notes', completed: true, priority: 'Normal', estimate: 15, date: today },
-    { id: 't2', title: 'Finish one project milestone', completed: false, priority: 'High', estimate: 45, date: today },
-    { id: 't3', title: 'Prepare tomorrow’s top 3', completed: false, priority: 'Low', estimate: 10, date: today },
+    { id: 't1', title: 'Review lecture notes', completed: true, priority: 'Normal', estimate: 15, date: today, category: 'Study' as const, time: '09:00', recurrence: 'None' as const },
+    { id: 't2', title: 'Finish one project milestone', completed: false, priority: 'High', estimate: 45, date: today, category: 'Work' as const, time: '11:30', recurrence: 'None' as const },
+    { id: 't3', title: 'Prepare tomorrow’s top 3', completed: false, priority: 'Low', estimate: 10, date: today, category: 'Personal' as const, time: '18:00', recurrence: 'Daily' as const, completedDates: [] },
   ];
 }
 
@@ -158,7 +159,7 @@ function App() {
 
   const dueHabits = useMemo(() => habits.filter((habit) => isDue(habit, today)), [habits, today]);
   const doneToday = dueHabits.filter((habit) => Boolean(habit.logs[today])).length;
-  const todayTasks = tasks.filter((task) => task.date === today);
+  const todayTasks = tasks.filter((task) => taskOccursOn(task, today)).map((task) => ({ ...task, completed: taskIsDone(task, today) }));
   const focusTask = todayTasks.find((task) => task.id === focusTaskId && !task.completed);
   const doneTasks = todayTasks.filter((task) => task.completed).length;
   const completion = dueHabits.length ? Math.round((doneToday / dueHabits.length) * 100) : 0;
@@ -223,13 +224,22 @@ function App() {
     event.preventDefault();
     const title = taskDraft.trim();
     if (!title) return;
-    setTasks((current) => [...current, { id: `t-${crypto.randomUUID()}`, title, completed: false, priority: 'Normal', estimate: 15, date: today }]);
+    setTasks((current) => [...current, { id: `t-${crypto.randomUUID()}`, title, completed: false, priority: 'Normal', estimate: 15, date: today, category: 'Personal', time: '', recurrence: 'None', completedDates: [] }]);
     setTaskDraft('');
     setShowTaskInput(false);
     setToast('Added to today’s plan');
   };
 
-  const toggleTask = (id: string) => setTasks((current) => current.map((task) => task.id === id ? { ...task, completed: !task.completed } : task));
+  const toggleTask = (id: string, dayKey = today) => setTasks((current) => current.map((task) => {
+    if (task.id !== id) return task;
+    if ((task.recurrence ?? 'None') === 'None') return task.date === dayKey ? { ...task, completed: !task.completed } : task;
+    const completedDates = task.completedDates ?? [];
+    return { ...task, completedDates: completedDates.includes(dayKey) ? completedDates.filter((key) => key !== dayKey) : [...completedDates, dayKey] };
+  }));
+  const addPlannerTask = (draft: import('./Planner').PlannerTaskDraft) => {
+    setTasks((current) => [...current, { ...draft, id: `t-${crypto.randomUUID()}`, completed: false, completedDates: [] }]);
+    setToast('Added to your calendar');
+  };
   const resetFocus = (minutes = focusPreset) => { setFocusRunning(false); setFocusPreset(minutes); setFocusSeconds(minutes * 60); };
   const timeText = `${String(Math.floor(focusSeconds / 60)).padStart(2, '0')}:${String(focusSeconds % 60).padStart(2, '0')}`;
   const timerProgress = 1 - focusSeconds / (focusPreset * 60 || 1);
@@ -245,6 +255,7 @@ function App() {
         <nav className="nav-list" aria-label="Main navigation">
           {([
             { label: 'Today' as Page, icon: Gauge, sub: 'Your daily dashboard' },
+            { label: 'Planner' as Page, icon: CalendarDays, sub: 'Daily, weekly & monthly' },
             { label: 'Habits' as Page, icon: Target, sub: 'Routines that stick' },
             { label: 'Insights' as Page, icon: BarChart3, sub: 'Patterns & progress' },
             { label: 'Focus' as Page, icon: Focus, sub: 'Make room for deep work' },
@@ -323,10 +334,12 @@ function App() {
 
           <div className="content-grid lower-grid">
             <section className="panel activity-panel"><div className="panel-heading"><div><div className="panel-overline">CONSISTENCY OVER INTENSITY</div><h3>Your activity</h3></div><button className="period-chip" type="button" onClick={() => setPage('Insights')}>Last 5 weeks <ChevronDown size={13} /></button></div><ActivityHeatmap habits={habits} today={today} /><div className="heatmap-footer"><span>Less <i className="heat h0" /><i className="heat h1" /><i className="heat h2" /><i className="heat h3" /><i className="heat h4" /> More</span><button className="text-button" type="button" onClick={() => setPage('Insights')}>View insights <ArrowRight size={14} /></button></div></section>
-            <section className="panel tasks-panel"><div className="panel-heading"><div><div className="panel-overline">DO THE NEXT RIGHT THING</div><h3>Today’s plan <span className="heading-count">{doneTasks}/{todayTasks.length}</span></h3></div><IconButton label="Add task" onClick={() => setShowTaskInput(true)}><Plus size={17} /></IconButton></div><div className="task-progress"><span style={{ width: `${todayTasks.length ? doneTasks / todayTasks.length * 100 : 0}%` }} /></div><div className="task-list">{todayTasks.map((task) => <TaskRow key={task.id} task={task} onToggle={() => toggleTask(task.id)} />)}{todayTasks.length === 0 && <p className="quiet-empty">Your day is open. Add one priority.</p>}</div>{showTaskInput ? <form className="task-add-form" onSubmit={addTask}><input autoFocus value={taskDraft} onChange={(event) => setTaskDraft(event.target.value)} placeholder="What needs doing?" aria-label="New task" /><IconButton label="Save task" onClick={() => { if (taskDraft.trim()) { setTasks((current) => [...current, { id: `t-${crypto.randomUUID()}`, title: taskDraft.trim(), completed: false, priority: 'Normal', estimate: 15, date: today }]); setTaskDraft(''); setShowTaskInput(false); } }}><Check size={16} /></IconButton><IconButton label="Cancel" onClick={() => setShowTaskInput(false)}><X size={16} /></IconButton></form> : <button className="add-inline task-add" type="button" onClick={() => setShowTaskInput(true)}><span><Plus size={15} /></span> Add a task</button>}</section>
+            <section className="panel tasks-panel"><div className="panel-heading"><div><div className="panel-overline">DO THE NEXT RIGHT THING</div><h3>Today’s plan <span className="heading-count">{doneTasks}/{todayTasks.length}</span></h3></div><IconButton label="Add task" onClick={() => setShowTaskInput(true)}><Plus size={17} /></IconButton></div><div className="task-progress"><span style={{ width: `${todayTasks.length ? doneTasks / todayTasks.length * 100 : 0}%` }} /></div><div className="task-list">{todayTasks.map((task) => <TaskRow key={task.id} task={task} onToggle={() => toggleTask(task.id)} />)}{todayTasks.length === 0 && <p className="quiet-empty">Your day is open. Add one priority.</p>}</div>{showTaskInput ? <form className="task-add-form" onSubmit={addTask}><input autoFocus value={taskDraft} onChange={(event) => setTaskDraft(event.target.value)} placeholder="What needs doing?" aria-label="New task" /><button className="icon-button" type="submit" aria-label="Save task"><Check size={16} /></button><button className="icon-button" type="button" aria-label="Cancel" onClick={() => { setShowTaskInput(false); setTaskDraft(''); }}><X size={16} /></button></form> : <button className="add-inline task-add" type="button" onClick={() => setShowTaskInput(true)}><span><Plus size={15} /></span> Add a task</button>}</section>
           </div>
           <footer className="page-footer"><span><Sparkles size={13} /> Built for progress, not perfection.</span><span>Local-first • Your data stays in this browser</span></footer>
         </>}
+
+        {page === 'Planner' && <PlannerPage habits={habits} tasks={tasks} today={today} onToggleHabit={toggleHabit} onToggleTask={toggleTask} onAddTask={addPlannerTask} />}
 
         {page === 'Habits' && <>
           <section className="page-intro"><div><div className="eyebrow"><span className="eyebrow-line" /> BUILD YOUR BASELINE</div><h1>Habits, <span>by design.</span></h1><p className="welcome-sub">Make good actions easier to start and easier to repeat.</p></div><button className="primary-button" type="button" onClick={() => setShowHabitModal(true)}><Plus size={16} /> Create habit</button></section>
