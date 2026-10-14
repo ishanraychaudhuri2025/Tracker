@@ -406,7 +406,7 @@ function App() {
         {page === 'Insights' && <>
           <section className="page-intro"><div><div className="eyebrow"><span className="eyebrow-line" /> THE PATTERNS BEHIND PROGRESS</div><h1>Notice what <span>works.</span></h1><p className="welcome-sub">Use the evidence you create to make tomorrow easier.</p></div><div className="review-date-chip"><CalendarDays size={15} /> Last 7 days</div></section>
           <section className="insights-stat-grid"><StatCard icon={<Activity size={17} />} label="Consistency" value={`${consistency}%`} detail="Of scheduled habit check-ins" tone="lime" /><StatCard icon={<CheckCheck size={17} />} label="Logged actions" value={String(totalWins)} detail="Across your habit history" tone="violet" /><StatCard icon={<Flame size={17} />} label="Active routines" value={String(activeStreaks)} detail="With a current streak" tone="orange" /></section>
-          <section className="panel insight-activity"><div className="panel-heading"><div><div className="panel-overline">SHOWING UP ADDS UP</div><h3>Five weeks of activity</h3></div><div className="consistency-label"><span className="save-dot" /> {consistency}% this week</div></div><ActivityHeatmap habits={habits} today={today} large /></section>
+          <section className="panel insight-activity"><div className="panel-heading"><div><div className="panel-overline">SHOWING UP ADDS UP</div><h3>Five weeks of activity</h3></div><div className="consistency-label"><span className="save-dot" /> {consistency}% this week</div></div><MonthlyActivityCalendar habits={habits} tasks={tasks} today={today} onToggleHabit={toggleHabit} onToggleTask={toggleTask} /></section>
           <div className="content-grid insight-bottom"><section className="panel"><div className="panel-heading"><div><div className="panel-overline">WHAT THE DATA SAYS</div><h3>Your strongest routines</h3></div><Trophy size={18} className="muted-icon" /></div><div className="ranking-list">{[...habits].sort((a, b) => getBestStreak(b, today) - getBestStreak(a, today)).slice(0, 4).map((habit, index) => <div className="ranking-row" key={habit.id}><span className="rank-number">0{index + 1}</span><span className={`rank-emoji tone-${habit.color}`}>{habit.emoji}</span><span className="rank-name"><b>{habit.name}</b><small>{habit.category} · {habit.frequency.toLowerCase()}</small></span><span className="rank-streak"><Flame size={13} /> {getCurrentStreak(habit, today)} days</span><div className="rank-bar"><span style={{ width: `${Math.min(100, getBestStreak(habit, today) / Math.max(1, bestStreak) * 100)}%` }} /></div></div>)}{habits.length === 0 && <p className="quiet-empty">Add routines to start seeing patterns.</p>}</div></section><section className="panel reflection-panel"><div className="panel-heading"><div><div className="panel-overline">YOUR NEXT EXPERIMENT</div><h3>Make it easier</h3></div><Sparkles size={17} className="accent-icon" /></div><div className="reflection-quote">“Success is often a better-designed starting point.”</div><div className="experiment-row"><span className="experiment-number">01</span><div><b>Pick one habit to protect</b><p>Which routine would make the rest of your day feel better?</p></div></div><div className="experiment-row"><span className="experiment-number">02</span><div><b>Make a specific if–then plan</b><p>“After <em>your cue</em>, I’ll do <em>the smallest version</em>.”</p></div></div><div className="experiment-row"><span className="experiment-number">03</span><div><b>Review, don’t judge</b><p>At week’s end, adjust the cue, effort, or timing that got in the way.</p></div></div><button className="secondary-button full-button" type="button" onClick={() => setPage('Habits')}>Tune my habits <ArrowRight size={15} /></button></section></div>
           <section className="research-note"><div className="research-icon"><BookOpen size={17} /></div><div><b>Grounded in behavior research</b><p>Progress monitoring, context cues, and specific if–then plans are established approaches—not guarantees. This tracker turns them into repeatable prompts.</p></div><button type="button" onClick={() => setToast('Research references are included in the project README.')}><CircleHelp size={16} /> About the method</button></section>
         </>}
@@ -476,23 +476,146 @@ function WeeklyTracker({ habits, today, onToggle }: { habits: Habit[]; today: st
   </section>;
 }
 
-function ActivityHeatmap({ habits, today, large = false }: { habits: Habit[]; today: string; large?: boolean }) {
-  const cells = Array.from({ length: 35 }, (_, index) => {
-    const key = shiftKey(today, index - 34);
-    const count = habits.filter((habit) => habit.logs[key]).length;
-    const dueCount = habits.filter((habit) => isDue(habit, key)).length;
-    const intensity = count === 0 ? 0 : count / Math.max(dueCount, 1) < 0.25 ? 1 : count / Math.max(dueCount, 1) < 0.5 ? 2 : count / Math.max(dueCount, 1) < 0.8 ? 3 : 4;
-    return { key, count, intensity };
+function MonthlyActivityCalendar({
+  habits, tasks, today, onToggleHabit, onToggleTask,
+}: {
+  habits: Habit[];
+  tasks: Task[];
+  today: string;
+  onToggleHabit: (habitId: string, dayKey: string) => void;
+  onToggleTask: (taskId: string, dayKey: string) => void;
+}) {
+  const [monthAnchor, setMonthAnchor] = useState(() => today.slice(0, 7) + '-01');
+  const [selectedDate, setSelectedDate] = useState(today);
+  const [showDetails, setShowDetails] = useState(true);
+  const [year, month] = monthAnchor.split('-').map(Number);
+  const monthTitle = new Date(year, month - 1, 1, 12).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const firstOffset = (new Date(year, month - 1, 1, 12).getDay() + 6) % 7;
+  const cellCount = Math.ceil((firstOffset + daysInMonth) / 7) * 7;
+  const dateKey = (day: number) => year + '-' + String(month).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+  const monthDays = Array.from({ length: daysInMonth }, (_, index) => {
+    const key = dateKey(index + 1);
+    const dueHabits = habits.filter((habit) => isDue(habit, key));
+    const doneHabits = dueHabits.filter((habit) => Boolean(habit.logs[key]));
+    const scheduledTasks = tasks.filter((task) => taskOccursOn(task, key));
+    const doneTasks = scheduledTasks.filter((task) => taskIsDone(task, key));
+    const total = dueHabits.length + scheduledTasks.length;
+    const done = doneHabits.length + doneTasks.length;
+    const isFuture = key > today;
+    return {
+      key, day: index + 1, dueHabits, doneHabits, scheduledTasks, doneTasks,
+      total, done, percent: total ? Math.round(done / total * 100) : 0,
+      taskCount: doneTasks.length, taskTotal: scheduledTasks.length,
+      habitCount: doneHabits.length, habitTotal: dueHabits.length,
+      isFuture, isToday: key === today,
+    };
   });
-  const monthLabels = Array.from({ length: 5 }, (_, weekIndex) => {
-    const cell = cells[weekIndex * 7];
-    const previous = weekIndex > 0 ? cells[(weekIndex - 1) * 7] : undefined;
-    return weekIndex === 0 || cell.key.slice(5, 7) !== previous?.key.slice(5, 7)
-      ? new Date(`${cell.key}T12:00:00`).toLocaleDateString('en-US', { month: 'short' })
-      : '';
+  const gridCells = Array.from({ length: cellCount }, (_, index) => {
+    const dayNumber = index - firstOffset + 1;
+    return dayNumber < 1 || dayNumber > daysInMonth ? null : monthDays[dayNumber - 1];
   });
-  return <div className={`heatmap ${large ? 'large-heatmap' : ''}`}><div className="heatmap-months">{monthLabels.map((month, index) => <span key={`${index}-${month}`}>{month}</span>)}</div><div className="heatmap-grid">{cells.map((cell) => <div key={cell.key} className={`heat-cell h${cell.intensity} ${cell.key === today ? 'today-cell' : ''}`} title={`${cell.key}: ${cell.count} habit${cell.count === 1 ? '' : 's'} completed`} />)}</div><div className="heatmap-days"><span>5 WKS AGO</span><span>4 WKS AGO</span><span>3 WKS AGO</span><span>2 WKS AGO</span><span>THIS WEEK</span></div></div>;
+  const monthCompletedTasks = monthDays.reduce((sum, day) => sum + (day.isFuture ? 0 : day.taskCount), 0);
+  const monthDueTasks = monthDays.reduce((sum, day) => sum + (day.isFuture ? 0 : day.taskTotal), 0);
+  const monthCompletedHabits = monthDays.reduce((sum, day) => sum + (day.isFuture ? 0 : day.habitCount), 0);
+  const monthDueHabits = monthDays.reduce((sum, day) => sum + (day.isFuture ? 0 : day.habitTotal), 0);
+  const activeDays = monthDays.filter((day) => !day.isFuture && day.done > 0).length;
+  const selected = monthDays.find((day) => day.key === selectedDate);
+  const selectedDateLabel = new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const changeMonth = (delta: number) => {
+    const next = new Date(year, month - 1 + delta, 1, 12);
+    const key = next.getFullYear() + '-' + String(next.getMonth() + 1).padStart(2, '0') + '-01';
+    setMonthAnchor(key);
+    setSelectedDate(key.slice(0, 7) === today.slice(0, 7) ? today : key);
+  };
+  const jumpToCurrentMonth = () => {
+    setMonthAnchor(today.slice(0, 7) + '-01');
+    setSelectedDate(today);
+  };
+
+  return <section className="monthly-activity">
+    <div className="monthly-activity-header">
+      <div className="monthly-title-block">
+        <span className="analytics-section-index">TASKS + ROUTINES / CALENDAR VIEW</span>
+        <h3>Daily execution <span>by month</span></h3>
+        <p>Every date shows finished tasks and completed habits. Select a day to review its checklist.</p>
+      </div>
+      <div className="monthly-navigation" aria-label="Calendar month navigation">
+        <button type="button" className="monthly-nav-arrow" onClick={() => changeMonth(-1)} aria-label="Previous month">‹</button>
+        <div className="monthly-current-month"><CalendarDays size={14}/><b>{monthTitle}</b></div>
+        <button type="button" className="monthly-nav-arrow" onClick={() => changeMonth(1)} aria-label="Next month">›</button>
+        <button type="button" className="monthly-today-button" onClick={jumpToCurrentMonth}>Today</button>
+      </div>
+    </div>
+
+    <div className="monthly-stats-row">
+      <div className="monthly-stat"><span className="monthly-stat-icon tasks-icon"><CheckCheck size={14}/></span><div><small>TASKS COMPLETED</small><b>{monthCompletedTasks}<i> / {monthDueTasks}</i></b></div></div>
+      <div className="monthly-stat"><span className="monthly-stat-icon habits-icon"><Target size={14}/></span><div><small>HABIT CHECK-INS</small><b>{monthCompletedHabits}<i> / {monthDueHabits}</i></b></div></div>
+      <div className="monthly-stat"><span className="monthly-stat-icon days-icon"><Activity size={14}/></span><div><small>ACTIVE DAYS</small><b>{activeDays}<i> / {monthDays.filter((day) => !day.isFuture).length}</i></b></div></div>
+    </div>
+
+    <div className="monthly-calendar-shell">
+      <div className="monthly-weekday-row">{['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((day) => <span key={day}>{day}</span>)}</div>
+      <div className="monthly-calendar-grid">
+        {gridCells.map((day, index) => day ? <button
+          type="button"
+          key={day.key}
+          className={'monthly-day-cell ' + (day.key === selectedDate ? 'is-selected ' : '') + (day.isToday ? 'is-today ' : '') + (day.isFuture ? 'is-future ' : '') + (day.done > 0 ? 'has-progress' : '')}
+          onClick={() => { setSelectedDate(day.key); setShowDetails(true); }}
+          aria-pressed={day.key === selectedDate}
+          aria-label={day.key + ': ' + day.taskCount + ' of ' + day.taskTotal + ' tasks, ' + day.habitCount + ' of ' + day.habitTotal + ' habits completed'}
+          key={day.key}
+        >
+          <span className="monthly-day-top"><b>{day.day}</b>{day.isToday ? <i>today</i> : null}</span>
+          <span className="monthly-day-task-count"><strong>{day.taskCount}</strong><small> / {day.taskTotal} tasks</small></span>
+          <span className="monthly-day-habit-count"><span className="monthly-habit-dot"/> {day.habitCount}<small> / {day.habitTotal} habits</small></span>
+          <span className="monthly-day-progress"><i style={{ width: day.isFuture ? '0%' : day.percent + '%' }}/></span>
+          <span className="monthly-day-status">{day.isFuture ? (day.total ? 'UP NEXT' : '—') : day.total ? day.percent + '% DONE' : 'NO ACTIVITY'}</span>
+        </button> : <div key={'blank-' + index} className="monthly-day-empty" aria-hidden="true"/> )}
+      </div>
+      <div className="monthly-calendar-legend">
+        <span><i className="monthly-legend-task"/> Tasks completed</span>
+        <span><i className="monthly-legend-habit"/> Habit check-ins</span>
+        <span><i className="monthly-legend-today"/> Today</span>
+        <span className="monthly-week-note">Weeks run Monday → Sunday</span>
+      </div>
+    </div>
+
+    {selected && <section className="monthly-day-detail">
+      <div className="monthly-detail-header">
+        <div><span className="analytics-section-index">SELECTED DATE / DAILY LOG</span><h4>{selectedDateLabel}</h4><p>{selected.isFuture ? 'A look ahead. Future dates remain editable only when the day arrives.' : selected.done + ' of ' + selected.total + ' scheduled actions completed.'}</p></div>
+        <button type="button" className="monthly-detail-collapse" onClick={() => setShowDetails((value) => !value)}>{showDetails ? 'Hide checklist' : 'Show checklist'} <span>{showDetails ? '−' : '+'}</span></button>
+      </div>
+      {showDetails && <div className="monthly-detail-columns">
+        <div className="monthly-detail-group">
+          <div className="monthly-detail-group-title"><span className="monthly-stat-icon tasks-icon"><CheckCheck size={13}/></span><b>Tasks</b><small>{selected.doneTasks.length}/{selected.scheduledTasks.length}</small></div>
+          {selected.scheduledTasks.length ? selected.scheduledTasks.map((task) => {
+            const done = taskIsDone(task, selectedDate);
+            const disabled = selected.isFuture || (task.recurrence ?? 'None') === 'None' && task.date !== selectedDate;
+            return <div className={'monthly-detail-row ' + (done ? 'is-done' : '')} key={task.id}>
+              <button type="button" className={'monthly-detail-check ' + (done ? 'checked' : '')} disabled={disabled} onClick={() => onToggleTask(task.id, selectedDate)} aria-label={(done ? 'Undo ' : 'Complete ') + task.title}>{done ? <Check size={12}/> : null}</button>
+              <span className="monthly-detail-item-copy"><b>{task.title}</b><small>{task.time || 'Flexible'} · {task.category || 'Personal'} · {task.estimate} min</small></span>
+              <span className={'monthly-item-status ' + (done ? 'is-done' : '')}>{done ? 'DONE' : selected.isFuture ? 'UP NEXT' : 'OPEN'}</span>
+            </div>;
+          }) : <p className="monthly-detail-empty">No tasks scheduled for this date.</p>}
+        </div>
+        <div className="monthly-detail-group">
+          <div className="monthly-detail-group-title"><span className="monthly-stat-icon habits-icon"><Target size={13}/></span><b>Habits</b><small>{selected.doneHabits.length}/{selected.dueHabits.length}</small></div>
+          {selected.dueHabits.length ? selected.dueHabits.map((habit) => {
+            const done = Boolean(habit.logs[selectedDate]);
+            return <div className={'monthly-detail-row ' + (done ? 'is-done' : '')} key={habit.id}>
+              <button type="button" className={'monthly-detail-check ' + (done ? 'checked' : '')} disabled={selected.isFuture} onClick={() => onToggleHabit(habit.id, selectedDate)} aria-label={(done ? 'Undo ' : 'Complete ') + habit.name}>{done ? <Check size={12}/> : null}</button>
+              <span className="monthly-detail-emoji">{habit.emoji}</span>
+              <span className="monthly-detail-item-copy"><b>{habit.name}</b><small>{habit.cue || habit.category}</small></span>
+              <span className={'monthly-item-status ' + (done ? 'is-done' : '')}>{done ? 'DONE' : selected.isFuture ? 'UP NEXT' : 'OPEN'}</span>
+            </div>;
+          }) : <p className="monthly-detail-empty">No habits scheduled for this date.</p>}
+        </div>
+      </div>}
+    </section>}
+  </section>;
 }
+
 
 function HabitDetail({ habit, today, onToggle, onDelete }: { habit: Habit; today: string; onToggle: () => void; onDelete: () => void }) {
   const streak = getCurrentStreak(habit, today);
