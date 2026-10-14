@@ -2155,3 +2155,166 @@ button, .planner-week-day, .planner-month-day { -webkit-touch-callout:none; }
   .analytics-page-header p { font-size:10px; }
   .sidebar-tip p { font-size:10px; }
 }
+
+
+/* === Typography & colour refinement — October 2026 === */
+.app-shell:not(.light-mode) {
+  --bg: #090c14;
+  --panel: #101522;
+  --panel-raised: #151c2b;
+  --panel-soft: #1b2638;
+  --border: #2b3850;
+  --border-soft: #222e43;
+  --text: #f1f4fc;
+  --muted: #b8c3d9;
+  --subtle: #94a4c1;
+  --lime: #a9a5ff;
+  --lime-strong: #c0bdff;
+  --lime-soft: rgba(169,165,255,.14);
+  --violet: #c0b4ff;
+  --blue: #91d4ed;
+  --orange: #f2b58d;
+}
+.app-shell:not(.light-mode) .primary-button,
+.app-shell:not(.light-mode) .auth-submit {
+  color: #111426;
+  background: linear-gradient(135deg,#c2beff 0%,#a7a5ff 100%);
+  border-color: #c2beff;
+  box-shadow: 0 5px 18px rgba(169,165,255,.13);
+}
+.app-shell:not(.light-mode) .primary-button:hover:not(:disabled),
+.app-shell:not(.light-mode) .auth-submit:hover:not(:disabled) {
+  filter: brightness(1.06);
+  box-shadow: 0 9px 24px rgba(169,165,255,.22);
+}
+.app-shell:not(.light-mode) .secondary-button,
+.app-shell:not(.light-mode) .analytics-plain-button,
+.app-shell:not(.light-mode) .analytics-side-link,
+.app-shell:not(.light-mode) .analytics-chart-footer button,
+.app-shell:not(.light-mode) .analytics-table-footer>button {
+  color: #d0d5f1;
+  background: #171e2e;
+  border-color: #35415b;
+}
+.app-shell:not(.light-mode) .secondary-button:hover,
+.app-shell:not(.light-mode) .analytics-plain-button:hover,
+.app-shell:not(.light-mode) .analytics-side-link:hover {
+  color: #f2f1ff;
+  background: #202941;
+  border-color: #8d8bf0;
+}
+.app-shell:not(.light-mode) .analytics-side-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #35415b;
+  border-radius: 8px;
+  padding: 0 10px;
+}
+.app-shell:not(.light-mode) .analytics-chart-footer button,
+.app-shell:not(.light-mode) .analytics-table-footer>button {
+  border: 1px solid #35415b;
+  border-radius: 8px;
+  padding: 0 10px;
+}
+.app-shell:not(.light-mode) .analytics-chart-footer button:hover,
+.app-shell:not(.light-mode) .analytics-table-footer>button:hover {
+  color: #f2f1ff;
+  background: #202941;
+  border-color: #8d8bf0;
+}
+/* Small metadata remains secondary, but is no longer tiny or low contrast. */
+.app-shell:not(.light-mode) .panel-overline,
+.app-shell:not(.light-mode) .eyebrow,
+.app-shell:not(.light-mode) .analytics-kicker,
+.app-shell:not(.light-mode) .analytics-section-index,
+.app-shell:not(.light-mode) .analytics-table-head,
+.app-shell:not(.light-mode) .analytics-footer,
+.app-shell:not(.light-mode) .analytics-chart-legend,
+.app-shell:not(.light-mode) .analytics-y-labels,
+.app-shell:not(.light-mode) .analytics-x-labels,
+.app-shell:not(.light-mode) .analytics-chart-footer,
+.app-shell:not(.light-mode) .analytics-table-footer,
+.app-shell:not(.light-mode) .analytics-micro-note {
+  color: #aab8d4;
+  font-size: 10px;
+  line-height: 1.55;
+}
+.app-shell:not(.light-mode) .stat-detail,
+.app-shell:not(.light-mode) .nav-copy small,
+.app-shell:not(.light-mode) .routine-mini,
+.app-shell:not(.light-mode) .sidebar-tip p,
+.app-shell:not(.light-mode) .profile-copy small,
+.app-shell:not(.light-mode) .analytics-routine-name small,
+.app-shell:not(.light-mode) .analytics-streak-value small,
+.app-shell:not(.light-mode) .analytics-metric-bottom,
+.app-shell:not(.light-mode) .analytics-chart-heading p,
+.app-shell:not(.light-mode) .analytics-table-header p,
+.app-shell:not(.light-mode) .analytics-page-header p,
+.app-shell:not(.light-mode) .analytics-next-meta {
+  color: #aebbd5;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.app-shell:not(.light-mode) .analytics-metric-label,
+.app-shell:not(.light-mode) .analytics-metric-value small,
+.app-shell:not(.light-mode) .analytics-routine-name b,
+.app-shell:not(.light-mode) .analytics-area-tag,
+.app-shell:not(.light-mode) .analytics-consistency-cell>span,
+.app-shell:not(.light-mode) .analytics-streak-value {
+  color: #d0d8eb;
+  font-size: 11px;
+}
+.app-shell:not(.light-mode) .analytics-chart-heading h2,
+.app-shell:not(.light-mode) .analytics-table-header h2,
+.app-shell:not(.light-mode) .analytics-card-heading h2 {
+  color: #f0f3fc;
+}
+.app-shell:not(.light-mode) .analytics-metric-card,
+.app-shell:not(.light-mode) .analytics-chart-panel,
+.app-shell:not(.light-mode) .analytics-side-card,
+.app-shell:not(.light-mode) .analytics-table-panel {
+  background-color: #101522;
+  border-color: #29364e;
+}
+.app-shell:not(.light-mode) .analytics-metric-card:hover,
+.app-shell:not(.light-mode) .analytics-chart-panel:hover,
+.app-shell:not(.light-mode) .analytics-side-card:hover,
+.app-shell:not(.light-mode) .analytics-table-panel:hover {
+  border-color: rgba(169,165,255,.48);
+}
+.app-shell:not(.light-mode) .analytics-tick.checked,
+.app-shell:not(.light-mode) .analytics-today-toggle.checked {
+  color: #111426;
+  background: #a9a5ff;
+  border-color: #a9a5ff;
+  box-shadow: 0 0 10px rgba(169,165,255,.14);
+}
+.app-shell:not(.light-mode) .analytics-metric-line {
+  opacity: .92;
+}
+.app-shell:not(.light-mode) .analytics-live-tag {
+  color: #d6d3ff;
+  background: rgba(169,165,255,.1);
+  border-color: rgba(169,165,255,.28);
+}
+.app-shell:not(.light-mode) .sidebar-section-head,
+.app-shell:not(.light-mode) .workspace-label {
+  color: #9aaac8;
+}
+.app-shell:not(.light-mode) .nav-copy small,
+.app-shell:not(.light-mode) .sidebar-empty {
+  color: #a5b2cc;
+}
+@media (max-width:760px) {
+  .app-shell:not(.light-mode) .analytics-kicker,
+  .app-shell:not(.light-mode) .analytics-chart-legend,
+  .app-shell:not(.light-mode) .analytics-y-labels,
+  .app-shell:not(.light-mode) .analytics-x-labels,
+  .app-shell:not(.light-mode) .analytics-chart-footer,
+  .app-shell:not(.light-mode) .analytics-table-footer,
+  .app-shell:not(.light-mode) .analytics-footer { font-size: 9px; }
+  .app-shell:not(.light-mode) .analytics-chart-heading p,
+  .app-shell:not(.light-mode) .analytics-table-header p,
+  .app-shell:not(.light-mode) .analytics-page-header p { font-size: 11px; }
+}
