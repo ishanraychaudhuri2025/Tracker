@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { CSSProperties, FormEvent, ReactNode } from 'react';
+import type { Session } from '@supabase/supabase-js';
 import {
   Activity, ArrowRight, ArrowUpRight, BarChart3, Bell, BookOpen,
   CalendarDays, CalendarRange, Check, CheckCheck, ChevronDown, CircleHelp, Clock3, Flame, Focus,
-  Gauge, Leaf, ListTodo, Moon, MoreHorizontal, Plus, RotateCcw, Settings2, ShieldCheck,
+  Gauge, Leaf, ListTodo, LogOut, Moon, MoreHorizontal, Plus, RotateCcw, Settings2, ShieldCheck,
   Sparkles, Sun, Target, Timer, Trophy, X, Zap,
 } from 'lucide-react';
 import type { Category, Frequency, Habit, Page, Task } from './types';
 import { PlannerPage, taskIsDone, taskOccursOn } from './Planner';
+import AuthScreen from './components/AuthScreen';
+import { supabase, supabaseConfigured } from './lib/supabase';
 
 const STORAGE_KEY = 'streako-elite-v1';
 const todayKey = () => toKey(new Date());
@@ -168,11 +171,163 @@ function App() {
   const [focusSessions, setFocusSessions] = useState(0);
   const [focusTaskId, setFocusTaskId] = useState<string | null>(null);
   const [toast, setToast] = useState('');
+  const [authSession, setAuthSession] = useState<Session | null>(null);
+  const [authReady, setAuthReady] = useState(!supabaseConfigured);
+  const [workspaceReady, setWorkspaceReady] = useState(!supabaseConfigured);
+  const [cloudStatus, setCloudStatus] = useState(supabaseConfigured ? 'Connecting…' : 'Saved locally');
+  const [cloudError, setCloudError] = useState('');
   const today = todayKey();
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, tasks }));
-  }, [habits, tasks]);
+    if (!supabase) {
+      setAuthReady(true);
+      setWorkspaceReady(true);
+      setCloudStatus('Saved locally');
+      return undefined;
+    }
+
+    let active = true;
+    let requestVersion = 0;
+    const hydrateWorkspace = async (session: Session) => {
+      const version = ++requestVersion;
+      setAuthReady(false);
+      setWorkspaceReady(false);
+      setCloudError('');
+      setCloudStatus('Loading workspace…');
+      try {
+        const { data, error } = await supabase
+          .from('tracker_workspaces')
+          .select('habits, tasks, focus_sessions, preferences')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+        if (!active || version !== requestVersion) return;
+        if (error) throw error;
+
+        let workspace = data;
+        if (!workspace) {
+          const userSaved = localStorage.getItem(STORAGE_KEY + ':' + session.user.id);
+          const guestSaved = userSaved ? null : localStorage.getItem(STORAGE_KEY);
+          const candidate = userSaved ?? guestSaved;
+          let localSnapshot: { habits?: unknown; tasks?: unknown; focusSessions?: unknown; preferences?: unknown } = {};
+          try {
+            if (candidate) localSnapshot = JSON.parse(candidate);
+          } catch {
+            localSnapshot = {};
+          }
+          const habitsToImport = Array.isArray(localSnapshot.habits) ? localSnapshot.habits : seedHabits();
+          const tasksToImport = Array.isArray(localSnapshot.tasks) ? localSnapshot.tasks : seedTasks();
+          const focusToImport = typeof localSnapshot.focusSessions === 'number' ? localSnapshot.focusSessions : 0;
+          const preferencesToImport = localSnapshot.preferences && typeof localSnapshot.preferences === 'object'
+            ? localSnapshot.preferences
+            : { dark: true };
+          const { data: created, error: createError } = await supabase
+            .from('tracker_workspaces')
+            .insert({
+              user_id: session.user.id,
+              habits: habitsToImport,
+              tasks: tasksToImport,
+              focus_sessions: focusToImport,
+              preferences: preferencesToImport,
+            })
+            .select('habits, tasks, focus_sessions, preferences')
+            .single();
+          if (!active || version !== requestVersion) return;
+          if (createError) throw createError;
+          workspace = created;
+        }
+
+        setHabits(Array.isArray(workspace.habits) ? workspace.habits as Habit[] : []);
+        setTasks(Array.isArray(workspace.tasks) ? workspace.tasks as Task[] : []);
+        setFocusSessions(typeof workspace.focus_sessions === 'number' ? workspace.focus_sessions : 0);
+        const preferences = workspace.preferences as { dark?: unknown } | null;
+        if (typeof preferences?.dark === 'boolean') setDark(preferences.dark);
+        setAuthSession(session);
+        setWorkspaceReady(true);
+        setAuthReady(true);
+        setCloudStatus('Cloud synced');
+      } catch (caught) {
+        if (!active || version !== requestVersion) return;
+        const message = caught instanceof Error ? caught.message : 'Unknown workspace error';
+        setCloudError(message);
+        setCloudStatus('Sync issue');
+        setAuthSession(session);
+        setWorkspaceReady(false);
+        setAuthReady(true);
+      }
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'INITIAL_SESSION') return;
+      if (event === 'SIGNED_OUT' || !session) {
+        requestVersion += 1;
+        setAuthSession(null);
+        setAuthReady(true);
+        setWorkspaceReady(false);
+        setCloudError('');
+        setCloudStatus('Signed out');
+        return;
+      }
+      setAuthSession(session);
+      if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'PASSWORD_RECOVERY') {
+        void hydrateWorkspace(session);
+      }
+    });
+
+    void supabase.auth.getSession().then(({ data, error }) => {
+      if (!active) return;
+      if (error) {
+        setCloudError(error.message);
+        setCloudStatus('Auth issue');
+        setAuthReady(true);
+        return;
+      }
+      if (data.session) {
+        setAuthSession(data.session);
+        void hydrateWorkspace(data.session);
+      } else {
+        setAuthSession(null);
+        setAuthReady(true);
+        setWorkspaceReady(false);
+        setCloudStatus('Signed out');
+      }
+    });
+
+    return () => {
+      active = false;
+      requestVersion += 1;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!supabaseConfigured || !supabase) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, tasks, focusSessions, preferences: { dark } }));
+      return undefined;
+    }
+    if (!authSession || !workspaceReady) return undefined;
+
+    const snapshot = { habits, tasks, focusSessions, preferences: { dark } };
+    localStorage.setItem(STORAGE_KEY + ':' + authSession.user.id, JSON.stringify(snapshot));
+    setCloudStatus('Syncing…');
+    const timeout = window.setTimeout(() => {
+      void supabase.from('tracker_workspaces').upsert({
+        user_id: authSession.user.id,
+        habits,
+        tasks,
+        focus_sessions: focusSessions,
+        preferences: { dark },
+      }).then(({ error }) => {
+        if (error) {
+          setCloudStatus('Sync issue');
+          setCloudError(error.message);
+        } else {
+          setCloudStatus('Cloud synced');
+          setCloudError('');
+        }
+      });
+    }, 450);
+    return () => window.clearTimeout(timeout);
+  }, [habits, tasks, focusSessions, dark, authSession?.user.id, workspaceReady]);
 
   useEffect(() => {
     if (!focusRunning) return undefined;
@@ -274,6 +429,14 @@ function App() {
   const timeText = `${String(Math.floor(focusSeconds / 60)).padStart(2, '0')}:${String(focusSeconds % 60).padStart(2, '0')}`;
   const timerProgress = 1 - focusSeconds / (focusPreset * 60 || 1);
 
+  if (supabaseConfigured && !authReady) {
+    return <div className="auth-loading-screen"><div className="auth-loading-mark"><BoltMark /></div><h1>Preparing your workspace</h1><p>Securely loading your routines and task history…</p></div>;
+  }
+  if (supabaseConfigured && !authSession) return <AuthScreen />;
+  if (supabaseConfigured && authSession && !workspaceReady) {
+    return <div className="auth-loading-screen"><div className="auth-loading-mark"><ShieldCheck size={21} /></div><h1>Workspace sync needs attention</h1><p>We signed you in, but couldn’t load your saved workspace. Your data was not overwritten.</p><div className="auth-workspace-error">{cloudError || 'Check that the Supabase tracker_workspaces migration has been applied and the project environment variables are correct.'}</div><div className="auth-loading-actions"><button className="auth-retry-button" type="button" onClick={() => window.location.reload()}>Retry connection</button><button className="auth-retry-button secondary" type="button" onClick={() => { if (supabase) void supabase.auth.signOut(); }}>Sign out</button></div></div>;
+  }
+
   return (
     <div className={`app-shell ${dark ? 'dark-mode' : 'light-mode'}`}>
       <aside className="sidebar">
@@ -307,17 +470,17 @@ function App() {
         </div>
         <div className="sidebar-bottom">
           <div className="sidebar-tip"><div className="tip-icon"><Sparkles size={15} /></div><div><b>Small counts.</b><p>Never miss twice. Restart gently.</p></div></div>
-          <button className="profile-row" type="button" onClick={() => setToast('Profile settings will be added when accounts are connected.')}>
-            <span className="avatar">IR</span><span className="profile-copy"><b>Your workspace</b><small>Personal edition</small></span><MoreHorizontal size={18} className="muted-icon" />
-          </button>
-          <div className="sidebar-tools"><button type="button" onClick={() => setDark((current) => !current)}><span>{dark ? <Sun size={15} /> : <Moon size={15} />}</span>{dark ? 'Light appearance' : 'Dark appearance'}</button><button type="button" onClick={() => setToast('You’re using local-first demo mode. Your changes stay in this browser.')}><Settings2 size={15} />Preferences</button></div>
+          <div className="profile-row">
+            <span className="avatar">{authSession?.user.email?.slice(0, 2).toUpperCase() || 'IR'}</span><span className="profile-copy"><b>{authSession?.user.email?.split('@')[0] || 'Your workspace'}</b><small>{authSession ? 'Synced workspace' : 'Personal edition'}</small></span>{authSession && supabase ? <button type="button" className="profile-signout" aria-label="Sign out" title="Sign out" onClick={() => { void supabase.auth.signOut(); }}><LogOut size={15}/></button> : <MoreHorizontal size={18} className="muted-icon" />}
+          </div>
+          <div className="sidebar-tools"><button type="button" onClick={() => setDark((current) => !current)}><span>{dark ? <Sun size={15} /> : <Moon size={15} />}</span>{dark ? 'Light appearance' : 'Dark appearance'}</button><button type="button" onClick={() => setToast(authSession ? 'Your workspace syncs to your account.' : 'Cloud auth is not connected yet.')}><Settings2 size={15} />Preferences</button>{!supabaseConfigured && <span className="local-mode-note">LOCAL MODE · CLOUD NOT CONNECTED</span>}</div>
         </div>
       </aside>
 
       <main className="main-content">
         <header className="topbar">
           <div className="breadcrumbs"><span>Workspace</span><span className="crumb-slash">/</span><b>{page}</b></div>
-          <div className="topbar-actions"><span className="local-save"><span className="save-dot" /> Saved locally</span><IconButton label="Notifications" onClick={() => setToast('You’re all caught up. No reminders are scheduled yet.')}><Bell size={17} /></IconButton><button className="date-chip" type="button" onClick={() => setPage('Today')}><CalendarDays size={15} />{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}<ChevronDown size={13} /></button></div>
+          <div className="topbar-actions"><span className="local-save" title={cloudError || cloudStatus}><span className="save-dot" /> {cloudStatus}</span><IconButton label="Notifications" onClick={() => setToast('You’re all caught up. No reminders are scheduled yet.')}><Bell size={17} /></IconButton><button className="date-chip" type="button" onClick={() => setPage('Today')}><CalendarDays size={15} />{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}<ChevronDown size={13} /></button></div>
         </header>
 
         {page === 'Today' && <>
