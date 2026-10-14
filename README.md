@@ -25,19 +25,24 @@ The Insights page includes a navigable calendar with per-day completed-task coun
 
 Streako supports Supabase email/password accounts and stores each signed-in user's habits, recurring tasks, focus-session count, and appearance preferences in a user-scoped workspace row. Workspace access is enforced by PostgreSQL Row Level Security using `auth.uid()`.
 
-### Configure Supabase
+### Configure this Supabase project
 
-1. Create a Supabase project and copy its project URL and **publishable key** (or legacy anon key). Never place a secret/service-role key in browser environment variables.
-2. Apply `supabase/migrations/20261014000100_tracker_workspaces.sql` to the project database.
-3. Set these variables in local `.env` and in Vercel's Production, Preview, and Development environments:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_PUBLISHABLE_KEY` (or `VITE_SUPABASE_ANON_KEY` for legacy projects)
-4. In Supabase Authentication settings, ensure email/password is enabled and configure the production site URL and redirect allowlist to include the deployed Streako domain.
-5. Redeploy after adding the environment variables. New accounts may need to confirm their email, depending on the project's Auth settings.
+The configured Streako deployment uses the public Supabase project URL and publishable key as fallbacks in `src/lib/supabase.ts`; these can be overridden with build-time environment variables. The publishable/anon key is intended for browser use—never expose a service-role or secret key in frontend code.
 
-Password recovery includes a dedicated new-password form. Legacy guest-only local data is imported into a new account once and removed from the shared guest slot after successful import so later accounts do not inherit it.
+The workspace table migration is at `supabase/migrations/20261014000100_tracker_workspaces.sql`. It has already been applied to the connected `streako` Supabase project.
 
-When cloud configuration is absent, the app remains in local-only mode rather than pretending account sync is active. Existing local workspace data is imported for the first signed-in account that has no cloud workspace. After that, workspaces are stored separately per account.
+**One-time Auth URL configuration:** in [Supabase Auth → URL Configuration](https://supabase.com/dashboard/project/wxyigvitegdnurimmarb/auth/url-configuration), set:
+
+- **Site URL:** `https://streako-elite.vercel.app`
+- **Additional Redirect URLs:** `https://streako-elite.vercel.app/**`
+- **Optional Vercel previews:** `https://*-ishan-e93e.vercel.app/**`
+- **Local development:** `http://localhost:5173/**`
+
+The Site URL and redirect allowlist are important for email confirmation and password-recovery links. See the [Supabase redirect URL guide](https://supabase.com/docs/guides/auth/redirect-urls).
+
+Password recovery includes a dedicated new-password form. Legacy guest-only local data is imported into a new account once and removed from the shared guest slot after successful import so later accounts do not inherit it. After signing in, workspace changes are synced to the user's row; RLS restricts reads and writes to that user.
+
+For a separate deployment or fork, set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (or legacy `VITE_SUPABASE_ANON_KEY`) in its build environment. Never set a service-role key in a `VITE_*` variable.
 
 ## Run locally
 
