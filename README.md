@@ -4,6 +4,12 @@ A research-informed, local-first habit and task tracker. This is an original imp
 
 ## What is here
 
+- **Planner:** selectable weekly and monthly calendars, date navigation, day-by-day activity summaries, and clickable checklists.
+- **Recurring activities:** schedule tasks daily, on weekdays/weekends, weekly, or monthly; each occurrence has its own completion state.
+- **Time and life-area grouping:** organize tasks by Morning / Afternoon / Evening / Anytime or by Study, Work, Health, Personal, and Admin.
+- **Progress matrix:** weekly habit tick marks plus daily and monthly visual progress.
+- **Problem-to-solution plan:** see [docs/PROBLEM_SOLUTION_MAP.md](docs/PROBLEM_SOLUTION_MAP.md) for the user problems, design responses, reference listings, and research basis.
+
 - **Today dashboard:** check habits off, see daily progress, review current/best streaks, and track a small task list.
 - **Habit design:** create routines with a category, cadence, reliable cue, and a minimum version. The form turns those inputs into an if–then plan.
 - **Focus room:** a working 15 / 25 / 50-minute focus timer, pause/resume, reset, and completed-session count.
