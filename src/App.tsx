@@ -540,19 +540,19 @@ function App() {
               <div className="analytics-metric-label"><span>DAILY COMPLETION</span><span className="analytics-metric-icon"><Activity size={14}/></span></div>
               <div className="analytics-metric-value">{completion}<small>%</small></div>
               <div className="analytics-metric-bottom"><span>{doneToday} of {dueHabits.length} routines complete</span><span className="analytics-trend-positive"><ArrowUpRight size={12}/> TODAY</span></div>
-              <div className="analytics-mini-bars" aria-hidden="true">{[28,42,34,60,47,73,58,82,55,92,69,100].map((height,index) => <i key={index} style={{height: height + '%'}}/>)}</div>
+              <div className="analytics-mini-bars" aria-hidden="true">{Array.from({ length: 12 }, (_, index) => { const dayKey = shiftKey(today, index - 11); const due = habits.filter((habit) => isDue(habit, dayKey)); const done = due.filter((habit) => Boolean(habit.logs[dayKey])).length; const height = due.length ? Math.max(2, (done / due.length) * 21) : 2; return <i key={dayKey} style={{ height: height + 'px', opacity: due.length ? 0.8 : 0.22 }} />; })}</div>
             </article>
             <article className="analytics-metric-card">
               <div className="analytics-metric-label"><span>7-DAY CONSISTENCY</span><span className="analytics-metric-icon tone-blue"><CalendarDays size={14}/></span></div>
               <div className="analytics-metric-value">{consistency}<small>%</small></div>
               <div className="analytics-metric-bottom"><span>Last seven days</span><span className="analytics-micro-note">{consistency >= 70 ? 'ON TRACK' : 'BUILDING'}</span></div>
-              <div className="analytics-metric-line analytics-line-blue"><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/></div>
+              <div className="analytics-metric-line analytics-line-blue" aria-label="Daily completion over the last seven days">{Array.from({ length: 7 }, (_, index) => { const dayKey = shiftKey(today, index - 6); const due = habits.filter((habit) => isDue(habit, dayKey)); const done = due.filter((habit) => Boolean(habit.logs[dayKey])).length; const height = due.length ? Math.max(3, Math.round((done / due.length) * 17)) : 3; return <i key={dayKey} title={dayKey + ': ' + done + '/' + due.length + ' completed'} style={{ height: height + 'px', opacity: due.length ? 0.85 : 0.22, background: due.length && done === due.length ? '#a6d8ec' : undefined }} />; })}</div>
             </article>
             <article className="analytics-metric-card">
               <div className="analytics-metric-label"><span>ACTIVE STREAKS</span><span className="analytics-metric-icon tone-pink"><Flame size={14}/></span></div>
               <div className="analytics-metric-value">{String(activeStreaks).padStart(2,'0')}<small> routines</small></div>
               <div className="analytics-metric-bottom"><span>Habits in motion</span><span className="analytics-micro-note">LIVE</span></div>
-              <div className="analytics-streak-steps" aria-hidden="true"><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/></div>
+              <div className="analytics-streak-steps" aria-hidden="true">{Array.from({ length: 12 }, (_, index) => { const dayKey = shiftKey(today, index - 11); const done = habits.filter((habit) => Boolean(habit.logs[dayKey])).length; const height = habits.length ? Math.max(done ? 3 : 2, Math.round((done / habits.length) * 19)) : 2; return <i key={dayKey} title={dayKey + ': ' + done + ' check-ins'} style={{ height: height + 'px', opacity: done ? 0.8 : 0.16 }} />; })}</div>
             </article>
             <article className="analytics-metric-card">
               <div className="analytics-metric-label"><span>TOTAL CHECK-INS</span><span className="analytics-metric-icon tone-violet"><CheckCheck size={14}/></span></div>
