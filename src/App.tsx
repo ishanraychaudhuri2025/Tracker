@@ -164,11 +164,23 @@ function App() {
   const [filter, setFilter] = useState<'All' | Category>('All');
   const [showHabitModal, setShowHabitModal] = useState(false);
   const [habitDraft, setHabitDraft] = useState({ name: '', category: 'Craft' as Category, frequency: 'Daily' as Frequency, cue: '', minimum: '' });
-  const [dark, setDark] = useState(true);
+  const [dark, setDark] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      const preferences = saved ? (JSON.parse(saved) as { preferences?: { dark?: unknown } }).preferences : undefined;
+      return typeof preferences?.dark === 'boolean' ? preferences.dark : true;
+    } catch { return true; }
+  });
   const [focusRunning, setFocusRunning] = useState(false);
   const [focusPreset, setFocusPreset] = useState(25);
   const [focusSeconds, setFocusSeconds] = useState(25 * 60);
-  const [focusSessions, setFocusSessions] = useState(0);
+  const [focusSessions, setFocusSessions] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      const snapshot = saved ? (JSON.parse(saved) as { focusSessions?: unknown }) : undefined;
+      return typeof snapshot?.focusSessions === 'number' ? snapshot.focusSessions : 0;
+    } catch { return 0; }
+  });
   const [focusTaskId, setFocusTaskId] = useState<string | null>(null);
   const [toast, setToast] = useState('');
   const [authSession, setAuthSession] = useState<Session | null>(null);
