@@ -425,7 +425,8 @@ function App() {
 
 function BoltMark() {
   return <svg className="bolt-mark-svg" viewBox="0 0 36 36" aria-hidden="true" focusable="false">
-    <path d="M4 23.1 14.8 12l-2.2 7.1L29.7 5 21.8 20.4l10-5.1L17.2 30.1l2.1-8.1L7.5 29.2l4.1-6.1Z" fill="currentColor" />
+    <path d="M19.8 3.5 7 20.2h8.2l-1.8 12.3L29 14.9h-8.4L19.8 3.5Z" fill="currentColor" />
+    <path d="m7 20.2 8.2 0" fill="none" stroke="rgba(255,255,255,.65)" strokeWidth="1.1" strokeLinecap="round" />
   </svg>;
 }
 function StatCard({ icon, label, value, detail, tone }: { icon: ReactNode; label: string; value: string; detail: string; tone: string }) {
