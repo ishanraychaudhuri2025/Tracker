@@ -189,12 +189,6 @@ function App() {
   const activeStreaks = habits.filter((habit) => getCurrentStreak(habit, today) > 0).length;
   const totalWins = habits.reduce((count, habit) => count + Object.values(habit.logs).filter(Boolean).length, 0);
   const filteredHabits = habits.filter((habit) => filter === 'All' || habit.category === filter);
-  const quote = doneToday === dueHabits.length && dueHabits.length > 0
-    ? 'You showed up for yourself today. That’s the whole point.'
-    : doneToday === 0
-      ? 'Make the first step so small it feels almost too easy.'
-      : 'Momentum is built in the next small action, not the perfect day.';
-
   const toggleHabit = (id: string, dayKey = today) => {
     const habit = habits.find((item) => item.id === id);
     if (!habit) return;
