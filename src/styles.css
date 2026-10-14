@@ -1688,3 +1688,181 @@ button, .planner-week-day, .planner-month-day { -webkit-touch-callout:none; }
   color: #171a31;
 }
 .app-shell :is(button, .panel, .stat-card, .brand-mark) { transition-duration: .22s; }
+
+
+/* MONTHLY EXECUTION CALENDAR — task and routine activity, day by day */
+.app-shell {
+  --lime:#a6a4ff;
+  --lime-strong:#c2bfff;
+  --lime-soft:rgba(166,164,255,.12);
+  --blue:#83d4f5;
+  --violet:#c4a5ff;
+  --orange:#efba94;
+}
+.app-shell.light-mode {
+  --lime:#666bd1;
+  --lime-strong:#5258bf;
+  --lime-soft:rgba(102,107,209,.11);
+  --blue:#3184b7;
+  --violet:#825dc2;
+  --orange:#b96d3f;
+}
+.insight-activity { margin:0!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important; }
+.monthly-activity {
+  min-width:0;padding:22px 23px 17px;border:1px solid rgba(137,151,193,.15);border-radius:15px;
+  background:linear-gradient(145deg,rgba(17,21,36,.97),rgba(11,14,25,.97));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+}
+.light-mode .monthly-activity { background:linear-gradient(145deg,#fff,#f7f8fc); }
+.monthly-activity-header { display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap; }
+.monthly-title-block { min-width:0; }
+.monthly-title-block h3 { margin:8px 0 6px;color:var(--text);font:500 clamp(21px,2.15vw,28px)/1.15 'Space Grotesk',sans-serif;letter-spacing:-.9px; }
+.monthly-title-block h3 span { color:#9fa7d4;font-weight:400; }
+.light-mode .monthly-title-block h3 span { color:#7075c8; }
+.monthly-title-block p { margin:0;max-width:620px;color:var(--muted);font-size:11px;line-height:1.65; }
+.monthly-navigation { display:flex;align-items:center;gap:5px;flex:0 0 auto; }
+.monthly-nav-arrow,.monthly-today-button {
+  height:34px;display:grid;place-items:center;padding:0 10px;border:1px solid var(--border);border-radius:8px;
+  color:#a9b1ce;background:rgba(137,151,193,.045);font:500 10px 'IBM Plex Mono',monospace;transition:background .18s ease,border-color .18s ease,color .18s ease;
+}
+.monthly-nav-arrow { width:32px;padding:0;font:400 23px/1 'Inter',sans-serif; }
+.monthly-nav-arrow:hover,.monthly-today-button:hover { color:#f0f1ff;border-color:rgba(166,164,255,.42);background:rgba(166,164,255,.10); }
+.monthly-current-month { min-height:34px;display:flex;align-items:center;gap:8px;padding:0 11px;border:1px solid var(--border);border-radius:8px;color:var(--text);background:rgba(137,151,193,.055); }
+.monthly-current-month svg { color:var(--lime); }
+.monthly-current-month b { font:500 11px 'Inter',sans-serif;letter-spacing:-.15px;white-space:nowrap; }
+.monthly-today-button { height:31px;margin-left:3px;padding:0 10px;font:500 9px 'Inter',sans-serif; }
+.monthly-stats-row { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:20px;margin-bottom:18px; }
+.monthly-stat { min-width:0;display:flex;align-items:center;gap:10px;padding:11px 13px;border:1px solid var(--border-soft);border-radius:9px;background:rgba(137,151,193,.035); }
+.monthly-stat-icon { width:29px;height:29px;flex:0 0 29px;display:grid;place-items:center;border:1px solid rgba(166,164,255,.16);border-radius:8px;color:#b6b4ff;background:rgba(166,164,255,.09); }
+.monthly-stat-icon.habits-icon { color:#8bd6f4;border-color:rgba(131,212,245,.17);background:rgba(131,212,245,.08); }
+.monthly-stat-icon.days-icon { color:#d0b0ff;border-color:rgba(196,165,255,.17);background:rgba(196,165,255,.08); }
+.monthly-stat>div { display:grid;gap:5px;min-width:0; }
+.monthly-stat small { color:var(--subtle);font:500 7px 'IBM Plex Mono',monospace;letter-spacing:.75px;white-space:nowrap; }
+.monthly-stat b { color:var(--text);font:500 19px/1 'Space Grotesk',sans-serif;letter-spacing:-.7px;font-variant-numeric:tabular-nums; }
+.monthly-stat b i { color:var(--subtle);font:400 9px 'IBM Plex Mono',monospace;font-style:normal;letter-spacing:0; }
+.monthly-calendar-shell { padding:11px;border:1px solid var(--border-soft);border-radius:11px;background:rgba(6,9,17,.24); }
+.light-mode .monthly-calendar-shell { background:rgba(233,237,249,.35); }
+.monthly-weekday-row { display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-bottom:6px; }
+.monthly-weekday-row>span { padding:6px 7px;color:var(--subtle);font:500 8px 'IBM Plex Mono',monospace;letter-spacing:.8px;text-transform:uppercase; }
+.monthly-calendar-grid { display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px; }
+.monthly-day-empty { min-width:0;min-height:105px;border:1px solid transparent; }
+.monthly-day-cell {
+  position:relative;min-width:0;min-height:106px;display:flex;align-items:stretch;flex-direction:column;gap:7px;
+  padding:10px 10px 8px;border:1px solid rgba(137,151,193,.11);border-radius:9px;text-align:left;color:var(--text);
+  background:linear-gradient(145deg,rgba(24,29,46,.72),rgba(15,19,31,.72));
+  transition:transform .17s ease,border-color .17s ease,background .17s ease,box-shadow .17s ease;
+}
+.light-mode .monthly-day-cell { background:linear-gradient(145deg,#fff,#f8f9fe); }
+.monthly-day-cell:hover:not(.is-future) { transform:translateY(-1px);border-color:rgba(166,164,255,.34);background:rgba(166,164,255,.055); }
+.monthly-day-cell.is-selected { border-color:rgba(166,164,255,.55);background:linear-gradient(145deg,rgba(166,164,255,.12),rgba(131,212,245,.035));box-shadow:inset 0 0 0 1px rgba(166,164,255,.06),0 4px 14px rgba(0,0,0,.08); }
+.monthly-day-cell.is-today .monthly-day-top>b { color:#d2d0ff;background:rgba(166,164,255,.15);border-color:rgba(166,164,255,.28); }
+.monthly-day-cell.is-future { opacity:.6; }
+.monthly-day-cell.is-future:hover { transform:none; }
+.monthly-day-top { display:flex;align-items:center;justify-content:space-between;gap:4px;min-width:0; }
+.monthly-day-top>b { width:24px;height:24px;display:grid;place-items:center;border:1px solid transparent;border-radius:7px;color:#dfe3f5;font:500 11px 'IBM Plex Mono',monospace; }
+.monthly-day-top>i { color:#b9b5ff;font:500 6px 'IBM Plex Mono',monospace;letter-spacing:.3px;text-transform:uppercase;font-style:normal; }
+.monthly-day-task-count { display:flex;align-items:baseline;gap:4px;min-width:0;white-space:nowrap; }
+.monthly-day-task-count>strong { color:#d5d5ff;font:500 15px/1 'Space Grotesk',sans-serif;letter-spacing:-.35px;font-variant-numeric:tabular-nums; }
+.monthly-day-task-count>small,.monthly-day-habit-count>small { color:var(--subtle);font-size:8px; }
+.monthly-day-habit-count { display:flex;align-items:center;gap:5px;min-width:0;white-space:nowrap;color:#9fdaf2;font:500 9px 'IBM Plex Mono',monospace; }
+.monthly-habit-dot { width:5px;height:5px;flex:0 0 5px;border-radius:2px;background:#87d6f3; }
+.monthly-day-progress { display:block;width:100%;height:3px;margin-top:auto;border-radius:5px;background:rgba(137,151,193,.13);overflow:hidden; }
+.monthly-day-progress>i { display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#8589ec,#99d8f2);transition:width .24s ease; }
+.monthly-day-cell.is-today .monthly-day-progress>i { background:linear-gradient(90deg,#a6a4ff,#83d4f5); }
+.monthly-day-status { color:var(--subtle);font:500 6px 'IBM Plex Mono',monospace;letter-spacing:.45px;white-space:nowrap; }
+.monthly-calendar-legend { display:flex;align-items:center;gap:15px;flex-wrap:wrap;margin-top:12px;padding:0 2px;color:var(--subtle);font:400 8px 'Inter',sans-serif; }
+.monthly-calendar-legend>span { display:inline-flex;align-items:center;gap:6px; }
+.monthly-legend-task,.monthly-legend-habit,.monthly-legend-today { width:7px;height:7px;border-radius:2px;background:#a6a4ff; }
+.monthly-legend-habit { background:#83d4f5; }
+.monthly-legend-today { background:transparent;border:1px solid #a6a4ff; }
+.monthly-week-note { margin-left:auto;color:var(--subtle);font-size:8px; }
+.monthly-day-detail { margin-top:15px;padding:16px 16px 13px;border:1px solid var(--border-soft);border-radius:10px;background:rgba(137,151,193,.025); }
+.monthly-detail-header { display:flex;align-items:center;justify-content:space-between;gap:12px; }
+.monthly-detail-header h4 { margin:6px 0 4px;color:var(--text);font:500 17px 'Space Grotesk',sans-serif;letter-spacing:-.35px; }
+.monthly-detail-header p { margin:0;color:var(--muted);font-size:9px;line-height:1.5; }
+.monthly-detail-collapse { display:inline-flex;align-items:center;gap:8px;min-height:30px;padding:0 9px;border:1px solid var(--border);border-radius:7px;color:var(--muted);background:var(--panel-raised);font-size:8px;white-space:nowrap; }
+.monthly-detail-collapse:hover { color:var(--text);border-color:rgba(166,164,255,.32); }
+.monthly-detail-collapse span { font-size:14px;line-height:1; }
+.monthly-detail-columns { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px; }
+.monthly-detail-group { min-width:0;padding:11px 12px 6px;border:1px solid var(--border-soft);border-radius:9px;background:rgba(7,10,18,.18); }
+.light-mode .monthly-detail-group { background:rgba(240,242,250,.55); }
+.monthly-detail-group-title { display:flex;align-items:center;gap:8px;padding-bottom:9px;border-bottom:1px solid var(--border-soft); }
+.monthly-detail-group-title .monthly-stat-icon { width:24px;height:24px;flex-basis:24px;border-radius:6px; }
+.monthly-detail-group-title b { color:var(--text);font-size:10px;font-weight:550; }
+.monthly-detail-group-title>small { margin-left:auto;color:var(--subtle);font:500 8px 'IBM Plex Mono',monospace; }
+.monthly-detail-row { display:flex;align-items:center;gap:8px;min-width:0;min-height:44px;border-bottom:1px solid var(--border-soft); }
+.monthly-detail-row:last-child { border-bottom:0; }
+.monthly-detail-row.is-done .monthly-detail-item-copy>b { color:#a5a9ca;text-decoration:line-through;text-decoration-color:rgba(166,164,255,.48); }
+.monthly-detail-check { width:19px;height:19px;flex:0 0 19px;display:grid;place-items:center;padding:0;border:1px solid rgba(137,151,193,.28);border-radius:5px;color:#17182b;background:rgba(137,151,193,.06);transition:background .14s ease,border-color .14s ease; }
+.monthly-detail-check:hover:not(:disabled) { border-color:#a6a4ff; }
+.monthly-detail-check.checked { border-color:#a6a4ff;background:#a6a4ff;color:#151629; }
+.monthly-detail-check:disabled { opacity:.35;cursor:not-allowed; }
+.monthly-detail-emoji { width:22px;height:22px;flex:0 0 22px;display:grid;place-items:center;border-radius:6px;color:#b8b7ff;background:rgba(166,164,255,.08);font-size:11px; }
+.monthly-detail-item-copy { display:flex;flex-direction:column;gap:4px;flex:1;min-width:0; }
+.monthly-detail-item-copy>b { overflow:hidden;color:var(--text);font-size:9px;font-weight:500;text-overflow:ellipsis;white-space:nowrap; }
+.monthly-detail-item-copy>small { overflow:hidden;color:var(--subtle);font-size:7px;text-overflow:ellipsis;white-space:nowrap; }
+.monthly-item-status { flex:0 0 auto;color:var(--subtle);font:500 6px 'IBM Plex Mono',monospace;letter-spacing:.5px; }
+.monthly-item-status.is-done { color:#a9a6ff; }
+.monthly-detail-empty { margin:0;padding:14px 0;color:var(--subtle);font-size:9px; }
+@media (max-width:1100px) {
+  .monthly-day-cell { padding:8px 7px;min-height:99px; }
+  .monthly-day-task-count>strong { font-size:13px; }
+  .monthly-calendar-grid,.monthly-weekday-row { gap:4px; }
+}
+@media (max-width:760px) {
+  .monthly-activity { padding:16px 13px 13px; }
+  .monthly-activity-header { align-items:flex-start; }
+  .monthly-stats-row { gap:6px;margin-top:14px;margin-bottom:12px; }
+  .monthly-stat { gap:7px;padding:9px 8px; }
+  .monthly-stat-icon { width:25px;height:25px;flex-basis:25px; }
+  .monthly-stat small { font-size:6px;letter-spacing:.3px; }
+  .monthly-stat b { font-size:16px; }
+  .monthly-calendar-shell { padding:6px; }
+  .monthly-calendar-grid,.monthly-weekday-row { gap:3px; }
+  .monthly-weekday-row>span { padding:5px 3px;font-size:7px;letter-spacing:.2px; }
+  .monthly-day-cell { min-height:91px;padding:6px 5px;gap:6px;border-radius:7px; }
+  .monthly-day-top>b { width:20px;height:20px;font-size:9px; }
+  .monthly-day-top>i { font-size:5px; }
+  .monthly-day-task-count { gap:2px; }
+  .monthly-day-task-count>strong { font-size:12px; }
+  .monthly-day-task-count>small,.monthly-day-habit-count>small { font-size:6px; }
+  .monthly-day-habit-count { gap:3px;font-size:8px; }
+  .monthly-day-status { font-size:5px;letter-spacing:0; }
+  .monthly-calendar-legend { gap:9px;font-size:7px; }
+  .monthly-week-note { width:100%;margin:0; }
+  .monthly-detail-columns { gap:7px; }
+  .monthly-day-detail { padding:12px 10px 9px; }
+}
+@media (max-width:520px) {
+  .monthly-activity { padding:13px 9px 10px;border-radius:10px; }
+  .monthly-title-block h3 { font-size:20px; }
+  .monthly-title-block p { font-size:9px; }
+  .monthly-navigation { width:100%;justify-content:flex-start; }
+  .monthly-current-month { flex:1;justify-content:center; }
+  .monthly-stats-row { gap:4px; }
+  .monthly-stat { align-items:flex-start;flex-direction:column;gap:6px;padding:8px 6px; }
+  .monthly-stat small { font-size:5px;letter-spacing:.1px; }
+  .monthly-stat b { font-size:15px; }
+  .monthly-calendar-shell { padding:4px; }
+  .monthly-weekday-row,.monthly-calendar-grid { gap:2px; }
+  .monthly-weekday-row>span { padding:4px 0;text-align:center;font-size:6px;letter-spacing:0; }
+  .monthly-day-cell { min-height:68px;padding:5px 3px;gap:5px;border-radius:5px; }
+  .monthly-day-top>b { width:17px;height:17px;font-size:8px;border-radius:5px; }
+  .monthly-day-top>i { display:none; }
+  .monthly-day-task-count>strong { font-size:11px; }
+  .monthly-day-task-count>small,.monthly-day-habit-count>small { display:none; }
+  .monthly-day-task-count::after { content:'T';order:-1;color:var(--subtle);font:500 6px 'IBM Plex Mono',monospace; }
+  .monthly-day-habit-count::before { content:'H';color:var(--subtle);font:500 6px 'IBM Plex Mono',monospace; }
+  .monthly-day-habit-count { gap:2px;font-size:7px; }
+  .monthly-habit-dot { width:4px;height:4px;flex-basis:4px; }
+  .monthly-day-progress { height:2px; }
+  .monthly-day-status { font-size:0; }
+  .monthly-day-status::after { content:' ';font-size:5px; }
+  .monthly-detail-header { align-items:flex-start; }
+  .monthly-detail-header h4 { font-size:14px; }
+  .monthly-detail-collapse { padding:0 6px;font-size:7px; }
+  .monthly-detail-columns { grid-template-columns:minmax(0,1fr); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .monthly-day-cell,.monthly-day-progress>i,.monthly-nav-arrow,.monthly-today-button { transition:none; }
+}
