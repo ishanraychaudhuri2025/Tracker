@@ -75,7 +75,6 @@ function MomentumChart({ habits, today }: { habits: Habit[]; today: string }) {
     return { key, value: due.length ? Math.round((done / due.length) * 100) : 0, done, total: due.length };
   });
   const chartW = 660;
-  const chartH = 220;
   const left = 18;
   const right = 16;
   const top = 18;
@@ -105,10 +104,10 @@ function MomentumChart({ habits, today }: { habits: Habit[]; today: string }) {
       <div className="analytics-y-labels"><span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span></div>
       <svg viewBox="0 0 660 220" preserveAspectRatio="none" role="img" aria-label={range==='7D'?'Seven day consistency chart':'Thirty day consistency chart'}>
         <defs><linearGradient id="momentumArea" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#9cafff" stopOpacity=".27"/><stop offset="100%" stopColor="#9cafff" stopOpacity="0"/></linearGradient><linearGradient id="momentumLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#9aaaff"/><stop offset="55%" stopColor="#b6c2ff"/><stop offset="100%" stopColor="#c9ff75"/></linearGradient></defs>
-        {[18,60,102,144,186].map((y,index)=><line key={y} x1="18" x2="644" y1={y} y2={y} className="analytics-grid-line"/> )}
+        {[18,60,102,144,186].map((y)=><line key={y} x1="18" x2="644" y1={y} y2={y} className="analytics-grid-line"/> )}
         <path d={areaPath} fill="url(#momentumArea)" className="analytics-area-path"/>
         <path d={linePath} fill="none" stroke="url(#momentumLine)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="analytics-trend-path"/>
-        {points.map((point,index)=><g key={point.key} className="analytics-chart-point"><circle cx={point.x} cy={point.y} r={range==='7D'?4:2.4} className="analytics-chart-point-halo"/><circle cx={point.x} cy={point.y} r={range==='7D'?2:1.2} className="analytics-chart-point-core"><title>{labelFor(point.key)}: {point.value}% · {point.done}/{point.total} complete</title></circle></g>)}
+        {points.map((point)=><g key={point.key} className="analytics-chart-point"><circle cx={point.x} cy={point.y} r={range==='7D'?4:2.4} className="analytics-chart-point-halo"/><circle cx={point.x} cy={point.y} r={range==='7D'?2:1.2} className="analytics-chart-point-core"><title>{labelFor(point.key)}: {point.value}% · {point.done}/{point.total} complete</title></circle></g>)}
       </svg>
     </div>
     <div className="analytics-x-labels">{ticks.map((index)=><span key={series[index].key}>{labelFor(series[index].key)}</span>)}</div>
