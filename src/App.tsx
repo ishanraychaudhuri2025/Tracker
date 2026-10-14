@@ -389,30 +389,7 @@ function App() {
             </aside>
           </section>
 
-          <section className="analytics-table-panel">
-            <div className="analytics-table-header">
-              <div><span className="analytics-section-index">03 / ROUTINE PERFORMANCE</span><h2>Your routines <span>{habits.length.toString().padStart(2,'0')}</span></h2><p>Seven-day check-ins and current streaks at a glance.</p></div>
-              <button type="button" className="analytics-plain-button" onClick={() => setPage('Habits')}>All routines <ArrowRight size={13}/></button>
-            </div>
-            <div className="analytics-table-scroll">
-              <div className="analytics-table analytics-table-head"><span>ROUTINE</span><span>AREA</span><span>7-DAY ACTIVITY</span><span>CONSISTENCY</span><span>STREAK</span><span>TODAY</span></div>
-              {habits.slice().sort((a,b) => getCurrentStreak(b,today)-getCurrentStreak(a,today)).map((habit) => {
-                const dueDays = Array.from({length:7},(_,offset)=>shiftKey(today,-(6-offset))).filter((key)=>isDue(habit,key));
-                const checked = dueDays.filter((key)=>Boolean(habit.logs[key])).length;
-                const percent = dueDays.length ? Math.round((checked/dueDays.length)*100) : 0;
-                return <div className="analytics-table analytics-table-row" key={habit.id}>
-                  <button type="button" className="analytics-routine-name" onClick={() => {setPage('Habits');setFilter(habit.category);}}><span className={'analytics-routine-rank tone-' + habit.color}>{habit.emoji}</span><span><b>{habit.name}</b><small>{habit.cue || 'Build the routine'}</small></span></button>
-                  <span className="analytics-area-tag">{habit.category}</span>
-                  <div className="analytics-week-ticks">{Array.from({length:7},(_,offset)=>{const key=shiftKey(today,-(6-offset));const scheduled=isDue(habit,key);const logged=Boolean(habit.logs[key]);return <button type="button" key={key} disabled={!scheduled || key>today} className={'analytics-tick ' + (!scheduled?'not-due ':'') + (logged?'checked':'')} onClick={() => toggleHabit(habit.id,key)} aria-label={habit.name + ' ' + key + (logged?' completed':' not completed')} title={key + (logged?' · complete':scheduled?' · not logged':' · not scheduled')}>{logged?<Check size={10}/>:null}</button>;})}</div>
-                  <div className="analytics-consistency-cell"><span>{percent}%</span><i><b style={{width:percent+'%'}}/></i></div>
-                  <span className="analytics-streak-value"><Flame size={12}/>{getCurrentStreak(habit,today)}<small>d</small></span>
-                  <button type="button" className={'analytics-today-toggle ' + (habit.logs[today]?'checked':'')} onClick={() => toggleHabit(habit.id)} aria-label={(habit.logs[today]?'Uncheck ':'Complete ') + habit.name + ' today'}>{habit.logs[today]?<Check size={12}/>:<Plus size={12}/>}</button>
-                </div>;
-              })}
-              {habits.length===0 && <div className="analytics-no-habits">Your data will appear here when you add a routine. <button type="button" onClick={() => setShowHabitModal(true)}>Create first routine <Plus size={12}/></button></div>}
-            </div>
-            <div className="analytics-table-footer"><span><i className="analytics-footer-dot filled"/> Complete</span><span><i className="analytics-footer-dot"/> Not logged</span><span><i className="analytics-footer-dot outline"/> Not scheduled</span><button type="button" onClick={() => setPage('Planner')}>View all dates <ArrowUpRight size={12}/></button></div>
-          </section>
+          <WeeklyTracker habits={habits} today={today} onToggle={toggleHabit} />
 
           <footer className="analytics-footer"><span><BoltMark/> STREAKO ANALYTICS / PERSONAL DATA SYSTEM</span><span>YOUR PROGRESS, WITHOUT THE NOISE.</span></footer>
         </>}
@@ -453,6 +430,49 @@ function BoltMark() {
 }
 function StatCard({ icon, label, value, detail, tone }: { icon: ReactNode; label: string; value: string; detail: string; tone: string }) {
   return <div className="stat-card"><div className="stat-top"><span className={`stat-icon ${tone}`}>{icon}</span><span className="stat-indicator"><ArrowUpRight size={14} /></span></div><div className="stat-value">{value}</div><div className="stat-label">{label}</div><div className="stat-detail">{detail}</div></div>;
+}
+
+function WeeklyTracker({ habits, today, onToggle }: { habits: Habit[]; today: string; onToggle: (habitId: string, dayKey: string) => void }) {
+  const weekday = new Date(today + 'T12:00:00').getDay();
+  const monday = shiftKey(today, -((weekday + 6) % 7));
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const key = shiftKey(monday, index);
+    const due = habits.filter((habit) => isDue(habit, key));
+    const done = due.filter((habit) => Boolean(habit.logs[key])).length;
+    return { key, due: due.length, done, percent: due.length ? Math.round((done / due.length) * 100) : 0, future: key > today, label: new Date(key + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' }), date: new Date(key + 'T12:00:00').getDate() };
+  });
+  const weeklyDue = days.reduce((sum, day) => sum + (day.future ? 0 : day.due), 0);
+  const weeklyDone = days.reduce((sum, day) => sum + (day.future ? 0 : day.done), 0);
+  const weeklyPercent = weeklyDue ? Math.round((weeklyDone / weeklyDue) * 100) : 0;
+  return <section className="panel weekly-tracker-panel">
+    <div className="panel-heading weekly-heading">
+      <div><div className="panel-overline">THE SMALL WINS, MADE VISIBLE</div><h3>This week <span className="heading-count">{weeklyDone}/{weeklyDue}</span></h3></div>
+      <div className="weekly-heading-side"><span className="weekly-average"><span className="weekly-average-dot" /> {weeklyPercent}% logged</span><span className="weekly-hint">Tap any past day to edit</span></div>
+    </div>
+    <div className="weekly-chart" aria-label="Daily habit completion for this week">
+      {days.map((day, index) => <div className={'weekly-chart-day ' + (day.key === today ? 'is-today ' : '') + (day.future ? 'is-future' : '')} key={day.key}>
+        <div className="weekly-chart-top"><b>{day.future ? '—' : day.percent + '%'}</b><small>{day.future ? 'UP NEXT' : day.done + '/' + day.due}</small></div>
+        <div className="weekly-bar-track"><span style={{ height: (day.future ? 3 : Math.max(day.percent > 0 ? 10 : 3, day.percent)) + '%', animationDelay: (index * 45) + 'ms' }} /></div>
+        <div className="weekly-day-label"><b>{day.label}</b><small>{day.date}</small></div>
+      </div>)}
+    </div>
+    <div className="weekly-matrix-wrap"><div className="weekly-matrix" role="grid" aria-label="Habit check-ins for each day of the week">
+      <div className="weekly-matrix-cell weekly-matrix-label weekly-matrix-head" role="columnheader">ROUTINE</div>
+      {days.map((day) => <div key={day.key} role="columnheader" className={'weekly-matrix-cell weekly-matrix-day ' + (day.key === today ? 'is-today ' : '') + (day.future ? 'is-future' : '')}><b>{day.label.slice(0, 1)}</b><small>{day.date}</small></div>)}
+      {habits.map((habit) => <div className="weekly-matrix-row" role="row" key={habit.id}>
+        <div className="weekly-matrix-cell weekly-matrix-label" role="rowheader"><span className={'weekly-habit-dot tone-' + habit.color} /><span className="weekly-habit-name" title={habit.name}>{habit.name}</span><small>{habit.category}</small></div>
+        {days.map((day) => {
+          const done = Boolean(habit.logs[day.key]);
+          const scheduled = isDue(habit, day.key);
+          return <div className={'weekly-matrix-cell weekly-tick-cell ' + (day.key === today ? 'is-today' : '')} role="gridcell" key={day.key}>
+            {!scheduled ? <span className="weekly-not-due" aria-label="Not scheduled">·</span> : <button type="button" className={'weekly-tick ' + (done ? 'done ' : '') + (day.future ? 'future' : '')} disabled={day.future} onClick={() => onToggle(habit.id, day.key)} aria-label={(done ? 'Undo' : 'Log') + ' ' + habit.name + ' for ' + day.key} title={habit.name + ' · ' + day.key + ': ' + (done ? 'completed' : 'not logged')}><span>{done ? <Check size={12} strokeWidth={3} /> : null}</span></button>}
+          </div>;
+        })}
+      </div>)}
+    </div></div>
+    {habits.length === 0 && <div className="weekly-empty"><Zap size={16} /> Your weekly check-ins will show up here when you add a habit.</div>}
+    <div className="weekly-footer"><span><i className="weekly-legend-box done" /> Done</span><span><i className="weekly-legend-box" /> Not logged</span><span><i className="weekly-legend-box scheduled" /> Not scheduled</span><span className="weekly-footer-note">Future days stay locked until they happen.</span></div>
+  </section>;
 }
 
 function ActivityHeatmap({ habits, today, large = false }: { habits: Habit[]; today: string; large?: boolean }) {
