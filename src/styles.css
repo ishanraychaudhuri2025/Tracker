@@ -2318,3 +2318,155 @@ button, .planner-week-day, .planner-month-day { -webkit-touch-callout:none; }
   .app-shell:not(.light-mode) .analytics-table-header p,
   .app-shell:not(.light-mode) .analytics-page-header p { font-size: 11px; }
 }
+
+
+/* === Cross-app design system polish — October 2026 === */
+:root {
+  font-size: 14px;
+  color-scheme: dark;
+  --streako-accent: #aaa4ff;
+  --streako-accent-strong: #c5c1ff;
+  --streako-text: #f1f4fc;
+  --streako-muted: #b8c4dc;
+  --streako-subtle: #9aa9c5;
+}
+body {
+  background: #090c14;
+  font-size: 14px;
+  line-height: 1.55;
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #aaa4ff;
+  outline-offset: 3px;
+}
+.app-shell {
+  --lime: #aaa4ff;
+  --lime-strong: #c5c1ff;
+  --lime-soft: rgba(170,164,255,.14);
+  --violet: #c5b9ff;
+  --blue: #91d4ed;
+  --orange: #f2b58d;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.app-shell.light-mode {
+  color-scheme: light;
+  --bg: #f4f5fb;
+  --panel: #ffffff;
+  --panel-raised: #f8f8ff;
+  --panel-soft: #eff0fa;
+  --border: #dfe2f0;
+  --border-soft: #e8eaf5;
+  --text: #20253a;
+  --muted: #555f7b;
+  --subtle: #6d7894;
+  --lime: #7772dc;
+  --lime-strong: #625dd0;
+  --lime-soft: rgba(119,114,220,.12);
+  --violet: #766bd0;
+  --blue: #327fa6;
+  --orange: #a96336;
+  --shadow: rgba(36,42,78,.07);
+}
+.app-shell :is(h1,h2,h3,h4) {
+  font-family: 'Space Grotesk','Inter',sans-serif;
+  letter-spacing: -.035em;
+  text-wrap: balance;
+}
+.app-shell h1 { line-height: 1.12; font-weight: 600; }
+.app-shell h2 { line-height: 1.22; font-weight: 600; }
+.app-shell h3,.app-shell h4 { line-height: 1.3; font-weight: 600; }
+.app-shell p { line-height: 1.65; }
+.app-shell :is(.workspace-label,.sidebar-section-head,.panel-overline,.eyebrow,.analytics-kicker,.analytics-section-index,.analytics-table-head,.analytics-footer,.analytics-chart-legend,.analytics-y-labels,.analytics-x-labels,.analytics-chart-footer,.analytics-table-footer,.analytics-micro-note) {
+  color: #aab8d4;
+  font-size: 10px;
+  line-height: 1.55;
+  letter-spacing: .055em;
+}
+.app-shell :is(.nav-copy small,.sidebar-empty,.sidebar-tip p,.profile-copy small,.routine-mini,.stat-detail,.analytics-metric-bottom,.analytics-chart-heading p,.analytics-table-header p,.analytics-page-header p,.analytics-next-meta,.analytics-routine-name small) {
+  color: #b2bfd8;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.app-shell :is(button,input,select,textarea) { font-family: 'Inter',sans-serif; }
+.app-shell :is(.nav-item,.routine-mini,.icon-button,.secondary-button,.text-button,.primary-button,.date-chip,.review-date-chip,.planner-segment button,.planner-date-nav button,.planner-filter-chips button) {
+  -webkit-tap-highlight-color: transparent;
+}
+.app-shell .brand-mark {
+  color: #14172d;
+  background: linear-gradient(145deg,#c8c4ff 0%,#8d88f4 100%);
+  box-shadow: 0 5px 20px rgba(170,164,255,.2);
+}
+.app-shell .nav-item.active {
+  box-shadow: inset 2px 0 var(--lime);
+}
+.app-shell .nav-item.active .nav-icon,
+.app-shell .tip-icon {
+  color: var(--lime-strong);
+  border-color: rgba(170,164,255,.25);
+  background: var(--lime-soft);
+}
+.app-shell .primary-button,
+.app-shell .auth-submit {
+  background: linear-gradient(135deg,#c5c1ff 0%,#a7a2ff 100%);
+  border-color: #b5b0ff;
+  color: #111426;
+  box-shadow: 0 5px 18px rgba(170,164,255,.13);
+  transition: transform .2s cubic-bezier(.2,.75,.25,1),box-shadow .2s ease,filter .2s ease,background .2s ease;
+}
+.app-shell .primary-button:hover:not(:disabled),
+.app-shell .auth-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 9px 24px rgba(170,164,255,.22);
+  filter: brightness(1.04);
+}
+.app-shell :is(.secondary-button,.analytics-plain-button,.analytics-side-link,.analytics-chart-footer button,.analytics-table-footer>button) {
+  color: #d5daf0;
+  background: #171e2e;
+  border-color: #35415b;
+}
+.app-shell :is(.secondary-button,.analytics-plain-button,.analytics-side-link,.analytics-chart-footer button,.analytics-table-footer>button):hover {
+  color: #f4f3ff;
+  background: #202941;
+  border-color: #928df1;
+}
+.app-shell.light-mode :is(.secondary-button,.analytics-plain-button,.analytics-side-link,.analytics-chart-footer button,.analytics-table-footer>button) {
+  color: #343a5a;
+  background: #f4f4ff;
+  border-color: #d8d9f0;
+}
+.app-shell.light-mode :is(.secondary-button,.analytics-plain-button,.analytics-side-link,.analytics-chart-footer button,.analytics-table-footer>button):hover {
+  color: #242744;
+  background: #e9e9ff;
+  border-color: #aaa5ef;
+}
+.app-shell :is(.metric-card,.analytics-metric-card,.analytics-chart-panel,.analytics-side-card,.analytics-table-panel,.planner-panel,.planner-calendar-panel,.habit-panel,.focus-panel,.insight-panel,.stat-card) {
+  transition: transform .22s cubic-bezier(.2,.75,.25,1),border-color .22s ease,box-shadow .22s ease,background-color .22s ease;
+}
+.app-shell :is(.metric-card,.analytics-metric-card,.analytics-chart-panel,.analytics-side-card,.analytics-table-panel,.planner-panel,.planner-calendar-panel,.habit-panel,.focus-panel,.insight-panel,.stat-card):hover {
+  border-color: rgba(170,164,255,.36);
+}
+.app-shell :is(.nav-item,.routine-mini,.icon-button,.secondary-button,.text-button,.analytics-tick,.analytics-today-toggle) {
+  transition: color .18s ease,background-color .18s ease,border-color .18s ease,transform .18s ease,box-shadow .18s ease;
+}
+.app-shell :is(.nav-item,.routine-mini,.icon-button,.secondary-button,.text-button):focus-visible {
+  outline-color: #aaa4ff;
+}
+@media (max-width:760px) {
+  .app-shell { font-size: 14px; }
+  .app-shell :is(.nav-copy small,.sidebar-empty,.sidebar-tip p,.profile-copy small,.routine-mini,.stat-detail,.analytics-metric-bottom,.analytics-chart-heading p,.analytics-table-header p,.analytics-page-header p,.analytics-next-meta,.analytics-routine-name small) {
+    font-size: 11px;
+  }
+  .app-shell :is(.workspace-label,.sidebar-section-head,.panel-overline,.eyebrow,.analytics-kicker,.analytics-section-index,.analytics-table-head,.analytics-footer,.analytics-chart-legend,.analytics-y-labels,.analytics-x-labels,.analytics-chart-footer,.analytics-table-footer,.analytics-micro-note) {
+    font-size: 9px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-shell :is(.metric-card,.analytics-metric-card,.analytics-chart-panel,.analytics-side-card,.analytics-table-panel,.planner-panel,.planner-calendar-panel,.habit-panel,.focus-panel,.insight-panel,.stat-card,.primary-button,.secondary-button) {
+    transition: none;
+  }
+}
