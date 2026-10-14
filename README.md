@@ -79,5 +79,3 @@ These are design hypotheses based on published behavior research, not a claim th
 ## License
 
 MIT for this original code scaffold. Third-party packages retain their own licenses.
-
-<!-- temporary CI verification for the analytics dashboard redesign -->
