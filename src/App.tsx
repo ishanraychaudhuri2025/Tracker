@@ -564,7 +564,6 @@ function MonthlyActivityCalendar({
           onClick={() => { setSelectedDate(day.key); setShowDetails(true); }}
           aria-pressed={day.key === selectedDate}
           aria-label={day.key + ': ' + day.taskCount + ' of ' + day.taskTotal + ' tasks, ' + day.habitCount + ' of ' + day.habitTotal + ' habits completed'}
-          key={day.key}
         >
           <span className="monthly-day-top"><b>{day.day}</b>{day.isToday ? <i>today</i> : null}</span>
           <span className="monthly-day-task-count"><strong>{day.taskCount}</strong><small> / {day.taskTotal} tasks</small></span>
