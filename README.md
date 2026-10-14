@@ -35,6 +35,8 @@ Streako supports Supabase email/password accounts and stores each signed-in user
 4. In Supabase Authentication settings, ensure email/password is enabled and configure the production site URL and redirect allowlist to include the deployed Streako domain.
 5. Redeploy after adding the environment variables. New accounts may need to confirm their email, depending on the project's Auth settings.
 
+Password recovery includes a dedicated new-password form. Legacy guest-only local data is imported into a new account once and removed from the shared guest slot after successful import so later accounts do not inherit it.
+
 When cloud configuration is absent, the app remains in local-only mode rather than pretending account sync is active. Existing local workspace data is imported for the first signed-in account that has no cloud workspace. After that, workspaces are stored separately per account.
 
 ## Run locally
