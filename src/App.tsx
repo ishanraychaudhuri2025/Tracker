@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { CSSProperties, FormEvent, ReactNode } from 'react';
 import {
-  Activity, ArrowDownRight, ArrowRight, ArrowUpRight, BarChart3, Bell, BookOpen,
+  Activity, ArrowRight, ArrowUpRight, BarChart3, Bell, BookOpen,
   CalendarDays, CalendarRange, Check, CheckCheck, ChevronDown, CircleHelp, Clock3, Flame, Focus,
   Gauge, Leaf, ListTodo, Moon, MoreHorizontal, Plus, RotateCcw, Settings2, ShieldCheck,
   Sparkles, Sun, Target, Timer, Trophy, X, Zap,
@@ -115,14 +115,6 @@ function MomentumChart({ habits, today }: { habits: Habit[]; today: string }) {
   </section>;
 }
 
-function getTaskPeriod(task: Task): 'Morning' | 'Afternoon' | 'Evening' | 'Anytime' {
-  if (!task.time) return 'Anytime';
-  const hour = Number(task.time.split(':')[0]);
-  if (hour < 12) return 'Morning';
-  if (hour < 17) return 'Afternoon';
-  return 'Evening';
-}
-
 function isDue(habit: Habit, dayKey: string): boolean {
   const day = new Date(`${dayKey}T12:00:00`).getDay();
   if (habit.frequency === 'Weekdays') return day >= 1 && day <= 5;
@@ -168,8 +160,6 @@ function App() {
   const [page, setPage] = useState<Page>('Today');
   const [filter, setFilter] = useState<'All' | Category>('All');
   const [showHabitModal, setShowHabitModal] = useState(false);
-  const [showTaskInput, setShowTaskInput] = useState(false);
-  const [taskDraft, setTaskDraft] = useState('');
   const [habitDraft, setHabitDraft] = useState({ name: '', category: 'Craft' as Category, frequency: 'Daily' as Frequency, cue: '', minimum: '' });
   const [dark, setDark] = useState(true);
   const [focusRunning, setFocusRunning] = useState(false);
@@ -218,8 +208,6 @@ function App() {
   const dueHabits = useMemo(() => habits.filter((habit) => isDue(habit, today)), [habits, today]);
   const doneToday = dueHabits.filter((habit) => Boolean(habit.logs[today])).length;
   const todayTasks = tasks.filter((task) => taskOccursOn(task, today)).map((task) => ({ ...task, completed: taskIsDone(task, today) }));
-  const focusTask = todayTasks.find((task) => task.id === focusTaskId && !task.completed);
-  const doneTasks = todayTasks.filter((task) => task.completed).length;
   const completion = dueHabits.length ? Math.round((doneToday / dueHabits.length) * 100) : 0;
   const consistency = useMemo(() => {
     let possible = 0;
@@ -270,16 +258,6 @@ function App() {
     setShowHabitModal(false);
     setPage('Habits');
     setToast('Your new habit is ready. Start with the minimum version.');
-  };
-
-  const addTask = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const title = taskDraft.trim();
-    if (!title) return;
-    setTasks((current) => [...current, { id: `t-${crypto.randomUUID()}`, title, completed: false, priority: 'Normal', estimate: 15, date: today, category: 'Personal', time: '', recurrence: 'None', completedDates: [] }]);
-    setTaskDraft('');
-    setShowTaskInput(false);
-    setToast('Added to today’s plan');
   };
 
   const toggleTask = (id: string, dayKey = today) => setTasks((current) => current.map((task) => {
@@ -418,7 +396,7 @@ function App() {
             </div>
             <div className="analytics-table-scroll">
               <div className="analytics-table analytics-table-head"><span>ROUTINE</span><span>AREA</span><span>7-DAY ACTIVITY</span><span>CONSISTENCY</span><span>STREAK</span><span>TODAY</span></div>
-              {habits.slice().sort((a,b) => getCurrentStreak(b,today)-getCurrentStreak(a,today)).map((habit,index) => {
+              {habits.slice().sort((a,b) => getCurrentStreak(b,today)-getCurrentStreak(a,today)).map((habit) => {
                 const dueDays = Array.from({length:7},(_,offset)=>shiftKey(today,-(6-offset))).filter((key)=>isDue(habit,key));
                 const checked = dueDays.filter((key)=>Boolean(habit.logs[key])).length;
                 const percent = dueDays.length ? Math.round((checked/dueDays.length)*100) : 0;
@@ -477,57 +455,6 @@ function StatCard({ icon, label, value, detail, tone }: { icon: ReactNode; label
   return <div className="stat-card"><div className="stat-top"><span className={`stat-icon ${tone}`}>{icon}</span><span className="stat-indicator"><ArrowUpRight size={14} /></span></div><div className="stat-value">{value}</div><div className="stat-label">{label}</div><div className="stat-detail">{detail}</div></div>;
 }
 
-function HabitRow({ habit, completed, streak, onToggle }: { habit: Habit; completed: boolean; streak: number; onToggle: () => void }) {
-  const [expanded, setExpanded] = useState(false);
-  return <div className={`habit-row ${completed ? 'habit-complete' : ''}`}><button className={`habit-checkbox ${completed ? 'checked' : ''}`} type="button" onClick={onToggle} aria-label={`${completed ? 'Undo' : 'Complete'} ${habit.name}`}>{completed && <Check size={16} strokeWidth={2.7} />}</button><span className={`habit-emoji tone-${habit.color}`}>{habit.emoji}</span><div className="habit-row-copy"><div className="habit-title-line"><b>{habit.name}</b>{completed && <span className="logged-pill">DONE</span>}</div><p>{habit.cue ? `↳ ${habit.cue}` : habit.category}</p>{expanded && <p className="habit-insight-expanded">Minimum: {habit.minimum} · {habit.frequency}</p>}</div><div className="habit-streak"><Flame size={13}/><b>{streak}</b><small>day{streak === 1 ? '' : 's'}</small></div><button className="habit-more" type="button" aria-label={`Details for ${habit.name}`} title="Show habit details" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}><MoreHorizontal size={18} /></button></div>;
-}
-
-function TaskRow({ task, onToggle }: { task: Task; onToggle: () => void }) {
-  return <div className={`task-row ${task.completed ? 'task-complete' : ''}`}><button className={`todo-box ${task.completed ? 'checked' : ''}`} type="button" aria-label={`${task.completed ? 'Reopen' : 'Complete'} ${task.title}`} onClick={onToggle}>{task.completed && <Check size={13} />}</button><div className="task-copy"><b>{task.title}</b><span><Clock3 size={12} /> {task.estimate} min <i /> <span className={`priority-dot ${task.priority.toLowerCase()}`} /> {task.priority} priority</span></div><span className="task-arrow">{task.completed ? <CheckCheck size={15} /> : <ArrowDownRight size={15} />}</span></div>;
-}
-
-function WeeklyTracker({ habits, today, onToggle }: { habits: Habit[]; today: string; onToggle: (habitId: string, dayKey: string) => void }) {
-  const weekday = new Date(today + 'T12:00:00').getDay();
-  const monday = shiftKey(today, -((weekday + 6) % 7));
-  const days = Array.from({ length: 7 }, (_, index) => {
-    const key = shiftKey(monday, index);
-    const due = habits.filter((habit) => isDue(habit, key));
-    const done = due.filter((habit) => Boolean(habit.logs[key])).length;
-    return { key, due: due.length, done, percent: due.length ? Math.round((done / due.length) * 100) : 0, future: key > today, label: new Date(key + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' }), date: new Date(key + 'T12:00:00').getDate() };
-  });
-  const weeklyDue = days.reduce((sum, day) => sum + (day.future ? 0 : day.due), 0);
-  const weeklyDone = days.reduce((sum, day) => sum + (day.future ? 0 : day.done), 0);
-  const weeklyPercent = weeklyDue ? Math.round((weeklyDone / weeklyDue) * 100) : 0;
-  return <section className="panel weekly-tracker-panel">
-    <div className="panel-heading weekly-heading">
-      <div><div className="panel-overline">THE SMALL WINS, MADE VISIBLE</div><h3>This week <span className="heading-count">{weeklyDone}/{weeklyDue}</span></h3></div>
-      <div className="weekly-heading-side"><span className="weekly-average"><span className="weekly-average-dot" /> {weeklyPercent}% logged</span><span className="weekly-hint">Tap any past day to edit</span></div>
-    </div>
-    <div className="weekly-chart" aria-label="Daily habit completion for this week">
-      {days.map((day, index) => <div className={'weekly-chart-day ' + (day.key === today ? 'is-today ' : '') + (day.future ? 'is-future' : '')} key={day.key}>
-        <div className="weekly-chart-top"><b>{day.future ? '—' : day.percent + '%'}</b><small>{day.future ? 'UP NEXT' : day.done + '/' + day.due}</small></div>
-        <div className="weekly-bar-track"><span style={{ height: (day.future ? 3 : Math.max(day.percent > 0 ? 10 : 3, day.percent)) + '%', animationDelay: (index * 45) + 'ms' }} /></div>
-        <div className="weekly-day-label"><b>{day.label}</b><small>{day.date}</small></div>
-      </div>)}
-    </div>
-    <div className="weekly-matrix-wrap"><div className="weekly-matrix" role="grid" aria-label="Habit check-ins for each day of the week">
-      <div className="weekly-matrix-cell weekly-matrix-label weekly-matrix-head" role="columnheader">ROUTINE</div>
-      {days.map((day) => <div key={day.key} role="columnheader" className={'weekly-matrix-cell weekly-matrix-day ' + (day.key === today ? 'is-today ' : '') + (day.future ? 'is-future' : '')}><b>{day.label.slice(0, 1)}</b><small>{day.date}</small></div>)}
-      {habits.map((habit) => <div className="weekly-matrix-row" role="row" key={habit.id}>
-        <div className="weekly-matrix-cell weekly-matrix-label" role="rowheader"><span className={'weekly-habit-dot tone-' + habit.color} /><span className="weekly-habit-name" title={habit.name}>{habit.name}</span><small>{habit.category}</small></div>
-        {days.map((day) => {
-          const done = Boolean(habit.logs[day.key]);
-          const scheduled = isDue(habit, day.key);
-          return <div className={'weekly-matrix-cell weekly-tick-cell ' + (day.key === today ? 'is-today' : '')} role="gridcell" key={day.key}>
-            {!scheduled ? <span className="weekly-not-due" aria-label="Not scheduled">·</span> : <button type="button" className={'weekly-tick ' + (done ? 'done ' : '') + (day.future ? 'future' : '')} disabled={day.future} onClick={() => onToggle(habit.id, day.key)} aria-label={(done ? 'Undo' : 'Log') + ' ' + habit.name + ' for ' + day.key} title={habit.name + ' · ' + day.key + ': ' + (done ? 'completed' : 'not logged')}><span>{done ? <Check size={12} strokeWidth={3} /> : null}</span></button>}
-          </div>;
-        })}
-      </div>)}
-    </div></div>
-    {habits.length === 0 && <div className="weekly-empty"><Zap size={16} /> Your weekly check-ins will show up here when you add a habit.</div>}
-    <div className="weekly-footer"><span><i className="weekly-legend-box done" /> Done</span><span><i className="weekly-legend-box" /> Not logged</span><span><i className="weekly-legend-box scheduled" /> Not scheduled</span><span className="weekly-footer-note">Future days stay locked until they happen.</span></div>
-  </section>;
-}
 function ActivityHeatmap({ habits, today, large = false }: { habits: Habit[]; today: string; large?: boolean }) {
   const cells = Array.from({ length: 35 }, (_, index) => {
     const key = shiftKey(today, index - 34);
