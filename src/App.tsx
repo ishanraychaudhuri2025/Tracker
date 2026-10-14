@@ -184,6 +184,7 @@ function App() {
   const [focusTaskId, setFocusTaskId] = useState<string | null>(null);
   const [toast, setToast] = useState('');
   const [authSession, setAuthSession] = useState<Session | null>(null);
+  const [passwordRecovery, setPasswordRecovery] = useState(false);
   const [authReady, setAuthReady] = useState(!supabaseConfigured);
   const [workspaceReady, setWorkspaceReady] = useState(!supabaseConfigured);
   const [cloudStatus, setCloudStatus] = useState(supabaseConfigured ? 'Connecting…' : 'Saved locally');
@@ -220,6 +221,7 @@ function App() {
         if (!workspace) {
           const userSaved = localStorage.getItem(STORAGE_KEY + ':' + session.user.id);
           const guestSaved = userSaved ? null : localStorage.getItem(STORAGE_KEY);
+          const importedGuestSnapshot = !userSaved && guestSaved !== null;
           const candidate = userSaved ?? guestSaved;
           let localSnapshot: { habits?: unknown; tasks?: unknown; focusSessions?: unknown; preferences?: unknown } = {};
           try {
@@ -246,6 +248,7 @@ function App() {
             .single();
           if (!active || version !== requestVersion) return;
           if (createError) throw createError;
+          if (importedGuestSnapshot) localStorage.removeItem(STORAGE_KEY);
           workspace = created;
         }
 
@@ -271,9 +274,19 @@ function App() {
 
     const { data: { subscription } } = client.auth.onAuthStateChange((event, session) => {
       if (event === 'INITIAL_SESSION') return;
+      if (event === 'PASSWORD_RECOVERY' && session) {
+        requestVersion += 1;
+        setAuthSession(session);
+        setPasswordRecovery(true);
+        setAuthReady(true);
+        setWorkspaceReady(false);
+        setCloudStatus('Password reset');
+        return;
+      }
       if (event === 'SIGNED_OUT' || !session) {
         requestVersion += 1;
         setAuthSession(null);
+        setPasswordRecovery(false);
         setAuthReady(true);
         setWorkspaceReady(false);
         setCloudError('');
@@ -281,7 +294,8 @@ function App() {
         return;
       }
       setAuthSession(session);
-      if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'PASSWORD_RECOVERY') {
+      if (event === 'USER_UPDATED') setPasswordRecovery(false);
+      if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
         void hydrateWorkspace(session);
       }
     });
@@ -443,7 +457,8 @@ function App() {
   const timeText = `${String(Math.floor(focusSeconds / 60)).padStart(2, '0')}:${String(focusSeconds % 60).padStart(2, '0')}`;
   const timerProgress = 1 - focusSeconds / (focusPreset * 60 || 1);
 
-  if (supabaseConfigured && !authReady) {
+  if (supabaseConfigured && passwordRecovery) return <AuthScreen initialMode="update" />;
+    if (supabaseConfigured && !authReady) {
     return <div className="auth-loading-screen"><div className="auth-loading-mark"><BoltMark /></div><h1>Preparing your workspace</h1><p>Securely loading your routines and task history…</p></div>;
   }
   if (supabaseConfigured && !authSession) return <AuthScreen />;
