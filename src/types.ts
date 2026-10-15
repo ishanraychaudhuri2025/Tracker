@@ -14,6 +14,8 @@ export interface Habit {
   logs: Record<string, boolean>;
   createdAt: string;
   color: string;
+  reminderEnabled?: boolean;
+  reminderTime?: string;
 }
 
 export interface Task {
