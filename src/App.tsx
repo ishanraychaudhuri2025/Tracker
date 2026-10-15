@@ -598,7 +598,7 @@ function App() {
 
         {page === 'Insights' && <>
           <section className="page-intro"><div><div className="eyebrow"><span className="eyebrow-line" /> THE PATTERNS BEHIND PROGRESS</div><h1>Notice what <span>works.</span></h1><p className="welcome-sub">Use the evidence you create to make tomorrow easier.</p></div><div className="review-date-chip"><CalendarDays size={15} /> Last 7 days</div></section>
-          <section className="insights-stat-grid"><StatCard icon={<Activity size={17} />} label="Consistency" value={`${consistency}%`} detail="Of scheduled habit check-ins" tone="lime" /><StatCard icon={<CheckCheck size={17} />} label="Logged actions" value={String(totalWins)} detail="Across your habit history" tone="violet" /><StatCard icon={<Flame size={17} />} label="Active routines" value={String(activeStreaks)} detail="With a current streak" tone="orange" /></section>
+          <section className="insights-stat-grid"><StatCard icon={<Activity size={17} />} label="Consistency" value={habits.length ? `${consistency}%` : '—'} detail={habits.length ? "Of scheduled habit check-ins" : "Add a routine to establish a baseline"} tone="lime" /><StatCard icon={<CheckCheck size={17} />} label="Logged actions" value={String(totalWins)} detail="Across your habit history" tone="violet" /><StatCard icon={<Flame size={17} />} label="Active routines" value={String(activeStreaks)} detail="With a current streak" tone="orange" /></section>
           <div className="insight-activity"><MonthlyActivityCalendar habits={habits} tasks={tasks} today={today} onToggleHabit={toggleHabit} onToggleTask={toggleTask} /></div>
           <div className="content-grid insight-bottom"><section className="panel"><div className="panel-heading"><div><div className="panel-overline">WHAT THE DATA SAYS</div><h3>Your strongest routines</h3></div><Trophy size={18} className="muted-icon" /></div><div className="ranking-list">{[...habits].sort((a, b) => getBestStreak(b, today) - getBestStreak(a, today)).slice(0, 4).map((habit, index) => <div className="ranking-row" key={habit.id}><span className="rank-number">0{index + 1}</span><span className={`rank-emoji tone-${habit.color}`}>{habit.emoji}</span><span className="rank-name"><b>{habit.name}</b><small>{habit.category} · {habit.frequency.toLowerCase()}</small></span><span className="rank-streak"><Flame size={13} /> {getCurrentStreak(habit, today)} days</span><div className="rank-bar"><span style={{ width: `${Math.min(100, getBestStreak(habit, today) / Math.max(1, bestStreak) * 100)}%` }} /></div></div>)}{habits.length === 0 && <p className="quiet-empty">Add routines to start seeing patterns.</p>}</div></section><section className="panel reflection-panel"><div className="panel-heading"><div><div className="panel-overline">YOUR NEXT EXPERIMENT</div><h3>Make it easier</h3></div><Sparkles size={17} className="accent-icon" /></div><div className="reflection-quote">“Success is often a better-designed starting point.”</div><div className="experiment-row"><span className="experiment-number">01</span><div><b>Pick one habit to protect</b><p>Which routine would make the rest of your day feel better?</p></div></div><div className="experiment-row"><span className="experiment-number">02</span><div><b>Make a specific if–then plan</b><p>“After <em>your cue</em>, I’ll do <em>the smallest version</em>.”</p></div></div><div className="experiment-row"><span className="experiment-number">03</span><div><b>Review, don’t judge</b><p>At week’s end, adjust the cue, effort, or timing that got in the way.</p></div></div><button className="secondary-button full-button" type="button" onClick={() => setPage('Habits')}>Tune my habits <ArrowRight size={15} /></button></section></div>
           <section className="research-note"><div className="research-icon"><BookOpen size={17} /></div><div><b>Grounded in behavior research</b><p>Progress monitoring, context cues, and specific if–then plans are established approaches—not guarantees. This tracker turns them into repeatable prompts.</p></div><button type="button" onClick={() => setToast('Research references are included in the project README.')}><CircleHelp size={16} /> About the method</button></section>
@@ -637,15 +637,15 @@ function WeeklyTracker({ habits, today, onToggle }: { habits: Habit[]; today: st
   });
   const weeklyDue = days.reduce((sum, day) => sum + (day.future ? 0 : day.due), 0);
   const weeklyDone = days.reduce((sum, day) => sum + (day.future ? 0 : day.done), 0);
-  const weeklyPercent = weeklyDue ? Math.round((weeklyDone / weeklyDue) * 100) : 0;
+  const weeklyPercent = weeklyDue ? Math.round((weeklyDone / weeklyDue) * 100) : null;
   return <section className="panel weekly-tracker-panel">
     <div className="panel-heading weekly-heading">
       <div><div className="panel-overline">THE SMALL WINS, MADE VISIBLE</div><h3>This week <span className="heading-count">{weeklyDone}/{weeklyDue}</span></h3></div>
-      <div className="weekly-heading-side"><span className="weekly-average"><span className="weekly-average-dot" /> {weeklyPercent}% logged</span><span className="weekly-hint">Tap any past day to edit</span></div>
+      <div className="weekly-heading-side"><span className="weekly-average"><span className="weekly-average-dot" /> {weeklyPercent === null ? 'No check-ins yet' : `${weeklyPercent}% logged`}</span><span className="weekly-hint">Tap any past day to edit</span></div>
     </div>
     <div className="weekly-chart" aria-label="Daily habit completion for this week">
-      {days.map((day, index) => <div className={'weekly-chart-day ' + (day.key === today ? 'is-today ' : '') + (day.future ? 'is-future' : '')} key={day.key}>
-        <div className="weekly-chart-top"><b>{day.future ? '—' : day.percent + '%'}</b><small>{day.future ? 'UP NEXT' : day.done + '/' + day.due}</small></div>
+      {days.map((day, index) => <div className={'weekly-chart-day ' + (day.key === today ? 'is-today ' : '') + (day.future ? 'is-future ' : '') + (day.due === 0 && !day.future ? 'is-empty' : '')} key={day.key}>
+        <div className="weekly-chart-top"><b>{day.future || day.due === 0 ? '—' : day.percent + '%'}</b><small>{day.future ? 'UP NEXT' : day.due === 0 ? 'NO HABITS' : day.done + '/' + day.due}</small></div>
         <div className="weekly-bar-track"><span style={{ height: (day.future ? 3 : Math.max(day.percent > 0 ? 10 : 3, day.percent)) + '%', animationDelay: (index * 45) + 'ms' }} /></div>
         <div className="weekly-day-label"><b>{day.label}</b><small>{day.date}</small></div>
       </div>)}
@@ -742,8 +742,8 @@ function MonthlyActivityCalendar({
     </div>
 
     <div className="monthly-stats-row">
-      <div className="monthly-stat"><span className="monthly-stat-icon tasks-icon"><CheckCheck size={14}/></span><div><small>TASKS COMPLETED</small><b>{monthCompletedTasks}<i> / {monthDueTasks}</i></b></div></div>
-      <div className="monthly-stat"><span className="monthly-stat-icon habits-icon"><Target size={14}/></span><div><small>HABIT CHECK-INS</small><b>{monthCompletedHabits}<i> / {monthDueHabits}</i></b></div></div>
+      <div className="monthly-stat"><span className="monthly-stat-icon tasks-icon"><CheckCheck size={14}/></span><div><small>TASKS COMPLETED</small><b>{monthCompletedTasks}{monthDueTasks ? <i> / {monthDueTasks}</i> : <i> no tasks</i>}</b></div></div>
+      <div className="monthly-stat"><span className="monthly-stat-icon habits-icon"><Target size={14}/></span><div><small>HABIT CHECK-INS</small><b>{monthCompletedHabits}{monthDueHabits ? <i> / {monthDueHabits}</i> : <i> no routines</i>}</b></div></div>
       <div className="monthly-stat"><span className="monthly-stat-icon days-icon"><Activity size={14}/></span><div><small>ACTIVE DAYS</small><b>{activeDays}<i> / {monthDays.filter((day) => !day.isFuture).length}</i></b></div></div>
     </div>
 
@@ -753,16 +753,16 @@ function MonthlyActivityCalendar({
         {gridCells.map((day, index) => day ? <button
           type="button"
           key={day.key}
-          className={'monthly-day-cell ' + (day.key === selectedDate ? 'is-selected ' : '') + (day.isToday ? 'is-today ' : '') + (day.isFuture ? 'is-future ' : '') + (day.done > 0 ? 'has-progress' : '')}
+          className={'monthly-day-cell ' + (day.key === selectedDate ? 'is-selected ' : '') + (day.isToday ? 'is-today ' : '') + (day.isFuture ? 'is-future ' : '') + (day.done > 0 ? 'has-progress ' : '') + (day.total === 0 ? 'is-empty' : '')}
           onClick={() => { setSelectedDate(day.key); setShowDetails(true); }}
           aria-pressed={day.key === selectedDate}
           aria-label={day.key + ': ' + day.taskCount + ' of ' + day.taskTotal + ' tasks, ' + day.habitCount + ' of ' + day.habitTotal + ' habits completed'}
         >
           <span className="monthly-day-top"><b>{day.day}</b>{day.isToday ? <i>today</i> : null}</span>
-          <span className="monthly-day-task-count"><strong>{day.taskCount}</strong><small> / {day.taskTotal} tasks</small></span>
-          <span className="monthly-day-habit-count"><span className="monthly-habit-dot"/> {day.habitCount}<small> / {day.habitTotal} habits</small></span>
+          {day.total > 0 ? <><span className="monthly-day-task-count"><strong>{day.taskCount}</strong><small> / {day.taskTotal} tasks</small></span>
+          <span className="monthly-day-habit-count"><span className="monthly-habit-dot"/> {day.habitCount}<small> / {day.habitTotal} habits</small></span></> : <span className="monthly-day-no-activity">Nothing scheduled</span>}
           <span className="monthly-day-progress"><i style={{ width: day.isFuture ? '0%' : day.percent + '%' }}/></span>
-          <span className="monthly-day-status">{day.isFuture ? (day.total ? 'UP NEXT' : '—') : day.total ? day.percent + '% DONE' : 'NO ACTIVITY'}</span>
+          <span className="monthly-day-status">{day.isFuture ? (day.total ? 'UP NEXT' : '—') : day.total ? day.percent + '% DONE' : '—'}</span>
         </button> : <div key={'blank-' + index} className="monthly-day-empty" aria-hidden="true"/> )}
       </div>
       <div className="monthly-calendar-legend">
