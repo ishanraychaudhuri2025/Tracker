@@ -2759,3 +2759,56 @@ textarea:focus-visible,
   .welcome-row, .page-intro { margin-block: 22px 17px; }
   .welcome-row h1, .page-intro h1, .analytics-page-header h1 { font-size: 30px; letter-spacing: -1px; }
 }
+
+
+/* Oct 16 UI fixes: align current-day accents, separate Insights sections,
+   and give empty workspaces a quieter, truthful zero state. */
+.insight-activity {
+  display: block;
+  margin: 24px 0 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.monthly-activity { margin: 0; }
+.weekly-average-dot {
+  background: var(--violet);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--violet) 14%, transparent);
+}
+.weekly-chart-day.is-today {
+  background: color-mix(in srgb, var(--violet) 8%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--violet) 28%, transparent);
+}
+.weekly-chart-day.is-today .weekly-day-label b,
+.weekly-chart-day.is-today .weekly-day-label small,
+.weekly-matrix-day.is-today {
+  color: var(--violet);
+}
+.weekly-chart-day.is-today .weekly-bar-track > span {
+  background: linear-gradient(180deg, var(--violet), var(--blue));
+  box-shadow: 0 -2px 16px color-mix(in srgb, var(--violet) 16%, transparent);
+}
+.weekly-chart-day.is-empty .weekly-chart-top b,
+.weekly-chart-day.is-empty .weekly-chart-top small {
+  color: var(--subtle);
+}
+.weekly-chart-day.is-empty .weekly-bar-track > span,
+.weekly-chart-day.is-today.is-empty .weekly-bar-track > span {
+  background: color-mix(in srgb, var(--violet) 24%, var(--border));
+  box-shadow: none;
+}
+.monthly-day-no-activity {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  color: var(--subtle);
+  font-size: 9px;
+  line-height: 1.45;
+}
+.monthly-day-cell.is-empty .monthly-day-progress { opacity: .35; }
+.monthly-day-cell.is-empty .monthly-day-status { color: var(--subtle); }
+@media (max-width: 760px) {
+  .insight-activity { margin-top: 18px !important; }
+  .monthly-day-no-activity { font-size: 8px; }
+}
