@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, FormEvent, ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
@@ -25,6 +25,11 @@ const categories: Category[] = ['Mind', 'Body', 'Craft', 'Life'];
 const frequencies: Frequency[] = ['Daily', 'Weekdays', 'Weekends', '3× / week'];
 const categoryTone: Record<Category, string> = { Mind: 'violet', Body: 'lime', Craft: 'orange', Life: 'blue' };
 const categoryEmoji: Record<Category, string> = { Mind: '◌', Body: '↗', Craft: '✳', Life: '⌂' };
+type ActiveReminder = { habitId: string; habitName: string; reminderTime: string };
+const formatReminderTime = (time: string) => {
+  const [hours, minutes] = time.split(':').map(Number);
+  return new Date(2000, 0, 1, hours, minutes).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+};
 
 function MomentumChart({ habits, today }: { habits: Habit[]; today: string }) {
   const [range, setRange] = useState<'7D' | '30D'>('7D');
@@ -121,7 +126,12 @@ function App() {
   const [page, setPage] = useState<Page>('Today');
   const [filter, setFilter] = useState<'All' | Category>('All');
   const [showHabitModal, setShowHabitModal] = useState(false);
-  const [habitDraft, setHabitDraft] = useState({ name: '', category: 'Craft' as Category, frequency: 'Daily' as Frequency, cue: '', minimum: '' });
+  const [habitDraft, setHabitDraft] = useState({ name: '', category: 'Craft' as Category, frequency: 'Daily' as Frequency, cue: '', minimum: '', reminderEnabled: false, reminderTime: '09:00' });
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>(typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'unsupported');
+  const [activeReminder, setActiveReminder] = useState<ActiveReminder | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const firedRemindersRef = useRef<Set<string>>(new Set());
+  const snoozeTimeoutRef = useRef<number | null>(null);
   const [dark, setDark] = useState(true);
   const [focusRunning, setFocusRunning] = useState(false);
   const [focusPreset, setFocusPreset] = useState(25);
@@ -136,6 +146,80 @@ function App() {
   const [cloudStatus, setCloudStatus] = useState(supabaseConfigured ? 'Connecting…' : 'Saved locally');
   const [cloudError, setCloudError] = useState('');
   const today = todayKey();
+
+  const unlockReminderAudio = () => {
+    if (typeof window === 'undefined' || !window.AudioContext) return;
+    if (!audioContextRef.current) audioContextRef.current = new window.AudioContext();
+    const context = audioContextRef.current;
+    if (context.state === 'suspended') void context.resume().catch(() => undefined);
+  };
+
+  const playReminderMelody = () => {
+    const context = audioContextRef.current;
+    if (!context) return;
+    if (context.state === 'suspended') void context.resume().catch(() => undefined);
+    [784, 988, 1175, 988].forEach((frequency, index) => {
+      const startAt = context.currentTime + index * 0.22;
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(frequency, startAt);
+      gain.gain.setValueAtTime(0.0001, startAt);
+      gain.gain.exponentialRampToValueAtTime(0.15, startAt + 0.035);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.19);
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start(startAt);
+      oscillator.stop(startAt + 0.21);
+    });
+  };
+
+  const enableDesktopNotifications = async () => {
+    if (!('Notification' in window)) {
+      setNotificationPermission('unsupported');
+      setToast('Desktop notifications are not supported in this browser.');
+      return;
+    }
+    if (Notification.permission === 'denied') {
+      setNotificationPermission('denied');
+      setToast('Notifications are blocked. Open the site controls beside the address bar and allow notifications for Streako.');
+      return;
+    }
+    try {
+      const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
+      setToast(permission === 'granted'
+        ? 'Desktop notifications enabled for habit reminders.'
+        : 'Notifications were not allowed. Your in-app sound reminder can still work while Streako is open.');
+    } catch {
+      setToast('The browser could not request notification permission. Check this site’s browser settings.');
+    }
+  };
+
+  const stopReminderAlarm = () => {
+    setActiveReminder(null);
+    if (snoozeTimeoutRef.current !== null) {
+      window.clearTimeout(snoozeTimeoutRef.current);
+      snoozeTimeoutRef.current = null;
+    }
+  };
+
+  const snoozeReminderAlarm = () => {
+    if (!activeReminder) return;
+    const reminder = activeReminder;
+    setActiveReminder(null);
+    if (snoozeTimeoutRef.current !== null) window.clearTimeout(snoozeTimeoutRef.current);
+    snoozeTimeoutRef.current = window.setTimeout(() => {
+      setActiveReminder(reminder);
+      if ('Notification' in window && Notification.permission === 'granted') {
+        try {
+          new Notification(`Time for ${reminder.habitName}`, { body: 'Your snoozed Streako habit reminder is here.' });
+        } catch { /* In-app alarm still appears if desktop notifications are unavailable. */ }
+      }
+      snoozeTimeoutRef.current = null;
+    }, 10 * 60 * 1000);
+    setToast('Reminder snoozed for 10 minutes. Keep Streako open.');
+  };
 
   useEffect(() => {
     // Remove pre-reset demo workspaces from this browser. Do not reuse these
@@ -317,6 +401,53 @@ function App() {
   }, [focusRunning, focusSeconds]);
 
   useEffect(() => {
+    if (!habits.some((habit) => habit.reminderEnabled && habit.reminderTime)) return undefined;
+    const checkReminders = () => {
+      const now = new Date();
+      const currentTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+      const day = toKey(now);
+      const due = habits.filter((habit) => habit.reminderEnabled && habit.reminderTime === currentTime && !habit.logs[day]);
+      const fresh = due.filter((habit) => !firedRemindersRef.current.has(`${habit.id}:${day}:${currentTime}`));
+      if (!fresh.length) return;
+      fresh.forEach((habit) => {
+        firedRemindersRef.current.add(`${habit.id}:${day}:${currentTime}`);
+        if ('Notification' in window && Notification.permission === 'granted') {
+          try {
+            const notification = new Notification(`Time for ${habit.name}`, {
+              body: 'A small step is enough. Open Streako to check in.',
+              tag: `streako-${habit.id}-${day}`,
+            });
+            notification.onclick = () => {
+              window.focus();
+              notification.close();
+            };
+          } catch { /* The in-app alarm remains available if notification delivery is blocked. */ }
+        }
+      });
+      setActiveReminder((current) => current || {
+        habitId: fresh[0].id,
+        habitName: fresh[0].name,
+        reminderTime: currentTime,
+      });
+    };
+    const interval = window.setInterval(checkReminders, 10000);
+    checkReminders();
+    return () => window.clearInterval(interval);
+  }, [habits]);
+
+  useEffect(() => {
+    if (!activeReminder) return undefined;
+    playReminderMelody();
+    const interval = window.setInterval(playReminderMelody, 2800);
+    return () => window.clearInterval(interval);
+  }, [activeReminder]);
+
+  useEffect(() => () => {
+    if (snoozeTimeoutRef.current !== null) window.clearTimeout(snoozeTimeoutRef.current);
+    if (audioContextRef.current) void audioContextRef.current.close().catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
     if (!toast) return undefined;
     const timeout = window.setTimeout(() => setToast(''), 3200);
     return () => window.clearTimeout(timeout);
@@ -436,12 +567,17 @@ function App() {
       logs: {},
       createdAt: today,
       color: tone,
+      reminderEnabled: habitDraft.reminderEnabled,
+      ...(habitDraft.reminderEnabled ? { reminderTime: habitDraft.reminderTime } : {}),
     };
     setHabits((current) => [next, ...current]);
-    setHabitDraft({ name: '', category: 'Craft', frequency: 'Daily', cue: '', minimum: '' });
+    const reminderMessage = habitDraft.reminderEnabled
+      ? ` Reminder set for ${formatReminderTime(habitDraft.reminderTime)}; keep Streako open for alerts.`
+      : '';
+    setHabitDraft({ name: '', category: 'Craft', frequency: 'Daily', cue: '', minimum: '', reminderEnabled: false, reminderTime: '09:00' });
     setShowHabitModal(false);
     setPage('Habits');
-    setToast('Your new habit is ready. Start with the minimum version.');
+    setToast('Your new habit is ready.' + reminderMessage);
   };
 
   const toggleTask = (id: string, dayKey = today) => setTasks((current) => current.map((task) => {
@@ -510,7 +646,7 @@ function App() {
       <main className="main-content">
         <header className="topbar">
           <div className="breadcrumbs"><span>Workspace</span><span className="crumb-slash">/</span><b>{page}</b></div>
-          <div className="topbar-actions"><span className="local-save" title={cloudError || cloudStatus}><span className="save-dot" /> {cloudStatus}</span><IconButton label="Notifications" onClick={() => setToast('You’re all caught up. No reminders are scheduled yet.')}><Bell size={17} /></IconButton><button className="date-chip" type="button" onClick={() => setPage('Today')}><CalendarDays size={15} />{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}<ChevronDown size={13} /></button></div>
+          <div className="topbar-actions"><span className="local-save" title={cloudError || cloudStatus}><span className="save-dot" /> {cloudStatus}</span><IconButton label="Notifications and reminders" onClick={() => { const count = habits.filter((habit) => habit.reminderEnabled).length; setToast(count ? `${count} habit reminder${count === 1 ? '' : 's'} scheduled. Streako must remain open for alerts.` : 'No reminders yet. Enable one when creating a habit.'); }}><Bell size={17} /></IconButton><button className="date-chip" type="button" onClick={() => setPage('Today')}><CalendarDays size={15} />{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}<ChevronDown size={13} /></button></div>
         </header>
 
         {page === 'Today' && <>
@@ -610,7 +746,42 @@ function App() {
         </>}
       </main>
 
-      {showHabitModal && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowHabitModal(false); }}><section className="habit-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div className="modal-top"><div><div className="panel-overline">START SMALL, STAY CONSISTENT</div><h2 id="modal-title">Create a habit</h2><p>Design the start, not just the finish line.</p></div><IconButton label="Close modal" onClick={() => setShowHabitModal(false)}><X size={18} /></IconButton></div><form onSubmit={addHabit}><label className="field-label">Habit name<input autoFocus value={habitDraft.name} onChange={(event) => setHabitDraft((draft) => ({ ...draft, name: event.target.value }))} placeholder="e.g. Practice coding" maxLength={70} required /></label><label className="field-label">Area of life<div className="category-select">{categories.map((category) => <button type="button" key={category} className={habitDraft.category === category ? `selected ${categoryTone[category]}` : ''} onClick={() => setHabitDraft((draft) => ({ ...draft, category }))}><span>{categoryEmoji[category]}</span>{category}</button>)}</div></label><label className="field-label">Frequency<select value={habitDraft.frequency} onChange={(event) => setHabitDraft((draft) => ({ ...draft, frequency: event.target.value as Frequency }))}>{frequencies.map((frequency) => <option key={frequency}>{frequency}</option>)}</select></label><label className="field-label">When will you do it? <span className="field-hint">A reliable cue</span><input value={habitDraft.cue} onChange={(event) => setHabitDraft((draft) => ({ ...draft, cue: event.target.value }))} placeholder="After I finish breakfast…" maxLength={100} /></label><label className="field-label">Your minimum version <span className="field-hint">Make it hard to say no</span><input value={habitDraft.minimum} onChange={(event) => setHabitDraft((draft) => ({ ...draft, minimum: event.target.value }))} placeholder="Read one page, write one line…" maxLength={100} /></label><div className="if-then-preview"><span><Sparkles size={15} /></span><p><b>Your if–then plan</b><br />If {habitDraft.cue.trim() || 'my cue happens'}, then I’ll {habitDraft.minimum.trim() || 'do the smallest version'}.</p></div><div className="modal-actions"><button className="secondary-button" type="button" onClick={() => setShowHabitModal(false)}>Cancel</button><button className="primary-button" type="submit"><Plus size={15} /> Create habit</button></div></form></section></div>}
+      {showHabitModal && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowHabitModal(false); }}><section className="habit-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div className="modal-top"><div><div className="panel-overline">START SMALL, STAY CONSISTENT</div><h2 id="modal-title">Create a habit</h2><p>Design the start, not just the finish line.</p></div><IconButton label="Close modal" onClick={() => setShowHabitModal(false)}><X size={18} /></IconButton></div><form onSubmit={addHabit}><label className="field-label">Habit name<input autoFocus value={habitDraft.name} onChange={(event) => setHabitDraft((draft) => ({ ...draft, name: event.target.value }))} placeholder="e.g. Practice coding" maxLength={70} required /></label><label className="field-label">Area of life<div className="category-select">{categories.map((category) => <button type="button" key={category} className={habitDraft.category === category ? `selected ${categoryTone[category]}` : ''} onClick={() => setHabitDraft((draft) => ({ ...draft, category }))}><span>{categoryEmoji[category]}</span>{category}</button>)}</div></label><label className="field-label">Frequency<select value={habitDraft.frequency} onChange={(event) => setHabitDraft((draft) => ({ ...draft, frequency: event.target.value as Frequency }))}>{frequencies.map((frequency) => <option key={frequency}>{frequency}</option>)}</select></label><label className="field-label">When will you do it? <span className="field-hint">A reliable cue</span><input value={habitDraft.cue} onChange={(event) => setHabitDraft((draft) => ({ ...draft, cue: event.target.value }))} placeholder="After I finish breakfast…" maxLength={100} /></label><label className="field-label">Your minimum version <span className="field-hint">Make it hard to say no</span><input value={habitDraft.minimum} onChange={(event) => setHabitDraft((draft) => ({ ...draft, minimum: event.target.value }))} placeholder="Read one page, write one line…" maxLength={100} /></label>
+          <section className="reminder-settings" aria-label="Habit reminder settings">
+            <div className="reminder-settings-heading">
+              <span className="reminder-bell-icon"><Bell size={17} /></span>
+              <span className="reminder-settings-copy"><b>Habit reminder</b><small>Get a repeating chime and desktop notification at a chosen time.</small></span>
+              <label className="reminder-switch">
+                <input type="checkbox" checked={habitDraft.reminderEnabled} onChange={(event) => { const enabled = event.target.checked; if (enabled) unlockReminderAudio(); setHabitDraft((draft) => ({ ...draft, reminderEnabled: enabled })); }} />
+                <span className="reminder-switch-track" aria-hidden="true" />
+                <b>{habitDraft.reminderEnabled ? 'On' : 'Off'}</b>
+              </label>
+            </div>
+            {habitDraft.reminderEnabled && <div className="reminder-options">
+              <label className="field-label reminder-time-label">Reminder time
+                <input type="time" value={habitDraft.reminderTime} onChange={(event) => setHabitDraft((draft) => ({ ...draft, reminderTime: event.target.value }))} required />
+              </label>
+              <div className="reminder-notification-option">
+                <span className="reminder-permission-status">{notificationPermission === 'granted' ? 'Desktop notifications enabled' : notificationPermission === 'denied' ? 'Browser notifications are blocked' : notificationPermission === 'unsupported' ? 'Desktop notifications unavailable' : 'Allow desktop notifications'}</span>
+                <button type="button" className="secondary-button notification-permission-button" onClick={() => { void enableDesktopNotifications(); }}>{notificationPermission === 'granted' ? 'Enabled' : notificationPermission === 'denied' ? 'How to allow' : notificationPermission === 'unsupported' ? 'Not supported' : 'Enable'}</button>
+              </div>
+              <p className="reminder-footnote">Reminders run while Streako is open (including a minimized tab). Browser permission is needed for desktop notifications. You can snooze or stop the sound when it rings.</p>
+            </div>}
+          </section>
+          <div className="if-then-preview"><span><Sparkles size={15} /></span><p><b>Your if–then plan</b><br />If {habitDraft.cue.trim() || 'my cue happens'}, then I’ll {habitDraft.minimum.trim() || 'do the smallest version'}.</p></div><div className="modal-actions"><button className="secondary-button" type="button" onClick={() => setShowHabitModal(false)}>Cancel</button><button className="primary-button" type="submit"><Plus size={15} /> Create habit</button></div></form></section></div>}
+      {activeReminder && <div className="reminder-alarm-backdrop" role="presentation">
+        <section className="reminder-alarm" role="alertdialog" aria-modal="true" aria-labelledby="reminder-alarm-title">
+          <span className="reminder-alarm-icon"><Bell size={22} /></span>
+          <span className="reminder-alarm-kicker">STREAKO REMINDER · {formatReminderTime(activeReminder.reminderTime)}</span>
+          <h2 id="reminder-alarm-title">Time for {activeReminder.habitName}</h2>
+          <p>A small step counts. Check in now, or snooze this reminder for ten minutes.</p>
+          <div className="reminder-alarm-actions">
+            <button type="button" className="secondary-button" onClick={snoozeReminderAlarm}><Clock3 size={15} /> Snooze 10 min</button>
+            <button type="button" className="primary-button" onClick={() => { toggleHabit(activeReminder.habitId); stopReminderAlarm(); }}><Check size={15} /> Mark done</button>
+          </div>
+          <button type="button" className="reminder-stop-button" onClick={stopReminderAlarm}>Stop sound</button>
+        </section>
+      </div>}
       {toast && <div className="toast" role="status"><span><Check size={15} /></span>{toast}<button type="button" aria-label="Dismiss message" onClick={() => setToast('')}><X size={14} /></button></div>}
     </div>
   );
@@ -813,7 +984,7 @@ function HabitDetail({ habit, today, onToggle, onDelete }: { habit: Habit; today
   const streak = getCurrentStreak(habit, today);
   const best = getBestStreak(habit, today);
   const last7 = Array.from({ length: 7 }, (_, index) => shiftKey(today, index - 6));
-  return <div className="habit-detail-row"><div className={`detail-emoji tone-${habit.color}`}>{habit.emoji}</div><div className="detail-main"><div className="detail-title-row"><b>{habit.name}</b><span className={`category-tag ${categoryTone[habit.category]}`}>{habit.category}</span><span className="frequency-tag">{habit.frequency}</span></div><p>{habit.cue ? `Cue: ${habit.cue}` : 'Choose a consistent cue'} <span>·</span> Minimum: {habit.minimum}</p><div className="mini-week">{last7.map((key) => <span key={key} className={`${habit.logs[key] ? 'done' : ''} ${key === today ? 'current' : ''}`} title={`${key}: ${habit.logs[key] ? 'completed' : 'not logged'}`}>{new Date(`${key}T12:00:00`).toLocaleDateString('en-US', { weekday: 'narrow' })}</span>)}</div></div><div className="detail-stats"><span><Flame size={14} /> <b>{streak}</b> current</span><span><Trophy size={14} /> <b>{best}</b> best</span></div><div className="detail-actions"><button className={`detail-check ${habit.logs[today] ? 'checked' : ''}`} onClick={onToggle} type="button">{habit.logs[today] ? <><Check size={14} /> Done today</> : <><Plus size={14} /> Check in</>}</button><button className="delete-button" onClick={onDelete} type="button" aria-label={`Delete ${habit.name}`} title="Delete habit"><X size={15} /></button></div></div>;
+  return <div className="habit-detail-row"><div className={`detail-emoji tone-${habit.color}`}>{habit.emoji}</div><div className="detail-main"><div className="detail-title-row"><b>{habit.name}</b><span className={`category-tag ${categoryTone[habit.category]}`}>{habit.category}</span><span className="frequency-tag">{habit.frequency}</span></div><p>{habit.cue ? `Cue: ${habit.cue}` : 'Choose a consistent cue'} <span>·</span> Minimum: {habit.minimum} {habit.reminderEnabled && habit.reminderTime && <span className="habit-reminder-tag"><Bell size={11} /> Reminder {formatReminderTime(habit.reminderTime)}</span>}</p><div className="mini-week">{last7.map((key) => <span key={key} className={`${habit.logs[key] ? 'done' : ''} ${key === today ? 'current' : ''}`} title={`${key}: ${habit.logs[key] ? 'completed' : 'not logged'}`}>{new Date(`${key}T12:00:00`).toLocaleDateString('en-US', { weekday: 'narrow' })}</span>)}</div></div><div className="detail-stats"><span><Flame size={14} /> <b>{streak}</b> current</span><span><Trophy size={14} /> <b>{best}</b> best</span></div><div className="detail-actions"><button className={`detail-check ${habit.logs[today] ? 'checked' : ''}`} onClick={onToggle} type="button">{habit.logs[today] ? <><Check size={14} /> Done today</> : <><Plus size={14} /> Check in</>}</button><button className="delete-button" onClick={onDelete} type="button" aria-label={`Delete ${habit.name}`} title="Delete habit"><X size={15} /></button></div></div>;
 }
 
 function Principle({ icon, tag, title, copy }: { icon: ReactNode; tag: string; title: string; copy: string }) {
