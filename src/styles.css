@@ -2812,3 +2812,167 @@ textarea:focus-visible,
   .insight-activity { margin-top: 18px !important; }
   .monthly-day-no-activity { font-size: 8px; }
 }
+
+
+/* Product polish: predictable viewport layout and cleaner, more readable tracking UI. */
+html, body, #root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+html, body { max-width: 100%; }
+body { overflow-x: hidden; }
+.app-shell {
+  display: flex;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
+}
+.sidebar {
+  box-sizing: border-box;
+  min-width: 0;
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+.sidebar::-webkit-scrollbar { width: 0; height: 0; }
+.main-content {
+  box-sizing: border-box;
+  width: auto !important;
+  min-width: 0;
+  max-width: 100%;
+  flex: 1 1 0;
+  overflow-x: clip;
+}
+.main-content > * { min-width: 0; max-width: 100%; }
+.weekly-tracker-panel, .weekly-chart, .weekly-matrix-wrap, .insight-activity { min-width: 0; max-width: 100%; }
+
+/* One coherent lavender/ice-blue progress language. Zero is a baseline, not a bar. */
+.weekly-chart-day:nth-child(4n + 2) .weekly-bar-track > span,
+.weekly-chart-day:nth-child(4n + 3) .weekly-bar-track > span,
+.weekly-chart-day:nth-child(4n) .weekly-bar-track > span {
+  background: linear-gradient(180deg, var(--violet), var(--blue));
+  box-shadow: 0 -2px 14px color-mix(in srgb, var(--violet) 14%, transparent);
+}
+.weekly-chart-day.is-empty .weekly-bar-track > span,
+.weekly-chart-day.is-today.is-empty .weekly-bar-track > span {
+  width: 0;
+  min-height: 0 !important;
+  height: 0 !important;
+  box-shadow: none;
+}
+.weekly-chart-day.is-today:not(.is-empty) .weekly-bar-track > span {
+  background: linear-gradient(180deg, var(--violet), var(--blue));
+}
+.weekly-chart-top b { font-size: 12px; }
+.weekly-chart-top small { font-size: 10px; letter-spacing: .2px; }
+.weekly-day-label b { font-size: 11px; }
+.weekly-day-label small { font-size: 10px; }
+.weekly-matrix-head { font-size: 10px; }
+.weekly-matrix-day b, .weekly-matrix-day small { font-size: 10px; }
+.weekly-matrix-label { gap: 8px; }
+.weekly-habit-name { font-size: 12px; }
+.weekly-matrix-label > small { font-size: 10px; }
+.weekly-matrix-cell { min-height: 40px; }
+.weekly-footer { font-size: 11px; }
+.weekly-hint, .weekly-footer-note { font-size: 11px; }
+
+/* Readable labels in the Insights month view. */
+.monthly-stat small { font-size: 9px; letter-spacing: .45px; }
+.monthly-day-task-count > small, .monthly-day-habit-count > small { font-size: 9px; }
+.monthly-day-habit-count { font-size: 10px; }
+.monthly-day-status { font-size: 8px; letter-spacing: .25px; }
+.monthly-weekday-row > span { font-size: 10px; }
+.monthly-week-note { font-size: 10px; }
+.monthly-detail-header p, .monthly-detail-item-copy > small,
+.monthly-item-status, .monthly-detail-empty { font-size: 10px; }
+.monthly-detail-item-copy > b { font-size: 11px; }
+
+/* Larger labels and controls across the app, including the habit form. */
+.nav-copy b { font-size: 13px; }
+.nav-copy small { font-size: 11px; }
+.workspace-label, .sidebar-section-head { font-size: 11px; }
+.sidebar-tip b { font-size: 13px; }
+.sidebar-tip p, .profile-copy small { font-size: 11px; }
+.sidebar-tools button { font-size: 12px; }
+.eyebrow, .panel-overline, .analytics-kicker, .analytics-section-index { font-size: 11px; }
+.page-intro p, .welcome-sub { font-size: 14px; }
+.stat-detail, .analytics-metric-bottom, .analytics-next-meta { font-size: 12px; }
+.field-label { font-size: 12px; }
+.field-label input, .field-label select { font-size: 13px; min-height: 44px; }
+.field-hint { font-size: 11px; }
+.category-select button { font-size: 12px; min-height: 42px; }
+.modal-top p { font-size: 12px; line-height: 1.6; }
+.if-then-preview p { font-size: 12px; }
+.if-then-preview b { font-size: 13px; }
+.toast { font-size: 12px; }
+.ranking-row .rank-name b, .rank-name small, .rank-number, .rank-streak { font-size: 11px; }
+.experiment-row b { font-size: 12px; }
+.experiment-row p, .research-note p, .research-note b { font-size: 12px; }
+.focus-task-choice b { font-size: 12px; }
+.focus-task-choice small, .focus-rule-panel p, .choose-task-panel > p { font-size: 12px; }
+.analytics-footer { font-size: 9px; }
+
+/* Reminder settings and the ringing dialog. */
+.reminder-settings {
+  padding: 15px;
+  border: 1px solid color-mix(in srgb, var(--violet) 24%, var(--border));
+  border-radius: 13px;
+  background: linear-gradient(140deg, color-mix(in srgb, var(--violet) 7%, var(--panel)), var(--panel));
+}
+.reminder-settings-heading { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.reminder-bell-icon, .reminder-alarm-icon {
+  display: grid; place-items: center; flex: 0 0 36px; width: 36px; height: 36px;
+  border-radius: 11px; color: var(--violet); background: color-mix(in srgb, var(--violet) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--violet) 24%, transparent);
+}
+.reminder-settings-copy { display: grid; gap: 4px; min-width: 0; flex: 1; }
+.reminder-settings-copy b { color: var(--text); font-size: 13px; }
+.reminder-settings-copy small { color: var(--muted); font-size: 11px; line-height: 1.5; }
+.reminder-switch { display: inline-flex; align-items: center; gap: 7px; flex: 0 0 auto; cursor: pointer; color: var(--muted); font-size: 11px; }
+.reminder-switch input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.reminder-switch-track { position: relative; width: 37px; height: 21px; border-radius: 99px; background: var(--panel-soft); border: 1px solid var(--border); transition: background .2s ease, border-color .2s ease; }
+.reminder-switch-track::after { content: ""; position: absolute; width: 13px; height: 13px; left: 3px; top: 3px; border-radius: 50%; background: var(--muted); transition: transform .2s ease, background .2s ease; }
+.reminder-switch input:checked + .reminder-switch-track { background: color-mix(in srgb, var(--violet) 30%, var(--panel)); border-color: var(--violet); }
+.reminder-switch input:checked + .reminder-switch-track::after { transform: translateX(16px); background: var(--violet); }
+.reminder-switch input:focus-visible + .reminder-switch-track { outline: 2px solid var(--violet); outline-offset: 3px; }
+.reminder-switch > b { min-width: 19px; }
+.reminder-options { display: grid; gap: 11px; margin-top: 15px; padding-top: 14px; border-top: 1px solid var(--border-soft); }
+.reminder-time-label { max-width: 210px; }
+.reminder-notification-option { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.reminder-permission-status { color: var(--muted); font-size: 12px; }
+.notification-permission-button { min-height: 36px; padding: 0 12px; font-size: 12px; }
+.reminder-footnote { margin: 0; color: var(--subtle); font-size: 11px; line-height: 1.6; }
+.habit-reminder-tag { display: inline-flex; align-items: center; gap: 4px; color: var(--violet); font-size: 11px; white-space: nowrap; }
+.reminder-alarm-backdrop { position: fixed; z-index: 50; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(5,8,16,.72); backdrop-filter: blur(12px); }
+.reminder-alarm {
+  width: min(100%, 440px); display: flex; align-items: center; flex-direction: column; text-align: center;
+  padding: 30px 28px 24px; border-radius: 22px; border: 1px solid color-mix(in srgb, var(--violet) 38%, var(--border));
+  background: linear-gradient(150deg, var(--panel-raised), var(--bg)); box-shadow: 0 30px 110px rgba(0,0,0,.38);
+  animation: modal-in .24s cubic-bezier(.2,.8,.2,1);
+}
+.reminder-alarm-icon { width: 58px; height: 58px; flex-basis: 58px; margin-bottom: 17px; color: var(--violet); animation: reminder-pulse 1.8s ease-in-out infinite; }
+.reminder-alarm-kicker { color: var(--violet); font-size: 10px; letter-spacing: 1.2px; font-weight: 700; }
+.reminder-alarm h2 { margin: 10px 0 8px; color: var(--text); font-size: clamp(22px,4vw,29px); letter-spacing: -.8px; line-height: 1.15; overflow-wrap: anywhere; }
+.reminder-alarm p { max-width: 34ch; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
+.reminder-alarm-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 9px; margin-top: 24px; width: 100%; }
+.reminder-alarm-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 43px; padding: 0 14px; font-size: 12px; }
+.reminder-stop-button { margin-top: 15px; padding: 6px 10px; border: 0; background: transparent; color: var(--subtle); font-size: 12px; }
+.reminder-stop-button:hover { color: var(--text); }
+@keyframes reminder-pulse { 0%,100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--violet) 0%, transparent); } 50% { box-shadow: 0 0 0 9px color-mix(in srgb, var(--violet) 10%, transparent); } }
+
+@media (max-width: 850px) {
+  .sidebar { scrollbar-width: none; }
+  .main-content { width: auto !important; max-width: calc(100vw - 73px); }
+  .monthly-calendar-grid, .monthly-weekday-row { gap: 4px; }
+}
+@media (max-width: 560px) {
+  .main-content { max-width: calc(100vw - 49px); }
+  .reminder-settings { padding: 12px; }
+  .reminder-settings-heading { align-items: flex-start; flex-wrap: wrap; }
+  .reminder-switch { margin-left: 47px; }
+  .reminder-time-label { max-width: none; }
+  .reminder-alarm { padding: 24px 17px 20px; }
+  .reminder-alarm-actions { flex-direction: column-reverse; }
+  .reminder-alarm-actions button { width: 100%; }
+}
