@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import type { Category, Frequency, Habit, Page, Task } from './types';
 import { PlannerPage, taskIsDone, taskOccursOn } from './Planner';
+import TasksPage from './TasksPage';
 import AuthScreen from './components/AuthScreen';
 import { supabase, supabaseConfigured } from './lib/supabase';
 
@@ -22,7 +23,7 @@ const shiftKey = (key: string, delta: number) => {
   return toKey(next);
 };
 const categories: Category[] = ['Mind', 'Body', 'Craft', 'Life'];
-const frequencies: Frequency[] = ['Daily', 'Weekdays', 'Weekends', '3× / week'];
+const frequencies: Frequency[] = ['Daily', 'Weekdays', 'Weekends', '3× / week', 'Custom'];
 const categoryTone: Record<Category, string> = { Mind: 'violet', Body: 'lime', Craft: 'orange', Life: 'blue' };
 const categoryEmoji: Record<Category, string> = { Mind: '◌', Body: '↗', Craft: '✳', Life: '⌂' };
 type ActiveReminder = { habitId: string; habitName: string; reminderTime: string; reminderSoundUrl?: string };
@@ -43,7 +44,7 @@ function parseReminderMedia(input?: string): ReminderMedia | null {
       return {
         provider: 'YouTube',
         originalUrl: parsed.toString(),
-        embedUrl: 'https://www.youtube-nocookie.com/embed/' + videoId + '?autoplay=1&rel=0&playsinline=1',
+        embedUrl: 'https://www.youtube-nocookie.com/embed/' + videoId + '?autoplay=1&mute=0&controls=1&rel=0&playsinline=1&loop=1&playlist=' + videoId + '&enablejsapi=1&origin=' + encodeURIComponent(window.location.origin),
       };
     }
     if (host === 'open.spotify.com') {
@@ -56,7 +57,7 @@ function parseReminderMedia(input?: string): ReminderMedia | null {
       return {
         provider: 'Spotify',
         originalUrl: parsed.toString(),
-        embedUrl: 'https://open.spotify.com/embed/' + type + '/' + mediaId + '?utm_source=generator',
+        embedUrl: 'https://open.spotify.com/embed/' + type + '/' + mediaId + '?utm_source=generator&autoplay=1',
       };
     }
   } catch {
@@ -120,11 +121,27 @@ function MomentumChart({ habits, today }: { habits: Habit[]; today: string }) {
   </section>;
 }
 
+function habitEndKey(habit: Habit): string | null {
+  const durationMonths = Number(habit.durationMonths || 0);
+  if (!durationMonths || !habit.createdAt) return null;
+  const [year, month, day] = habit.createdAt.split('-').map(Number);
+  const monthIndex = year * 12 + (month - 1) + durationMonths;
+  const endYear = Math.floor(monthIndex / 12);
+  const endMonthIndex = monthIndex % 12;
+  const lastDay = new Date(endYear, endMonthIndex + 1, 0, 12).getDate();
+  const endDay = Math.min(day, lastDay);
+  return toKey(new Date(endYear, endMonthIndex, endDay, 12));
+}
+
 function isDue(habit: Habit, dayKey: string): boolean {
+  if (habit.createdAt && dayKey < habit.createdAt) return false;
+  const endKey = habitEndKey(habit);
+  if (endKey && dayKey >= endKey) return false;
   const day = new Date(`${dayKey}T12:00:00`).getDay();
   if (habit.frequency === 'Weekdays') return day >= 1 && day <= 5;
   if (habit.frequency === 'Weekends') return day === 0 || day === 6;
   if (habit.frequency === '3× / week') return [2, 4, 6].includes(day);
+  if (habit.frequency === 'Custom') return Boolean(habit.scheduleDays?.includes(day));
   return true;
 }
 
@@ -166,10 +183,12 @@ function App() {
   const [filter, setFilter] = useState<'All' | Category>('All');
   const [showHabitModal, setShowHabitModal] = useState(false);
   const [editingHabitId, setEditingHabitId] = useState<string | null>(null);
-  const emptyHabitDraft = { name: '', category: 'Craft' as Category, frequency: 'Daily' as Frequency, cue: '', minimum: '', reminderEnabled: false, reminderTime: '09:00', reminderSoundUrl: '' };
+  const emptyHabitDraft = { name: '', category: 'Craft' as Category, frequency: 'Daily' as Frequency, cue: '', minimum: '', reminderEnabled: false, reminderTime: '09:00', reminderSoundUrl: '', customDays: [1, 2, 3, 4, 5], durationMonths: 0, timerMinutes: 0 };
   const [habitDraft, setHabitDraft] = useState(emptyHabitDraft);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>(typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'unsupported');
   const [activeReminder, setActiveReminder] = useState<ActiveReminder | null>(null);
+  const [reminderSoundStopped, setReminderSoundStopped] = useState(false);
+  const [reminderMediaReload, setReminderMediaReload] = useState(0);
   const audioContextRef = useRef<AudioContext | null>(null);
   const firedRemindersRef = useRef<Set<string>>(new Set());
   const snoozeTimeoutRef = useRef<number | null>(null);
@@ -448,7 +467,7 @@ function App() {
       const now = new Date();
       const currentTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
       const day = toKey(now);
-      const due = habits.filter((habit) => habit.reminderEnabled && habit.reminderTime === currentTime && !habit.logs[day]);
+      const due = habits.filter((habit) => habit.reminderEnabled && isDue(habit, day) && habit.reminderTime === currentTime && !habit.logs[day]);
       const fresh = due.filter((habit) => !firedRemindersRef.current.has(`${habit.id}:${day}:${currentTime}`));
       if (!fresh.length) return;
       fresh.forEach((habit) => {
@@ -479,14 +498,14 @@ function App() {
   }, [habits]);
 
   useEffect(() => {
-    if (!activeReminder) return undefined;
-    // A custom player is shown for linked music; one native chime still alerts
-    // the user because browser autoplay policies can block embedded media.
+    if (!activeReminder || reminderSoundStopped) return undefined;
+    // Repeat the native alarm while the reminder is open. Linked YouTube audio
+    // also attempts autoplay + loop; this chime is the fallback if the browser
+    // refuses audible autoplay for the embedded player.
     playReminderMelody();
-    if (activeReminder.reminderSoundUrl) return undefined;
     const interval = window.setInterval(playReminderMelody, 2800);
     return () => window.clearInterval(interval);
-  }, [activeReminder]);
+  }, [activeReminder, reminderSoundStopped]);
 
   useEffect(() => () => {
     if (snoozeTimeoutRef.current !== null) window.clearTimeout(snoozeTimeoutRef.current);
@@ -607,6 +626,16 @@ function App() {
       reminderEnabled: Boolean(habit.reminderEnabled),
       reminderTime: habit.reminderTime || '09:00',
       reminderSoundUrl: habit.reminderSoundUrl || '',
+      customDays: habit.scheduleDays ?? [1, 2, 3, 4, 5],
+      durationMonths: habit.durationMonths ?? 0,
+      timerMinutes: habit.timerMinutes ?? 0,
+    });
+    setShowHabitModal(true);
+  };
+
+ 2, 3, 4, 5],
+      durationMonths: habit.durationMonths ?? 0,
+      timerMinutes: habit.timerMinutes ?? 0,
     });
     setShowHabitModal(true);
   };
@@ -660,6 +689,19 @@ function App() {
     setToast((wasEditing ? 'Habit updated.' : 'Your new habit is ready.') + reminderMessage);
   };
 
+urrent]);
+    }
+    const wasEditing = Boolean(existing);
+    const reminderMessage = habitDraft.reminderEnabled
+      ? ' Reminder set for ' + formatReminderTime(habitDraft.reminderTime) + '; keep Cadence open for alerts.'
+      : '';
+    setHabitDraft({ ...emptyHabitDraft });
+    setEditingHabitId(null);
+    setShowHabitModal(false);
+    setPage('Habits');
+    setToast((wasEditing ? 'Habit updated.' : 'Your new habit is ready.') + reminderMessage);
+  };
+
   const toggleTask = (id: string, dayKey = today) => setTasks((current) => current.map((task) => {
     if (task.id !== id) return task;
     if ((task.recurrence ?? 'None') === 'None') return task.date === dayKey ? { ...task, completed: !task.completed } : task;
@@ -693,6 +735,7 @@ function App() {
         <nav className="nav-list" aria-label="Main navigation">
           {([
             { label: 'Today' as Page, icon: Gauge, sub: 'Your daily dashboard' },
+            { label: 'Tasks' as Page, icon: ListTodo, sub: 'Plan and finish work' },
             { label: 'Planner' as Page, icon: CalendarDays, sub: 'Daily, weekly & monthly' },
             { label: 'Habits' as Page, icon: Target, sub: 'Routines that stick' },
             { label: 'Insights' as Page, icon: BarChart3, sub: 'Patterns & progress' },
@@ -802,6 +845,8 @@ function App() {
           <footer className="analytics-footer"><span><CadenceMark/> CADENCE / PERSONAL PERFORMANCE SYSTEM</span><span>YOUR PROGRESS, WITHOUT THE NOISE.</span></footer>
         </>}
   
+        {page === 'Tasks' && <TasksPage tasks={tasks} today={today} onToggleTask={toggleTask} onAddTask={addPlannerTask} onDeleteTask={(taskId) => { setTasks((current) => current.filter((task) => task.id !== taskId)); setToast('Task removed.'); }} />}
+
         {page === 'Planner' && <PlannerPage habits={habits} tasks={tasks} today={today} onToggleHabit={toggleHabit} onToggleTask={toggleTask} onAddTask={addPlannerTask} />}
 
         {page === 'Habits' && <>
@@ -843,12 +888,12 @@ function App() {
               <label className="field-label reminder-sound-label">Custom music link <span className="field-hint">Optional · YouTube or Spotify</span>
                 <input type="url" value={habitDraft.reminderSoundUrl} onChange={(event) => setHabitDraft((draft) => ({ ...draft, reminderSoundUrl: event.target.value }))} placeholder="https://open.spotify.com/track/…" autoComplete="url" />
               </label>
-              <p className="reminder-music-help">Add a song, album or playlist. When the alarm appears, Cadence will show its player; YouTube and Spotify may require you to press Play or sign in. A Cadence chime remains as a fallback.</p>
+              <p className="reminder-music-help">YouTube links attempt to autoplay and loop. Browsers can block audible autoplay until you interact with the player; Spotify playback is controlled by its embed. The repeating Cadence chime stays active as a fallback until you stop it or mark the habit done.</p>
               <div className="reminder-notification-option">
                 <span className="reminder-permission-status">{notificationPermission === 'granted' ? 'Desktop notifications enabled' : notificationPermission === 'denied' ? 'Browser notifications are blocked' : notificationPermission === 'unsupported' ? 'Desktop notifications unavailable' : 'Allow desktop notifications'}</span>
                 <button type="button" className="secondary-button notification-permission-button" onClick={() => { void enableDesktopNotifications(); }}>{notificationPermission === 'granted' ? 'Enabled' : notificationPermission === 'denied' ? 'How to allow' : notificationPermission === 'unsupported' ? 'Not supported' : 'Enable'}</button>
               </div>
-              <p className="reminder-footnote">Reminders run while Cadence is open (including a minimized tab). Browser permission is needed for desktop notifications. You can snooze or stop the sound when it rings.</p>
+              <p className="reminder-footnote">Reminders run while Cadence is open (including a minimized tab). Browser permission is needed for desktop notifications. Use Stop sound to silence the looping alarm, or Mark done to close it.</p>
             </div>}
           </section>
           <div className="if-then-preview"><span><Sparkles size={15} /></span><p><b>Your if–then plan</b><br />If {habitDraft.cue.trim() || 'my cue happens'}, then I’ll {habitDraft.minimum.trim() || 'do the smallest version'}.</p></div><div className="modal-actions"><button className="secondary-button" type="button" onClick={() => { setShowHabitModal(false); setEditingHabitId(null); setHabitDraft({ ...emptyHabitDraft }); }}>Cancel</button><button className="primary-button" type="submit">{editingHabitId ? <><Check size={15} /> Save changes</> : <><Plus size={15} /> Create habit</>}</button></div></form></section></div>}
@@ -858,9 +903,10 @@ function App() {
           <span className="reminder-alarm-kicker">CADENCE REMINDER · {formatReminderTime(activeReminder.reminderTime)}</span>
           <h2 id="reminder-alarm-title">Time for {activeReminder.habitName}</h2>
           <p>A small step counts. Check in now, or snooze this reminder for ten minutes.</p>
-          {activeReminderMedia && <section className="reminder-media-player" aria-label="Custom reminder music">
+          {activeReminderMedia && !reminderSoundStopped && <section className="reminder-media-player" aria-label="Custom reminder music">
             <div className="reminder-media-heading"><span className="reminder-media-wave"><CadenceMark /></span><div><b>Your reminder soundtrack</b><small>{activeReminderMedia?.provider} player</small></div></div>
             <iframe
+              key={reminderMediaReload}
               src={activeReminderMedia?.embedUrl}
               title={'Cadence reminder music from ' + activeReminderMedia?.provider}
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
@@ -876,7 +922,7 @@ function App() {
             <button type="button" className="secondary-button" onClick={snoozeReminderAlarm}><Clock3 size={15} /> Snooze 10 min</button>
             <button type="button" className="primary-button" onClick={() => { toggleHabit(activeReminder.habitId); stopReminderAlarm(); }}><Check size={15} /> Mark done</button>
           </div>
-          <button type="button" className="reminder-stop-button" onClick={stopReminderAlarm}>Stop sound</button>
+          <div className="reminder-sound-controls">{activeReminderMedia && <button type="button" className="reminder-replay-button" onClick={() => { setReminderSoundStopped(false); setReminderMediaReload((value) => value + 1); }}>Play soundtrack again</button>}<button type="button" className="reminder-stop-button" onClick={() => setReminderSoundStopped(true)}>Stop sound</button></div>
         </section>
       </div>}
       {toast && <div className="toast" role="status"><span><Check size={15} /></span>{toast}<button type="button" aria-label="Dismiss message" onClick={() => setToast('')}><X size={14} /></button></div>}
