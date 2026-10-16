@@ -687,18 +687,7 @@ function App() {
     <div className={`app-shell ${dark ? 'dark-mode' : 'light-mode'}`}>
       <aside className="sidebar">
         <button className="brand-lockup" onClick={() => { setPage('Today'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} type="button" aria-label="Go to Cadence dashboard">
-          <span className="brand-mark"><CadenceMark /></span>
-          <span className="brand-name" role="img" aria-label="CADENCE"><svg className="cadence-wordmark-svg" viewBox="0 0 220 42" aria-hidden="true" focusable="false">
-            <g fill="none" stroke="currentColor" strokeWidth="2.65" strokeLinecap="square" strokeLinejoin="miter">
-              <path d="M22 7H13C7 7 5 12 5 21S7 35 13 35H22"/>
-              <path d="M32 35 44 7 56 35"/>
-              <path d="M66 7V35H76C85 35 89 30 89 21S85 7 76 7Z"/>
-              <path d="M99 7H118M99 21H114M99 35H118"/>
-              <path d="M128 35V7L149 35V7"/>
-              <path d="M179 7H169C163 7 160 12 160 21S163 35 169 35H179"/>
-              <path d="M190 7H209M190 21H205M190 35H209"/>
-            </g>
-          </svg></span>
+          <img className="cadence-lockup-image" src="/cadence-lockup.webp" alt="Cadence" width="163" height="52" />
         </button>
         <div className="workspace-label">YOUR SPACE <span className="live-dot" /></div>
         <nav className="nav-list" aria-label="Main navigation">
