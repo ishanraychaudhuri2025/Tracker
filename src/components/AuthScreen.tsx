@@ -84,7 +84,7 @@ export default function AuthScreen({ initialMode = 'signin' }: AuthScreenProps) 
       <div className="auth-brand-column">
         <div className="auth-brand-lockup">
           <span className="auth-brand-mark"><svg viewBox="0 0 44 44" aria-hidden="true"><path d="M2 23 C7 23 8 23 11 20 C14 17 14 10 18 10 C22 10 22 34 27 34 C31 34 32 6 36 6 C39 6 40 21 42 21" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
-          <span className="auth-wordmark">CADENCE</span>
+          <span className="auth-wordmark" aria-label="CADENCE"><span aria-hidden="true">CAD</span><span className="cadence-wordmark-e" aria-hidden="true"><i/><i/><i/></span><span aria-hidden="true">NC</span><span className="cadence-wordmark-e" aria-hidden="true"><i/><i/><i/></span></span>
         </div>
         <div className="auth-brand-copy">
           <span className="auth-eyebrow"><span/> YOUR PERSONAL PERFORMANCE SYSTEM</span>
