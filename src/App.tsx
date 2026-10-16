@@ -185,6 +185,7 @@ function App() {
   const [cloudStatus, setCloudStatus] = useState(supabaseConfigured ? 'Connecting…' : 'Saved locally');
   const [cloudError, setCloudError] = useState('');
   const today = todayKey();
+  const activeReminderMedia = parseReminderMedia(activeReminder?.reminderSoundUrl);
 
   const unlockReminderAudio = () => {
     if (typeof window === 'undefined' || !window.AudioContext) return;
@@ -597,6 +598,11 @@ function App() {
     event.preventDefault();
     const name = habitDraft.name.trim();
     if (!name) return;
+    const reminderMedia = parseReminderMedia(habitDraft.reminderSoundUrl);
+    if (habitDraft.reminderSoundUrl.trim() && !reminderMedia) {
+      setToast('Add a valid YouTube or Spotify track, album, or playlist link.');
+      return;
+    }
     const tone = categoryTone[habitDraft.category];
     const emoji = habitDraft.category === 'Body' ? '↗' : habitDraft.category === 'Mind' ? '◌' : habitDraft.category === 'Life' ? '✳' : '⌘';
     const next: Habit = {
@@ -615,11 +621,6 @@ function App() {
       ...(habitDraft.reminderEnabled && reminderMedia ? { reminderSoundUrl: reminderMedia.originalUrl } : {}),
     };
     setHabits((current) => [next, ...current]);
-    const reminderMedia = parseReminderMedia(habitDraft.reminderSoundUrl);
-    if (habitDraft.reminderSoundUrl.trim() && !reminderMedia) {
-      setToast('Add a valid YouTube or Spotify track, album, or playlist link.');
-      return;
-    }
     const reminderMessage = habitDraft.reminderEnabled
       ? ` Reminder set for ${formatReminderTime(habitDraft.reminderTime)}; keep Cadence open for alerts.`
       : '';
@@ -818,7 +819,7 @@ function App() {
                 <span className="reminder-permission-status">{notificationPermission === 'granted' ? 'Desktop notifications enabled' : notificationPermission === 'denied' ? 'Browser notifications are blocked' : notificationPermission === 'unsupported' ? 'Desktop notifications unavailable' : 'Allow desktop notifications'}</span>
                 <button type="button" className="secondary-button notification-permission-button" onClick={() => { void enableDesktopNotifications(); }}>{notificationPermission === 'granted' ? 'Enabled' : notificationPermission === 'denied' ? 'How to allow' : notificationPermission === 'unsupported' ? 'Not supported' : 'Enable'}</button>
               </div>
-              <p className="reminder-footnote">Reminders run while Streako is open (including a minimized tab). Browser permission is needed for desktop notifications. You can snooze or stop the sound when it rings.</p>
+              <p className="reminder-footnote">Reminders run while Cadence is open (including a minimized tab). Browser permission is needed for desktop notifications. You can snooze or stop the sound when it rings.</p>
             </div>}
           </section>
           <div className="if-then-preview"><span><Sparkles size={15} /></span><p><b>Your if–then plan</b><br />If {habitDraft.cue.trim() || 'my cue happens'}, then I’ll {habitDraft.minimum.trim() || 'do the smallest version'}.</p></div><div className="modal-actions"><button className="secondary-button" type="button" onClick={() => setShowHabitModal(false)}>Cancel</button><button className="primary-button" type="submit"><Plus size={15} /> Create habit</button></div></form></section></div>}
@@ -828,18 +829,18 @@ function App() {
           <span className="reminder-alarm-kicker">CADENCE REMINDER · {formatReminderTime(activeReminder.reminderTime)}</span>
           <h2 id="reminder-alarm-title">Time for {activeReminder.habitName}</h2>
           <p>A small step counts. Check in now, or snooze this reminder for ten minutes.</p>
-          {parseReminderMedia(activeReminder.reminderSoundUrl) && <section className="reminder-media-player" aria-label="Custom reminder music">
-            <div className="reminder-media-heading"><span className="reminder-media-wave"><CadenceMark /></span><div><b>Your reminder soundtrack</b><small>{parseReminderMedia(activeReminder.reminderSoundUrl)?.provider} player</small></div></div>
+          {activeReminderMedia && <section className="reminder-media-player" aria-label="Custom reminder music">
+            <div className="reminder-media-heading"><span className="reminder-media-wave"><CadenceMark /></span><div><b>Your reminder soundtrack</b><small>{activeReminderMedia?.provider} player</small></div></div>
             <iframe
-              src={parseReminderMedia(activeReminder.reminderSoundUrl)?.embedUrl}
-              title={'Cadence reminder music from ' + parseReminderMedia(activeReminder.reminderSoundUrl)?.provider}
+              src={activeReminderMedia?.embedUrl}
+              title={'Cadence reminder music from ' + activeReminderMedia?.provider}
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
               referrerPolicy="strict-origin-when-cross-origin"
               loading="eager"
               className="reminder-media-iframe"
             />
-            <a className="reminder-media-open" href={parseReminderMedia(activeReminder.reminderSoundUrl)?.originalUrl} target="_blank" rel="noreferrer">
-              Open in {parseReminderMedia(activeReminder.reminderSoundUrl)?.provider} <ArrowUpRight size={13}/>
+            <a className="reminder-media-open" href={activeReminderMedia?.originalUrl} target="_blank" rel="noreferrer">
+              Open in {activeReminderMedia?.provider} <ArrowUpRight size={13}/>
             </a>
           </section>}
           <div className="reminder-alarm-actions">
