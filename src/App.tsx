@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import type { Category, Frequency, Habit, Page, Task } from './types';
 import { PlannerPage, taskIsDone, taskOccursOn } from './Planner';
+import TasksPage from './TasksPage';
 import AuthScreen from './components/AuthScreen';
 import { supabase, supabaseConfigured } from './lib/supabase';
 
@@ -22,7 +23,7 @@ const shiftKey = (key: string, delta: number) => {
   return toKey(next);
 };
 const categories: Category[] = ['Mind', 'Body', 'Craft', 'Life'];
-const frequencies: Frequency[] = ['Daily', 'Weekdays', 'Weekends', '3× / week'];
+const frequencies: Frequency[] = ['Daily', 'Weekdays', 'Weekends', '3× / week', 'Custom'];
 const categoryTone: Record<Category, string> = { Mind: 'violet', Body: 'lime', Craft: 'orange', Life: 'blue' };
 const categoryEmoji: Record<Category, string> = { Mind: '◌', Body: '↗', Craft: '✳', Life: '⌂' };
 type ActiveReminder = { habitId: string; habitName: string; reminderTime: string; reminderSoundUrl?: string };
@@ -43,7 +44,7 @@ function parseReminderMedia(input?: string): ReminderMedia | null {
       return {
         provider: 'YouTube',
         originalUrl: parsed.toString(),
-        embedUrl: 'https://www.youtube-nocookie.com/embed/' + videoId + '?autoplay=1&rel=0&playsinline=1',
+        embedUrl: 'https://www.youtube-nocookie.com/embed/' + videoId + '?autoplay=1&mute=0&controls=1&rel=0&playsinline=1&loop=1&playlist=' + videoId + '&enablejsapi=1&origin=' + encodeURIComponent(window.location.origin),
       };
     }
     if (host === 'open.spotify.com') {
@@ -56,7 +57,7 @@ function parseReminderMedia(input?: string): ReminderMedia | null {
       return {
         provider: 'Spotify',
         originalUrl: parsed.toString(),
-        embedUrl: 'https://open.spotify.com/embed/' + type + '/' + mediaId + '?utm_source=generator',
+        embedUrl: 'https://open.spotify.com/embed/' + type + '/' + mediaId + '?utm_source=generator&autoplay=1',
       };
     }
   } catch {
@@ -120,21 +121,48 @@ function MomentumChart({ habits, today }: { habits: Habit[]; today: string }) {
   </section>;
 }
 
+function habitEndKey(habit: Habit): string | null {
+  const durationMonths = Number(habit.durationMonths || 0);
+  const durationStart = habit.durationStartedAt || habit.createdAt;
+  if (!durationMonths || !durationStart) return null;
+  const [year, month, day] = durationStart.split('-').map(Number);
+  const monthIndex = year * 12 + (month - 1) + durationMonths;
+  const endYear = Math.floor(monthIndex / 12);
+  const endMonthIndex = monthIndex % 12;
+  const lastDay = new Date(endYear, endMonthIndex + 1, 0, 12).getDate();
+  const endDay = Math.min(day, lastDay);
+  return toKey(new Date(endYear, endMonthIndex, endDay, 12));
+}
+
 function isDue(habit: Habit, dayKey: string): boolean {
+  if (habit.createdAt && dayKey < habit.createdAt) return false;
+  const durationStart = habit.durationStartedAt || habit.createdAt;
+  if (habit.durationMonths && durationStart && dayKey < durationStart) return false;
+  const endKey = habitEndKey(habit);
+  if (endKey && dayKey >= endKey) return false;
   const day = new Date(`${dayKey}T12:00:00`).getDay();
   if (habit.frequency === 'Weekdays') return day >= 1 && day <= 5;
   if (habit.frequency === 'Weekends') return day === 0 || day === 6;
   if (habit.frequency === '3× / week') return [2, 4, 6].includes(day);
+  if (habit.frequency === 'Custom') return Boolean(habit.scheduleDays?.includes(day));
   return true;
 }
 
 function getCurrentStreak(habit: Habit, dayKey = todayKey()): number {
   let count = 0;
   let cursor = habit.logs[dayKey] ? dayKey : shiftKey(dayKey, -1);
-  // A missed day breaks the streak; today may still be completed later.
-  while (habit.logs[cursor] && count < 500) {
+  let guard = 0;
+  // Streaks count scheduled repetitions, not calendar days the habit was never due.
+  while (cursor >= habit.createdAt && guard < 1500) {
+    if (!isDue(habit, cursor)) {
+      cursor = shiftKey(cursor, -1);
+      guard += 1;
+      continue;
+    }
+    if (!habit.logs[cursor]) break;
     count += 1;
     cursor = shiftKey(cursor, -1);
+    guard += 1;
   }
   return count;
 }
@@ -145,6 +173,11 @@ function getBestStreak(habit: Habit, dayKey = todayKey()): number {
   let cursor = habit.createdAt || Object.keys(habit.logs).sort()[0] || dayKey;
   let guard = 0;
   while (cursor <= dayKey && guard < 20000) {
+    if (!isDue(habit, cursor)) {
+      cursor = shiftKey(cursor, 1);
+      guard += 1;
+      continue;
+    }
     if (habit.logs[cursor]) {
       current += 1;
       best = Math.max(best, current);
@@ -166,10 +199,12 @@ function App() {
   const [filter, setFilter] = useState<'All' | Category>('All');
   const [showHabitModal, setShowHabitModal] = useState(false);
   const [editingHabitId, setEditingHabitId] = useState<string | null>(null);
-  const emptyHabitDraft = { name: '', category: 'Craft' as Category, frequency: 'Daily' as Frequency, cue: '', minimum: '', reminderEnabled: false, reminderTime: '09:00', reminderSoundUrl: '' };
+  const emptyHabitDraft = { name: '', category: 'Craft' as Category, frequency: 'Daily' as Frequency, cue: '', minimum: '', reminderEnabled: false, reminderTime: '09:00', reminderSoundUrl: '', customDays: [1, 2, 3, 4, 5], durationMonths: 0, timerMinutes: 0 };
   const [habitDraft, setHabitDraft] = useState(emptyHabitDraft);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>(typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'unsupported');
   const [activeReminder, setActiveReminder] = useState<ActiveReminder | null>(null);
+  const [reminderSoundStopped, setReminderSoundStopped] = useState(false);
+  const [reminderMediaReload, setReminderMediaReload] = useState(0);
   const audioContextRef = useRef<AudioContext | null>(null);
   const firedRemindersRef = useRef<Set<string>>(new Set());
   const snoozeTimeoutRef = useRef<number | null>(null);
@@ -240,6 +275,8 @@ function App() {
 
   const stopReminderAlarm = () => {
     setActiveReminder(null);
+    setReminderSoundStopped(false);
+    setReminderMediaReload(0);
     if (snoozeTimeoutRef.current !== null) {
       window.clearTimeout(snoozeTimeoutRef.current);
       snoozeTimeoutRef.current = null;
@@ -252,6 +289,8 @@ function App() {
     setActiveReminder(null);
     if (snoozeTimeoutRef.current !== null) window.clearTimeout(snoozeTimeoutRef.current);
     snoozeTimeoutRef.current = window.setTimeout(() => {
+      setReminderSoundStopped(false);
+      setReminderMediaReload(0);
       setActiveReminder(reminder);
       if ('Notification' in window && Notification.permission === 'granted') {
         try {
@@ -448,7 +487,7 @@ function App() {
       const now = new Date();
       const currentTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
       const day = toKey(now);
-      const due = habits.filter((habit) => habit.reminderEnabled && habit.reminderTime === currentTime && !habit.logs[day]);
+      const due = habits.filter((habit) => habit.reminderEnabled && isDue(habit, day) && habit.reminderTime === currentTime && !habit.logs[day]);
       const fresh = due.filter((habit) => !firedRemindersRef.current.has(`${habit.id}:${day}:${currentTime}`));
       if (!fresh.length) return;
       fresh.forEach((habit) => {
@@ -479,14 +518,14 @@ function App() {
   }, [habits]);
 
   useEffect(() => {
-    if (!activeReminder) return undefined;
-    // A custom player is shown for linked music; one native chime still alerts
-    // the user because browser autoplay policies can block embedded media.
+    if (!activeReminder || reminderSoundStopped) return undefined;
+    // Repeat the native alarm while the reminder is open. Linked YouTube audio
+    // also attempts autoplay + loop; this chime is the fallback if the browser
+    // refuses audible autoplay for the embedded player.
     playReminderMelody();
-    if (activeReminder.reminderSoundUrl) return undefined;
     const interval = window.setInterval(playReminderMelody, 2800);
     return () => window.clearInterval(interval);
-  }, [activeReminder]);
+  }, [activeReminder, reminderSoundStopped]);
 
   useEffect(() => () => {
     if (snoozeTimeoutRef.current !== null) window.clearTimeout(snoozeTimeoutRef.current);
@@ -607,6 +646,9 @@ function App() {
       reminderEnabled: Boolean(habit.reminderEnabled),
       reminderTime: habit.reminderTime || '09:00',
       reminderSoundUrl: habit.reminderSoundUrl || '',
+      customDays: habit.scheduleDays ?? [1, 2, 3, 4, 5],
+      durationMonths: habit.durationMonths ?? 0,
+      timerMinutes: habit.timerMinutes ?? 0,
     });
     setShowHabitModal(true);
   };
@@ -621,6 +663,10 @@ function App() {
     event.preventDefault();
     const name = habitDraft.name.trim();
     if (!name) return;
+    if (habitDraft.frequency === 'Custom' && habitDraft.customDays.length === 0) {
+      setToast('Choose at least one day for this custom habit.');
+      return;
+    }
     const reminderMedia = parseReminderMedia(habitDraft.reminderSoundUrl);
     if (habitDraft.reminderSoundUrl.trim() && !reminderMedia) {
       setToast('Add a valid YouTube or Spotify track, album, or playlist link.');
@@ -629,6 +675,10 @@ function App() {
     const tone = categoryTone[habitDraft.category];
     const emoji = habitDraft.category === 'Body' ? '↗' : habitDraft.category === 'Mind' ? '◌' : habitDraft.category === 'Life' ? '✳' : '⌘';
     const existing = editingHabitId ? habits.find((habit) => habit.id === editingHabitId) : undefined;
+    const durationMonths = Number(habitDraft.durationMonths) || undefined;
+    const durationStartedAt = existing && existing.durationMonths === durationMonths
+      ? (existing.durationStartedAt || existing.createdAt)
+      : today;
     const next: Habit = {
       id: existing?.id ?? 'h-' + crypto.randomUUID(),
       name,
@@ -643,6 +693,10 @@ function App() {
       reminderEnabled: habitDraft.reminderEnabled,
       ...(habitDraft.reminderEnabled ? { reminderTime: habitDraft.reminderTime } : {}),
       ...(habitDraft.reminderEnabled && reminderMedia ? { reminderSoundUrl: reminderMedia.originalUrl } : {}),
+      ...(habitDraft.frequency === 'Custom' ? { scheduleDays: [...habitDraft.customDays] } : { scheduleDays: undefined }),
+      durationMonths,
+      durationStartedAt,
+      timerMinutes: Math.min(180, Math.max(0, Number(habitDraft.timerMinutes) || 0)) || undefined,
     };
     if (existing) {
       setHabits((current) => current.map((habit) => habit.id === existing.id ? next : habit));
@@ -693,6 +747,7 @@ function App() {
         <nav className="nav-list" aria-label="Main navigation">
           {([
             { label: 'Today' as Page, icon: Gauge, sub: 'Your daily dashboard' },
+            { label: 'Tasks' as Page, icon: ListTodo, sub: 'Plan and finish work' },
             { label: 'Planner' as Page, icon: CalendarDays, sub: 'Daily, weekly & monthly' },
             { label: 'Habits' as Page, icon: Target, sub: 'Routines that stick' },
             { label: 'Insights' as Page, icon: BarChart3, sub: 'Patterns & progress' },
@@ -701,6 +756,7 @@ function App() {
             <button key={label} className={`nav-item ${page === label ? 'active' : ''}`} onClick={() => { setPage(label); window.scrollTo({ top: 0, behavior: 'smooth' }); }} type="button">
               <span className="nav-icon"><Icon size={17} /></span><span className="nav-copy"><b>{label}</b><small>{sub}</small></span>
               {label === 'Today' && <span className="nav-count">{Math.max(0, dueHabits.length - doneToday)}</span>}
+              {label === 'Tasks' && <span className="nav-count">{tasks.filter((task) => taskOccursOn(task, today) && !taskIsDone(task, today)).length}</span>}
             </button>
           ))}
         </nav>
@@ -799,9 +855,11 @@ function App() {
 
           <WeeklyTracker habits={habits} today={today} onToggle={toggleHabit} />
 
-          <footer className="analytics-footer"><span><CadenceMark/> CADENCE / PERSONAL PERFORMANCE SYSTEM</span><span>YOUR PROGRESS, WITHOUT THE NOISE.</span></footer>
+          <footer className="analytics-footer"><span><img className="cadence-footer-lockup" src="/cadence-lockup.webp" alt="Cadence" width="146" height="46" /> <i>/</i> PERSONAL PERFORMANCE SYSTEM</span><span>YOUR PROGRESS, WITHOUT THE NOISE.</span></footer>
         </>}
   
+        {page === 'Tasks' && <TasksPage tasks={tasks} today={today} onToggleTask={toggleTask} onAddTask={addPlannerTask} onDeleteTask={(taskId) => { setTasks((current) => current.filter((task) => task.id !== taskId)); setToast('Task removed.'); }} />}
+
         {page === 'Planner' && <PlannerPage habits={habits} tasks={tasks} today={today} onToggleHabit={toggleHabit} onToggleTask={toggleTask} onAddTask={addPlannerTask} />}
 
         {page === 'Habits' && <>
@@ -821,11 +879,16 @@ function App() {
 
         {page === 'Focus' && <>
           <section className="page-intro"><div><div className="eyebrow"><span className="eyebrow-line" /> ONE THING AT A TIME</div><h1>Make space for <span>deep work.</span></h1><p className="welcome-sub">Pick a task, choose a block, and give it your full attention.</p></div><div className="focus-session-badge"><span className="save-dot" /> {focusSessions} sessions completed</div></section>
-          <section className="focus-page-grid"><div className="panel focus-large-panel"><div className="focus-large-top"><span className="section-kicker"><span className="kicker-mark"><Timer size={13} /></span> FOCUS TIMER</span><span className="live-pill"><span /> {focusRunning ? 'IN SESSION' : 'READY WHEN YOU ARE'}</span></div><div className="focus-large-ring" style={{ '--timer-progress': `${timerProgress * 100}%` } as CSSProperties}><div className="focus-ring-inner"><span className="focus-time">{timeText}</span><span className="focus-caption">{focusRunning ? 'STAY PRESENT' : 'YOUR NEXT BLOCK'}</span></div></div><div className="timer-presets large-presets">{[15, 25, 50].map((minutes) => <button type="button" key={minutes} className={focusPreset === minutes ? 'selected' : ''} onClick={() => resetFocus(minutes)}>{minutes} min</button>)}</div><div className="focus-large-actions"><button className="primary-button" type="button" onClick={() => { if (focusSeconds === 0) resetFocus(); else setFocusRunning((running) => !running); }}>{focusRunning ? 'Pause focus' : focusSeconds === 0 ? 'Start another' : 'Start focusing'} {focusRunning ? <span className="pause-glyph">Ⅱ</span> : <ArrowRight size={16} />}</button><button className="secondary-button" type="button" onClick={() => resetFocus() }><RotateCcw size={15} /> Reset</button></div><p className="timer-reassurance"><ShieldCheck size={15} /> Missed a block? Nothing is lost. Restart with the next minute.</p></div><div className="focus-side-column"><section className="panel choose-task-panel"><div className="panel-overline">YOUR NEXT PRIORITY</div><h3>What will you work on?</h3><p>Choose one task. Everything else can wait for this block.</p>{todayTasks.filter((task) => !task.completed).map((task) => <button key={task.id} type="button" className={`focus-task-choice ${focusTaskId === task.id ? 'selected' : ''}`} onClick={() => { setFocusTaskId(task.id); setToast(`Focus target selected: ${task.title}`); }}><span className="todo-box" /><span><b>{task.title}</b><small>{task.estimate} min · {task.priority} priority</small></span><ArrowUpRight size={15} /></button>)}{todayTasks.filter((task) => !task.completed).length === 0 && <p className="quiet-empty">Your task list is clear. Enjoy the breathing room.</p>}<button className="text-button" type="button" onClick={() => setPage('Today')}>Manage today’s plan <ArrowRight size={14} /></button></section><section className="panel focus-rule-panel"><span className="rule-icon"><Leaf size={17} /></span><div className="panel-overline">A GENTLER RULE</div><h3>Return your attention.</h3><p>Focus isn’t never getting distracted. It’s noticing and coming back—without making a story out of it.</p></section></div></section>
+          <section className="focus-page-grid"><div className="panel focus-large-panel"><div className="focus-large-top"><span className="section-kicker"><span className="kicker-mark"><Timer size={13} /></span> FOCUS TIMER</span><span className="live-pill"><span /> {focusRunning ? 'IN SESSION' : 'READY WHEN YOU ARE'}</span></div><div className="focus-large-ring" style={{ '--timer-progress': `${timerProgress * 100}%` } as CSSProperties}><div className="focus-ring-inner"><span className="focus-time">{timeText}</span><span className="focus-caption">{focusRunning ? 'STAY PRESENT' : 'YOUR NEXT BLOCK'}</span></div></div><div className="timer-presets large-presets">{[15, 25, 50].map((minutes) => <button type="button" key={minutes} className={focusPreset === minutes ? 'selected' : ''} onClick={() => resetFocus(minutes)}>{minutes} min</button>)}</div><div className="focus-large-actions"><button className="primary-button" type="button" onClick={() => { if (focusSeconds === 0) resetFocus(); else setFocusRunning((running) => !running); }}>{focusRunning ? 'Pause focus' : focusSeconds === 0 ? 'Start another' : 'Start focusing'} {focusRunning ? <span className="pause-glyph">Ⅱ</span> : <ArrowRight size={16} />}</button><button className="secondary-button" type="button" onClick={() => resetFocus() }><RotateCcw size={15} /> Reset</button></div><p className="timer-reassurance"><ShieldCheck size={15} /> Missed a block? Nothing is lost. Restart with the next minute.</p></div><div className="focus-side-column"><section className="panel choose-task-panel"><div className="panel-overline">YOUR NEXT PRIORITY</div><h3>What will you work on?</h3><p>Choose one task. Everything else can wait for this block.</p>{todayTasks.filter((task) => !task.completed).map((task) => <button key={task.id} type="button" className={`focus-task-choice ${focusTaskId === task.id ? 'selected' : ''}`} onClick={() => { setFocusTaskId(task.id); setToast(`Focus target selected: ${task.title}`); }}><span className="todo-box" /><span><b>{task.title}</b><small>{task.estimate} min · {task.priority} priority</small></span><ArrowUpRight size={15} /></button>)}{todayTasks.filter((task) => !task.completed).length === 0 && <p className="quiet-empty">Your task list is clear. Enjoy the breathing room.</p>}<button className="text-button" type="button" onClick={() => setPage('Tasks')}>Manage today’s tasks <ArrowRight size={14} /></button></section><section className="panel focus-rule-panel"><span className="rule-icon"><Leaf size={17} /></span><div className="panel-overline">A GENTLER RULE</div><h3>Return your attention.</h3><p>Focus isn’t never getting distracted. It’s noticing and coming back—without making a story out of it.</p></section></div></section>
         </>}
       </main>
 
-      {showHabitModal && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) { setShowHabitModal(false); setEditingHabitId(null); setHabitDraft({ ...emptyHabitDraft }); } }}><section className="habit-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div className="modal-top"><div><div className="panel-overline">START SMALL, STAY CONSISTENT</div><h2 id="modal-title">{editingHabitId ? 'Edit habit' : 'Create a habit'}</h2><p>{editingHabitId ? 'Update your routine without losing its history.' : 'Design the start, not just the finish line.'}</p></div><IconButton label="Close modal" onClick={() => setShowHabitModal(false)}><X size={18} /></IconButton></div><form onSubmit={addHabit}><label className="field-label">Habit name<input autoFocus value={habitDraft.name} onChange={(event) => setHabitDraft((draft) => ({ ...draft, name: event.target.value }))} placeholder="e.g. Practice coding" maxLength={70} required /></label><label className="field-label">Area of life<div className="category-select">{categories.map((category) => <button type="button" key={category} className={habitDraft.category === category ? `selected ${categoryTone[category]}` : ''} onClick={() => setHabitDraft((draft) => ({ ...draft, category }))}><span>{categoryEmoji[category]}</span>{category}</button>)}</div></label><label className="field-label">Frequency<select value={habitDraft.frequency} onChange={(event) => setHabitDraft((draft) => ({ ...draft, frequency: event.target.value as Frequency }))}>{frequencies.map((frequency) => <option key={frequency}>{frequency}</option>)}</select></label><label className="field-label">When will you do it? <span className="field-hint">A reliable cue</span><input value={habitDraft.cue} onChange={(event) => setHabitDraft((draft) => ({ ...draft, cue: event.target.value }))} placeholder="After I finish breakfast…" maxLength={100} /></label><label className="field-label">Your minimum version <span className="field-hint">Make it hard to say no</span><input value={habitDraft.minimum} onChange={(event) => setHabitDraft((draft) => ({ ...draft, minimum: event.target.value }))} placeholder="Read one page, write one line…" maxLength={100} /></label>
+      {showHabitModal && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) { setShowHabitModal(false); setEditingHabitId(null); setHabitDraft({ ...emptyHabitDraft }); } }}><section className="habit-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div className="modal-top"><div><div className="panel-overline">START SMALL, STAY CONSISTENT</div><h2 id="modal-title">{editingHabitId ? 'Edit habit' : 'Create a habit'}</h2><p>{editingHabitId ? 'Update your routine without losing its history.' : 'Design the start, not just the finish line.'}</p></div><IconButton label="Close modal" onClick={() => setShowHabitModal(false)}><X size={18} /></IconButton></div><form onSubmit={addHabit}><label className="field-label">Habit name<input autoFocus value={habitDraft.name} onChange={(event) => setHabitDraft((draft) => ({ ...draft, name: event.target.value }))} placeholder="e.g. Practice coding" maxLength={70} required /></label><label className="field-label">Area of life<div className="category-select">{categories.map((category) => <button type="button" key={category} className={habitDraft.category === category ? `selected ${categoryTone[category]}` : ''} onClick={() => setHabitDraft((draft) => ({ ...draft, category }))}><span>{categoryEmoji[category]}</span>{category}</button>)}</div></label><label className="field-label">Frequency<select value={habitDraft.frequency} onChange={(event) => setHabitDraft((draft) => ({ ...draft, frequency: event.target.value as Frequency }))}>{frequencies.map((frequency) => <option key={frequency}>{frequency}</option>)}</select></label>
+          {habitDraft.frequency === 'Custom' && <fieldset className="habit-schedule-days"><legend>Repeat on these days</legend><div className="habit-weekday-picker">{[{ label: 'Sun', value: 0 }, { label: 'Mon', value: 1 }, { label: 'Tue', value: 2 }, { label: 'Wed', value: 3 }, { label: 'Thu', value: 4 }, { label: 'Fri', value: 5 }, { label: 'Sat', value: 6 }].map(({ label, value }) => <button type="button" key={value} className={habitDraft.customDays.includes(value) ? 'selected' : ''} aria-pressed={habitDraft.customDays.includes(value)} onClick={() => setHabitDraft((draft) => ({ ...draft, customDays: draft.customDays.includes(value) ? draft.customDays.filter((day) => day !== value) : [...draft.customDays, value].sort((left, right) => left - right) }))}>{label}</button>)}</div><p>Choose one or more weekdays. Only selected days count toward consistency and reminders.</p></fieldset>}<label className="field-label">When will you do it? <span className="field-hint">A reliable cue</span><input value={habitDraft.cue} onChange={(event) => setHabitDraft((draft) => ({ ...draft, cue: event.target.value }))} placeholder="After I finish breakfast…" maxLength={100} /></label><label className="field-label">Your minimum version <span className="field-hint">Make it hard to say no</span><input value={habitDraft.minimum} onChange={(event) => setHabitDraft((draft) => ({ ...draft, minimum: event.target.value }))} placeholder="Read one page, write one line…" maxLength={100} /></label>
+          <div className="habit-configuration-grid">
+            <label className="field-label">Duration<select value={String(habitDraft.durationMonths)} onChange={(event) => setHabitDraft((draft) => ({ ...draft, durationMonths: Number(event.target.value) }))}><option value="0">Forever</option><option value="1">1 month</option><option value="3">3 months</option><option value="6">6 months</option><option value="12">12 months</option></select><span className="field-hint">Starts on the creation date. Your history stays saved after it ends.</span></label>
+            <label className="field-label">Session timer <span className="field-hint">Optional · minutes</span><input type="number" min="0" max="180" step="1" value={habitDraft.timerMinutes} onChange={(event) => setHabitDraft((draft) => ({ ...draft, timerMinutes: Math.min(180, Math.max(0, Number(event.target.value) || 0)) }))} /><span className="field-hint">Set 0 to keep the timer off. Maximum 180 minutes.</span></label>
+          </div>
           <section className="reminder-settings" aria-label="Habit reminder settings">
             <div className="reminder-settings-heading">
               <span className="reminder-bell-icon"><Bell size={17} /></span>
@@ -843,12 +906,12 @@ function App() {
               <label className="field-label reminder-sound-label">Custom music link <span className="field-hint">Optional · YouTube or Spotify</span>
                 <input type="url" value={habitDraft.reminderSoundUrl} onChange={(event) => setHabitDraft((draft) => ({ ...draft, reminderSoundUrl: event.target.value }))} placeholder="https://open.spotify.com/track/…" autoComplete="url" />
               </label>
-              <p className="reminder-music-help">Add a song, album or playlist. When the alarm appears, Cadence will show its player; YouTube and Spotify may require you to press Play or sign in. A Cadence chime remains as a fallback.</p>
+              <p className="reminder-music-help">YouTube links attempt to autoplay and loop. Browsers can block audible autoplay until you interact with the player; Spotify playback is controlled by its embed. The repeating Cadence chime stays active as a fallback until you stop it or mark the habit done.</p>
               <div className="reminder-notification-option">
                 <span className="reminder-permission-status">{notificationPermission === 'granted' ? 'Desktop notifications enabled' : notificationPermission === 'denied' ? 'Browser notifications are blocked' : notificationPermission === 'unsupported' ? 'Desktop notifications unavailable' : 'Allow desktop notifications'}</span>
                 <button type="button" className="secondary-button notification-permission-button" onClick={() => { void enableDesktopNotifications(); }}>{notificationPermission === 'granted' ? 'Enabled' : notificationPermission === 'denied' ? 'How to allow' : notificationPermission === 'unsupported' ? 'Not supported' : 'Enable'}</button>
               </div>
-              <p className="reminder-footnote">Reminders run while Cadence is open (including a minimized tab). Browser permission is needed for desktop notifications. You can snooze or stop the sound when it rings.</p>
+              <p className="reminder-footnote">Reminders run while Cadence is open (including a minimized tab). Browser permission is needed for desktop notifications. Use Stop sound to silence the looping alarm, or Mark done to close it.</p>
             </div>}
           </section>
           <div className="if-then-preview"><span><Sparkles size={15} /></span><p><b>Your if–then plan</b><br />If {habitDraft.cue.trim() || 'my cue happens'}, then I’ll {habitDraft.minimum.trim() || 'do the smallest version'}.</p></div><div className="modal-actions"><button className="secondary-button" type="button" onClick={() => { setShowHabitModal(false); setEditingHabitId(null); setHabitDraft({ ...emptyHabitDraft }); }}>Cancel</button><button className="primary-button" type="submit">{editingHabitId ? <><Check size={15} /> Save changes</> : <><Plus size={15} /> Create habit</>}</button></div></form></section></div>}
@@ -858,9 +921,10 @@ function App() {
           <span className="reminder-alarm-kicker">CADENCE REMINDER · {formatReminderTime(activeReminder.reminderTime)}</span>
           <h2 id="reminder-alarm-title">Time for {activeReminder.habitName}</h2>
           <p>A small step counts. Check in now, or snooze this reminder for ten minutes.</p>
-          {activeReminderMedia && <section className="reminder-media-player" aria-label="Custom reminder music">
+          {activeReminderMedia && !reminderSoundStopped && <section className="reminder-media-player" aria-label="Custom reminder music">
             <div className="reminder-media-heading"><span className="reminder-media-wave"><CadenceMark /></span><div><b>Your reminder soundtrack</b><small>{activeReminderMedia?.provider} player</small></div></div>
             <iframe
+              key={reminderMediaReload}
               src={activeReminderMedia?.embedUrl}
               title={'Cadence reminder music from ' + activeReminderMedia?.provider}
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
@@ -876,7 +940,7 @@ function App() {
             <button type="button" className="secondary-button" onClick={snoozeReminderAlarm}><Clock3 size={15} /> Snooze 10 min</button>
             <button type="button" className="primary-button" onClick={() => { toggleHabit(activeReminder.habitId); stopReminderAlarm(); }}><Check size={15} /> Mark done</button>
           </div>
-          <button type="button" className="reminder-stop-button" onClick={stopReminderAlarm}>Stop sound</button>
+          <div className="reminder-sound-controls">{activeReminderMedia && <button type="button" className="reminder-replay-button" onClick={() => { setReminderSoundStopped(false); setReminderMediaReload((value) => value + 1); }}>Play soundtrack again</button>}<button type="button" className="reminder-stop-button" onClick={() => setReminderSoundStopped(true)}>Stop sound</button></div>
         </section>
       </div>}
       {toast && <div className="toast" role="status"><span><Check size={15} /></span>{toast}<button type="button" aria-label="Dismiss message" onClick={() => setToast('')}><X size={14} /></button></div>}
@@ -1083,6 +1147,33 @@ function MonthlyActivityCalendar({
 }
 
 
+function HabitSessionTimer({ minutes }: { minutes: number }) {
+  const [remaining, setRemaining] = useState(minutes * 60);
+  const [running, setRunning] = useState(false);
+  useEffect(() => {
+    setRunning(false);
+    setRemaining(minutes * 60);
+  }, [minutes]);
+  useEffect(() => {
+    if (!running) return undefined;
+    const interval = window.setInterval(() => setRemaining((current) => Math.max(0, current - 1)), 1000);
+    return () => window.clearInterval(interval);
+  }, [running]);
+  useEffect(() => {
+    if (remaining === 0) setRunning(false);
+  }, [remaining]);
+  const minutesLeft = Math.floor(remaining / 60);
+  const secondsLeft = remaining % 60;
+  return <div className="habit-session-timer">
+    <span className="habit-session-timer-icon"><Timer size={14}/></span>
+    <span className="habit-session-timer-copy"><small>SESSION TIMER</small><b>{String(minutesLeft).padStart(2, '0')}:{String(secondsLeft).padStart(2, '0')}</b><em>{remaining === 0 ? 'Session complete' : running ? 'In progress' : 'Ready when you are'}</em></span>
+    <div className="habit-session-timer-actions">
+      <button type="button" className="habit-session-timer-start" disabled={remaining === 0} onClick={() => setRunning((value) => !value)}>{running ? 'Pause' : remaining === minutes * 60 ? 'Start' : 'Resume'}</button>
+      <button type="button" className="habit-session-timer-reset" onClick={() => { setRunning(false); setRemaining(minutes * 60); }} aria-label="Reset habit timer" title="Reset timer"><RotateCcw size={13}/></button>
+    </div>
+  </div>;
+}
+
 function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habit; today: string; onToggle: () => void; onEdit: () => void; onDelete: () => void }) {
   const streak = getCurrentStreak(habit, today);
   const best = getBestStreak(habit, today);
@@ -1095,9 +1186,14 @@ function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habi
     <div className="habit-detail-row">
       <div className={"detail-emoji tone-" + habit.color}>{habit.emoji}</div>
       <div className="detail-main">
-        <div className="detail-title-row"><b>{habit.name}</b><span className={"category-tag " + categoryTone[habit.category]}>{habit.category}</span><span className="frequency-tag">{habit.frequency}</span></div>
+        <div className="detail-title-row"><b>{habit.name}</b><span className={"category-tag " + categoryTone[habit.category]}>{habit.category}</span><span className="frequency-tag">{habit.frequency === 'Custom' ? 'Custom days' : habit.frequency}</span>{habit.durationMonths ? <span className="habit-duration-tag">{habit.durationMonths} mo plan</span> : null}</div>
         <p>{habit.cue ? "Cue: " + habit.cue : "Choose a consistent cue"} <span>·</span> Minimum: {habit.minimum} {habit.reminderEnabled && habit.reminderTime && <span className="habit-reminder-tag"><Bell size={11} /> Reminder {formatReminderTime(habit.reminderTime)}</span>}</p>
         <div className="mini-week">{last7.map((key) => <span key={key} className={(habit.logs[key] ? "done " : "") + (key === today ? "current" : "")} title={key + ": " + (habit.logs[key] ? "completed" : "not logged")}>{new Date(key + "T12:00:00").toLocaleDateString("en-US", { weekday: "narrow" })}</span>)}</div>
+        <div className="habit-plan-meta">
+          {habit.frequency === 'Custom' && <span><CalendarDays size={11}/>{(habit.scheduleDays ?? []).map((day) => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][day]).join(' · ') || 'No days selected'}</span>}
+          {habit.durationMonths ? <span><Clock3 size={11}/>{habit.durationMonths} month{habit.durationMonths === 1 ? '' : 's'} total</span> : <span><RotateCcw size={11}/>Ongoing</span>}
+          {habit.timerMinutes ? <span><Timer size={11}/>{habit.timerMinutes} min timer</span> : null}
+        </div>
       </div>
       <div className="detail-stats"><span><Flame size={14} /> <b>{streak}</b> current</span><span><Trophy size={14} /> <b>{best}</b> best</span></div>
       <div className="detail-actions">
@@ -1106,6 +1202,7 @@ function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habi
         <button className="delete-button" onClick={onDelete} type="button" aria-label={"Delete " + habit.name} title="Delete habit"><X size={15} /></button>
       </div>
     </div>
+    {habit.timerMinutes && habit.timerMinutes > 0 ? <HabitSessionTimer key={habit.id + ":" + habit.timerMinutes} minutes={habit.timerMinutes} /> : null}
     <div className="habit-detail-activity" aria-label={"Fourteen-day activity for " + habit.name}>
       <div className="habit-activity-caption"><span>LAST 14 DAYS</span><span><b>{completed14}</b> / {due14} completed</span></div>
       <div className="habit-activity-chart" role="img" aria-label={completed14 + " of " + due14 + " scheduled check-ins completed over the last 14 days. A line rises to 100 percent on completed check-ins and stays at zero for missed check-ins."}>
@@ -1125,15 +1222,19 @@ function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habi
           <text x="0" y="29" className="habit-chart-y-label">100%</text>
           <text x="5" y="61" className="habit-chart-y-label">50%</text>
           <text x="10" y="93" className="habit-chart-y-label">0%</text>
-          {last14.map((key, index) => index % 2 === 0 || index === 13 ? <text key={key} x={36 + index * (668 / 13)} y="119" textAnchor="middle" className="habit-chart-x-label">{new Date(key + "T12:00:00").getDate()}</text> : null)}
+          {last14.map((key, index) => <text key={key} x={36 + index * (668 / 13)} y="119" textAnchor="middle" className="habit-chart-x-label">{new Date(key + "T12:00:00").getDate()}</text>)}
           {(() => {
             const points = last14.map((key, index) => {
               const scheduled = key <= today && key >= habit.createdAt && isDue(habit, key);
               const completed = scheduled && Boolean(habit.logs[key]);
               return { key, index, scheduled, completed, x: 36 + index * (668 / 13), y: completed ? 26 : 90 };
             }).filter((point) => point.scheduled);
-            const linePath = points.map((point, index) => (index === 0 ? "M " : "L ") + point.x.toFixed(2) + " " + point.y).join(" ");
-            const areaPath = points.length > 1 ? linePath + " L " + points[points.length - 1].x.toFixed(2) + " 96 L " + points[0].x.toFixed(2) + " 96 Z" : "";
+            const linePath = points.map((point, index) => {
+              const previous = points[index - 1];
+              const move = !previous || point.index !== previous.index + 1;
+              return (move ? "M " : "L ") + point.x.toFixed(2) + " " + point.y;
+            }).join(" ");
+            const areaPath = "";
             const lineId = "cadence-habit-line-" + habit.id.replace(/[^a-zA-Z0-9_-]/g, "");
             const areaId = "cadence-habit-area-" + habit.id.replace(/[^a-zA-Z0-9_-]/g, "");
             return <>

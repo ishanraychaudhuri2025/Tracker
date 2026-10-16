@@ -1,5 +1,5 @@
 export type Category = 'Mind' | 'Body' | 'Craft' | 'Life';
-export type Frequency = 'Daily' | 'Weekdays' | 'Weekends' | '3× / week';
+export type Frequency = 'Daily' | 'Weekdays' | 'Weekends' | '3× / week' | 'Custom';
 export type TaskCategory = 'Study' | 'Work' | 'Health' | 'Personal' | 'Admin';
 export type Recurrence = 'None' | 'Daily' | 'Weekdays' | 'Weekends' | 'Weekly' | 'Monthly';
 
@@ -17,6 +17,14 @@ export interface Habit {
   reminderEnabled?: boolean;
   reminderTime?: string;
   reminderSoundUrl?: string;
+  /** JavaScript weekday indexes: Sunday = 0 through Saturday = 6. Used when frequency is Custom. */
+  scheduleDays?: number[];
+  /** Number of months to run the habit; null/undefined means forever. */
+  durationMonths?: number | null;
+  /** Start date for the chosen duration; preserved on ordinary edits. */
+  durationStartedAt?: string;
+  /** Optional built-in session timer length in minutes. */
+  timerMinutes?: number;
 }
 
 export interface Task {
@@ -32,4 +40,4 @@ export interface Task {
   completedDates?: string[];
 }
 
-export type Page = 'Today' | 'Planner' | 'Habits' | 'Insights' | 'Focus';
+export type Page = 'Today' | 'Tasks' | 'Planner' | 'Habits' | 'Insights' | 'Focus';

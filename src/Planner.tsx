@@ -51,11 +51,28 @@ function daysInMonth(year: number, month: number) {
 function prettyDate(key: string, options: Intl.DateTimeFormatOptions = { weekday: 'long', month: 'long', day: 'numeric' }) {
   return fromKey(key).toLocaleDateString('en-US', options);
 }
+function habitEndKey(habit: Habit) {
+  const durationMonths = Number(habit.durationMonths || 0);
+  const durationStart = habit.durationStartedAt || habit.createdAt;
+  if (!durationMonths || !durationStart) return null;
+  const [year, month, day] = durationStart.split('-').map(Number);
+  const monthIndex = year * 12 + (month - 1) + durationMonths;
+  const endYear = Math.floor(monthIndex / 12);
+  const endMonthIndex = monthIndex % 12;
+  const lastDay = new Date(endYear, endMonthIndex + 1, 0, 12).getDate();
+  return toKey(new Date(endYear, endMonthIndex, Math.min(day, lastDay), 12));
+}
 function dueHabitOn(habit: Habit, key: string) {
+  if (habit.createdAt && key < habit.createdAt) return false;
+  const durationStart = habit.durationStartedAt || habit.createdAt;
+  if (habit.durationMonths && durationStart && key < durationStart) return false;
+  const endKey = habitEndKey(habit);
+  if (endKey && key >= endKey) return false;
   const day = fromKey(key).getDay();
   if (habit.frequency === 'Weekdays') return day >= 1 && day <= 5;
   if (habit.frequency === 'Weekends') return day === 0 || day === 6;
   if (habit.frequency === '3× / week') return [2, 4, 6].includes(day);
+  if (habit.frequency === 'Custom') return Boolean(habit.scheduleDays?.includes(day));
   return true;
 }
 
