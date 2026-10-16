@@ -3752,3 +3752,280 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 @media (prefers-reduced-motion:reduce) {
   .habit-activity-bar-slot>i { animation:none!important; }
 }
+
+
+/* FINAL VISUAL FIXES — Cadence reference wordmark, real line charts, locked graph grid. */
+.app-shell.dark-mode .brand-name,
+.auth-screen .auth-wordmark {
+  display:inline-flex!important;
+  align-items:center;
+  justify-content:flex-start;
+  color:#c16bff!important;
+  font-family:'Michroma','Orbitron','Space Grotesk',sans-serif;
+  font-size:0!important;
+  line-height:1;
+  letter-spacing:0!important;
+  text-transform:none!important;
+  background:none!important;
+  -webkit-background-clip:initial!important;
+  background-clip:initial!important;
+  white-space:nowrap;
+}
+.app-shell.dark-mode .cadence-wordmark-svg,
+.auth-screen .cadence-wordmark-svg {
+  display:block;
+  width:103px;
+  height:15px;
+  overflow:visible;
+  color:#c16bff;
+  filter:drop-shadow(0 0 3px rgba(188,104,255,.23));
+}
+.auth-screen .cadence-wordmark-svg { width:166px; height:24px; }
+.app-shell.dark-mode .brand-mark,
+.auth-screen .auth-brand-mark {
+  width:42px!important;
+  height:42px!important;
+  flex:0 0 42px!important;
+  border-radius:13px!important;
+  color:#d78aff!important;
+  background:linear-gradient(145deg,#2c2045 0%,#151022 70%,#090710 100%)!important;
+  border:1px solid rgba(193,107,255,.5)!important;
+  box-shadow:0 0 0 1px rgba(158,84,234,.12),0 0 19px rgba(152,47,234,.22),inset 0 1px 0 rgba(255,255,255,.08)!important;
+}
+.app-shell.dark-mode .cadence-mark-svg {
+  width:31px;height:31px;
+  filter:drop-shadow(0 0 3px rgba(219,150,255,.8)) drop-shadow(0 0 7px rgba(168,63,255,.45));
+}
+.auth-screen .auth-brand-mark svg { width:31px;height:31px;color:#d78aff;filter:drop-shadow(0 0 4px rgba(193,107,255,.8)); }
+
+/* Replace tiny decorative blocks with a readable 14-day line chart per routine. */
+.habit-detail-activity {
+  margin:0 3px 0 58px;
+  padding:12px 14px 10px;
+  display:grid;
+  gap:8px;
+  min-width:0;
+  border:1px solid rgba(157,139,232,.16);
+  border-radius:12px;
+  background:linear-gradient(110deg,rgba(137,114,218,.065),rgba(7,10,19,.42));
+}
+.habit-activity-caption {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  color:#aebbd6;
+  font:600 10px/1.4 'IBM Plex Mono',monospace;
+  letter-spacing:.08em;
+}
+.habit-activity-caption>span:last-child { color:#c0cbe0; font-size:11px; letter-spacing:0; }
+.habit-activity-caption b { color:#dfbdff; font-size:12px; }
+.habit-activity-chart {
+  position:relative;
+  display:block;
+  width:100%;
+  height:145px;
+  min-width:0;
+  overflow:hidden;
+}
+.habit-activity-line-chart {
+  display:block;
+  width:100%;
+  height:145px;
+  overflow:hidden;
+}
+.habit-chart-grid-line {
+  stroke:rgba(159,164,202,.16);
+  stroke-width:1;
+  stroke-dasharray:4 5;
+}
+.habit-chart-y-label {
+  fill:#9ba9c6;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;
+  font-weight:500;
+}
+.habit-chart-x-label {
+  fill:#9ba8c4;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;
+}
+.habit-chart-area-path { opacity:.86; }
+.habit-chart-line-path {
+  stroke-dasharray:1100;
+  stroke-dashoffset:0;
+  filter:drop-shadow(0 0 4px rgba(181,120,255,.25));
+  animation:cadence-line-reveal .8s cubic-bezier(.2,.8,.2,1) both;
+}
+.habit-chart-point {
+  stroke:#0b0c18;
+  stroke-width:2;
+  transition:r .18s ease,filter .18s ease;
+}
+.habit-chart-point.is-complete {
+  fill:#d9aeff;
+  filter:drop-shadow(0 0 4px rgba(193,130,255,.6));
+}
+.habit-chart-point.is-missed { fill:#73718f; }
+.habit-activity-line-chart:hover .habit-chart-point { stroke-width:2.5; }
+.habit-activity-line-chart:hover .habit-chart-point.is-complete { filter:drop-shadow(0 0 7px rgba(193,130,255,.9)); }
+.habit-chart-empty {
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#9ba9c6;
+  font-size:12px;
+  pointer-events:none;
+}
+.habit-activity-legend {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:12px 18px;
+  color:#aab7d0;
+  font-size:10px;
+  line-height:1.5;
+}
+.habit-activity-legend>span { display:inline-flex; align-items:center; gap:6px; }
+.habit-activity-legend i { width:8px;height:8px;display:inline-block;border-radius:50%;background:#78768f; }
+.habit-activity-legend i.done { background:#c18aff;box-shadow:0 0 7px rgba(193,138,255,.3); }
+.habit-activity-legend i.unscheduled { background:rgba(109,120,154,.34); }
+@keyframes cadence-line-reveal {
+  from { stroke-dashoffset:1100; opacity:.5; }
+  to { stroke-dashoffset:0; opacity:1; }
+}
+
+/* Weekly summary chart: reserve separate rows for value, plot, and day label.
+   Percentages stay above the plot; the progress track cannot intrude upward. */
+.app-shell .weekly-chart {
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  align-items:stretch;
+  gap:10px;
+  min-width:0;
+}
+.app-shell .weekly-chart-day {
+  display:grid!important;
+  grid-template-rows:34px 62px 34px!important;
+  grid-auto-rows:unset!important;
+  align-content:start;
+  align-items:stretch;
+  gap:9px!important;
+  min-width:0;
+  min-height:157px;
+  height:157px;
+  padding:7px 4px 5px;
+  overflow:hidden;
+  border-radius:11px;
+}
+.app-shell .weekly-chart-top {
+  position:relative;
+  z-index:2;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-width:0;
+  min-height:34px;
+  height:34px;
+  gap:3px;
+  line-height:1.2;
+  overflow:hidden;
+}
+.app-shell .weekly-chart-top b {
+  display:block;
+  font-size:12px!important;
+  line-height:1.15;
+  font-variant-numeric:tabular-nums;
+}
+.app-shell .weekly-chart-top small {
+  display:block;
+  max-width:100%;
+  color:#aab7d0;
+  font-size:9px!important;
+  line-height:1.15;
+  white-space:nowrap;
+}
+.app-shell .weekly-bar-track {
+  position:relative;
+  align-self:stretch;
+  justify-self:stretch;
+  min-width:0;
+  min-height:0!important;
+  height:62px!important;
+  max-height:62px!important;
+  width:100%;
+  margin:0;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  overflow:hidden!important;
+  contain:layout paint;
+  border-radius:8px;
+}
+.app-shell .weekly-bar-track>span {
+  position:relative;
+  display:block;
+  flex:0 0 auto;
+  width:min(22px,55%);
+  min-height:3px;
+  max-height:100%!important;
+  margin:0;
+  border-radius:8px 8px 3px 3px;
+  transform-origin:bottom center;
+  clip-path:inset(0 round 8px 8px 3px 3px);
+}
+.app-shell .weekly-day-label {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  gap:3px;
+  min-height:34px;
+  height:34px;
+  padding-top:0;
+  line-height:1.2;
+}
+.app-shell .weekly-day-label b { font-size:11px; line-height:1.15; }
+.app-shell .weekly-day-label small { font-size:10px; line-height:1.15; }
+.app-shell .weekly-chart-day.is-today {
+  box-shadow:inset 0 0 0 1px rgba(173,147,255,.43),0 6px 20px rgba(104,73,170,.1);
+  background:linear-gradient(180deg,rgba(134,100,225,.12),rgba(26,27,49,.25));
+}
+.app-shell .weekly-chart-day.is-today .weekly-chart-top b { color:#d6b6ff!important; }
+.app-shell .weekly-chart-day.is-today .weekly-bar-track { background:rgba(165,133,244,.075); }
+.app-shell .weekly-chart-day.is-today .weekly-bar-track>span {
+  background:linear-gradient(180deg,#e1baff 0%,#b08aff 45%,#8268ed 100%)!important;
+  box-shadow:0 0 14px rgba(176,138,255,.22)!important;
+}
+@media (max-width:900px) {
+  .app-shell .weekly-chart { gap:6px; }
+  .app-shell .weekly-chart-day { grid-template-rows:32px 56px 32px!important; gap:7px!important; min-height:144px;height:144px;padding:6px 2px; }
+  .app-shell .weekly-chart-top { height:32px;min-height:32px; }
+  .app-shell .weekly-bar-track { height:56px!important;max-height:56px!important; }
+  .app-shell .weekly-day-label { height:32px;min-height:32px; }
+  .app-shell .weekly-chart-top b { font-size:10px!important; }
+  .app-shell .weekly-chart-top small { font-size:8px!important; }
+}
+@media (max-width:700px) {
+  .app-shell .brand-name { font-size:0!important; }
+  .app-shell .cadence-wordmark-svg { width:91px;height:14px; }
+  .habit-detail-activity { margin:0; padding:10px 9px; }
+  .habit-activity-chart,.habit-activity-line-chart { height:132px; }
+  .habit-chart-x-label { font-size:11px; }
+  .habit-activity-legend { gap:8px 12px; font-size:10px; }
+  .app-shell .weekly-chart { gap:3px; }
+  .app-shell .weekly-chart-day { grid-template-rows:30px 49px 31px!important; gap:5px!important; min-height:125px;height:125px;padding:5px 1px; }
+  .app-shell .weekly-chart-top { height:30px;min-height:30px; }
+  .app-shell .weekly-bar-track { height:49px!important;max-height:49px!important; }
+  .app-shell .weekly-day-label { height:31px;min-height:31px; }
+  .app-shell .weekly-chart-top b { font-size:9px!important; }
+  .app-shell .weekly-chart-top small { font-size:7px!important; letter-spacing:0; }
+  .app-shell .weekly-day-label b { font-size:9px; }
+  .app-shell .weekly-day-label small { font-size:8px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .habit-chart-line-path { animation:none!important;stroke-dashoffset:0!important; }
+}
