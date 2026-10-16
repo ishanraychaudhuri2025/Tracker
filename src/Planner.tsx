@@ -64,6 +64,8 @@ function habitEndKey(habit: Habit) {
 }
 function dueHabitOn(habit: Habit, key: string) {
   if (habit.createdAt && key < habit.createdAt) return false;
+  const durationStart = habit.durationStartedAt || habit.createdAt;
+  if (habit.durationMonths && durationStart && key < durationStart) return false;
   const endKey = habitEndKey(habit);
   if (endKey && key >= endKey) return false;
   const day = fromKey(key).getDay();
