@@ -688,7 +688,7 @@ function App() {
       <aside className="sidebar">
         <button className="brand-lockup" onClick={() => { setPage('Today'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} type="button" aria-label="Go to Cadence dashboard">
           <span className="brand-mark"><CadenceMark /></span>
-          <span className="brand-name">CADENCE</span>
+          <span className="brand-name" aria-label="CADENCE"><span aria-hidden="true">CAD</span><span className="cadence-wordmark-e" aria-hidden="true"><i/><i/><i/></span><span aria-hidden="true">NC</span><span className="cadence-wordmark-e" aria-hidden="true"><i/><i/><i/></span></span>
         </button>
         <div className="workspace-label">YOUR SPACE <span className="live-dot" /></div>
         <nav className="nav-list" aria-label="Main navigation">
@@ -889,8 +889,9 @@ function CadenceMark() {
   return <svg className="cadence-mark-svg" viewBox="0 0 44 44" role="img" aria-label="Cadence waveform">
     <defs>
       <linearGradient id="cadence-wave-stroke" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#72FFF2" />
-        <stop offset="100%" stopColor="#16C9D9" />
+        <stop offset="0%" stopColor="#E3B4FF" />
+        <stop offset="48%" stopColor="#C16BFF" />
+        <stop offset="100%" stopColor="#8B35E6" />
       </linearGradient>
     </defs>
     <path d="M2 23 C7 23 8 23 11 20 C14 17 14 10 18 10 C22 10 22 34 27 34 C31 34 32 6 36 6 C39 6 40 21 42 21" fill="none" stroke="url(#cadence-wave-stroke)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
