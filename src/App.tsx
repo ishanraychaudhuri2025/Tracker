@@ -633,13 +633,6 @@ function App() {
     setShowHabitModal(true);
   };
 
- 2, 3, 4, 5],
-      durationMonths: habit.durationMonths ?? 0,
-      timerMinutes: habit.timerMinutes ?? 0,
-    });
-    setShowHabitModal(true);
-  };
-
   const openCreateHabit = () => {
     setEditingHabitId(null);
     setHabitDraft({ ...emptyHabitDraft });
