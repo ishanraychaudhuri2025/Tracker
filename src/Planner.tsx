@@ -53,8 +53,9 @@ function prettyDate(key: string, options: Intl.DateTimeFormatOptions = { weekday
 }
 function habitEndKey(habit: Habit) {
   const durationMonths = Number(habit.durationMonths || 0);
-  if (!durationMonths || !habit.createdAt) return null;
-  const [year, month, day] = habit.createdAt.split('-').map(Number);
+  const durationStart = habit.durationStartedAt || habit.createdAt;
+  if (!durationMonths || !durationStart) return null;
+  const [year, month, day] = durationStart.split('-').map(Number);
   const monthIndex = year * 12 + (month - 1) + durationMonths;
   const endYear = Math.floor(monthIndex / 12);
   const endMonthIndex = monthIndex % 12;
