@@ -4,7 +4,7 @@ import type { Session } from '@supabase/supabase-js';
 import {
   Activity, ArrowRight, ArrowUpRight, BarChart3, Bell, BookOpen,
   CalendarDays, CalendarRange, Check, CheckCheck, ChevronDown, CircleHelp, Clock3, Flame, Focus,
-  Gauge, Leaf, ListTodo, LogOut, Moon, MoreHorizontal, Plus, RotateCcw, Settings2, ShieldCheck,
+  Gauge, Leaf, ListTodo, LogOut, Moon, MoreHorizontal, Pencil, Plus, RotateCcw, Settings2, ShieldCheck,
   Sparkles, Sun, Target, Timer, Trophy, X, Zap,
 } from 'lucide-react';
 import type { Category, Frequency, Habit, Page, Task } from './types';
@@ -165,7 +165,9 @@ function App() {
   const [page, setPage] = useState<Page>('Today');
   const [filter, setFilter] = useState<'All' | Category>('All');
   const [showHabitModal, setShowHabitModal] = useState(false);
-  const [habitDraft, setHabitDraft] = useState({ name: '', category: 'Craft' as Category, frequency: 'Daily' as Frequency, cue: '', minimum: '', reminderEnabled: false, reminderTime: '09:00', reminderSoundUrl: '' });
+  const [editingHabitId, setEditingHabitId] = useState<string | null>(null);
+  const emptyHabitDraft = { name: '', category: 'Craft' as Category, frequency: 'Daily' as Frequency, cue: '', minimum: '', reminderEnabled: false, reminderTime: '09:00', reminderSoundUrl: '' };
+  const [habitDraft, setHabitDraft] = useState(emptyHabitDraft);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>(typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'unsupported');
   const [activeReminder, setActiveReminder] = useState<ActiveReminder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -594,6 +596,27 @@ function App() {
     if (nextValue) setToast('Logged: ' + habit.name + (dayKey === today ? '' : ' · ' + dayKey));
   };
 
+  const openEditHabit = (habit: Habit) => {
+    setEditingHabitId(habit.id);
+    setHabitDraft({
+      name: habit.name,
+      category: habit.category,
+      frequency: habit.frequency,
+      cue: habit.cue,
+      minimum: habit.minimum,
+      reminderEnabled: Boolean(habit.reminderEnabled),
+      reminderTime: habit.reminderTime || '09:00',
+      reminderSoundUrl: habit.reminderSoundUrl || '',
+    });
+    setShowHabitModal(true);
+  };
+
+  const openCreateHabit = () => {
+    setEditingHabitId(null);
+    setHabitDraft({ ...emptyHabitDraft });
+    setShowHabitModal(true);
+  };
+
   const addHabit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const name = habitDraft.name.trim();
@@ -605,29 +628,36 @@ function App() {
     }
     const tone = categoryTone[habitDraft.category];
     const emoji = habitDraft.category === 'Body' ? '↗' : habitDraft.category === 'Mind' ? '◌' : habitDraft.category === 'Life' ? '✳' : '⌘';
+    const existing = editingHabitId ? habits.find((habit) => habit.id === editingHabitId) : undefined;
     const next: Habit = {
-      id: `h-${crypto.randomUUID()}`,
+      id: existing?.id ?? 'h-' + crypto.randomUUID(),
       name,
       emoji,
       category: habitDraft.category,
       frequency: habitDraft.frequency,
       cue: habitDraft.cue.trim() || 'Choose a consistent moment',
       minimum: habitDraft.minimum.trim() || 'Do the smallest version for two minutes',
-      logs: {},
-      createdAt: today,
+      logs: existing?.logs ?? {},
+      createdAt: existing?.createdAt ?? today,
       color: tone,
       reminderEnabled: habitDraft.reminderEnabled,
       ...(habitDraft.reminderEnabled ? { reminderTime: habitDraft.reminderTime } : {}),
       ...(habitDraft.reminderEnabled && reminderMedia ? { reminderSoundUrl: reminderMedia.originalUrl } : {}),
     };
-    setHabits((current) => [next, ...current]);
+    if (existing) {
+      setHabits((current) => current.map((habit) => habit.id === existing.id ? next : habit));
+    } else {
+      setHabits((current) => [next, ...current]);
+    }
+    const wasEditing = Boolean(existing);
     const reminderMessage = habitDraft.reminderEnabled
-      ? ` Reminder set for ${formatReminderTime(habitDraft.reminderTime)}; keep Cadence open for alerts.`
+      ? ' Reminder set for ' + formatReminderTime(habitDraft.reminderTime) + '; keep Cadence open for alerts.'
       : '';
-    setHabitDraft({ name: '', category: 'Craft', frequency: 'Daily', cue: '', minimum: '', reminderEnabled: false, reminderTime: '09:00', reminderSoundUrl: '' });
+    setHabitDraft({ ...emptyHabitDraft });
+    setEditingHabitId(null);
     setShowHabitModal(false);
     setPage('Habits');
-    setToast('Your new habit is ready.' + reminderMessage);
+    setToast((wasEditing ? 'Habit updated.' : 'Your new habit is ready.') + reminderMessage);
   };
 
   const toggleTask = (id: string, dayKey = today) => setTasks((current) => current.map((task) => {
