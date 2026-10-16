@@ -123,8 +123,9 @@ function MomentumChart({ habits, today }: { habits: Habit[]; today: string }) {
 
 function habitEndKey(habit: Habit): string | null {
   const durationMonths = Number(habit.durationMonths || 0);
-  if (!durationMonths || !habit.createdAt) return null;
-  const [year, month, day] = habit.createdAt.split('-').map(Number);
+  const durationStart = habit.durationStartedAt || habit.createdAt;
+  if (!durationMonths || !durationStart) return null;
+  const [year, month, day] = durationStart.split('-').map(Number);
   const monthIndex = year * 12 + (month - 1) + durationMonths;
   const endYear = Math.floor(monthIndex / 12);
   const endMonthIndex = monthIndex % 12;
@@ -672,6 +673,10 @@ function App() {
     const tone = categoryTone[habitDraft.category];
     const emoji = habitDraft.category === 'Body' ? '↗' : habitDraft.category === 'Mind' ? '◌' : habitDraft.category === 'Life' ? '✳' : '⌘';
     const existing = editingHabitId ? habits.find((habit) => habit.id === editingHabitId) : undefined;
+    const durationMonths = Number(habitDraft.durationMonths) || undefined;
+    const durationStartedAt = existing && existing.durationMonths === durationMonths
+      ? (existing.durationStartedAt || existing.createdAt)
+      : today;
     const next: Habit = {
       id: existing?.id ?? 'h-' + crypto.randomUUID(),
       name,
@@ -687,7 +692,8 @@ function App() {
       ...(habitDraft.reminderEnabled ? { reminderTime: habitDraft.reminderTime } : {}),
       ...(habitDraft.reminderEnabled && reminderMedia ? { reminderSoundUrl: reminderMedia.originalUrl } : {}),
       ...(habitDraft.frequency === 'Custom' ? { scheduleDays: [...habitDraft.customDays] } : { scheduleDays: undefined }),
-      durationMonths: Number(habitDraft.durationMonths) || undefined,
+      durationMonths,
+      durationStartedAt,
       timerMinutes: Math.min(180, Math.max(0, Number(habitDraft.timerMinutes) || 0)) || undefined,
     };
     if (existing) {
