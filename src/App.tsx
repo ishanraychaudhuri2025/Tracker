@@ -650,6 +650,10 @@ function App() {
     event.preventDefault();
     const name = habitDraft.name.trim();
     if (!name) return;
+    if (habitDraft.frequency === 'Custom' && habitDraft.customDays.length === 0) {
+      setToast('Choose at least one day for this custom habit.');
+      return;
+    }
     const reminderMedia = parseReminderMedia(habitDraft.reminderSoundUrl);
     if (habitDraft.reminderSoundUrl.trim() && !reminderMedia) {
       setToast('Add a valid YouTube or Spotify track, album, or playlist link.');
@@ -672,24 +676,14 @@ function App() {
       reminderEnabled: habitDraft.reminderEnabled,
       ...(habitDraft.reminderEnabled ? { reminderTime: habitDraft.reminderTime } : {}),
       ...(habitDraft.reminderEnabled && reminderMedia ? { reminderSoundUrl: reminderMedia.originalUrl } : {}),
+      ...(habitDraft.frequency === 'Custom' ? { scheduleDays: [...habitDraft.customDays] } : { scheduleDays: undefined }),
+      durationMonths: Number(habitDraft.durationMonths) || undefined,
+      timerMinutes: Math.min(180, Math.max(0, Number(habitDraft.timerMinutes) || 0)) || undefined,
     };
     if (existing) {
       setHabits((current) => current.map((habit) => habit.id === existing.id ? next : habit));
     } else {
       setHabits((current) => [next, ...current]);
-    }
-    const wasEditing = Boolean(existing);
-    const reminderMessage = habitDraft.reminderEnabled
-      ? ' Reminder set for ' + formatReminderTime(habitDraft.reminderTime) + '; keep Cadence open for alerts.'
-      : '';
-    setHabitDraft({ ...emptyHabitDraft });
-    setEditingHabitId(null);
-    setShowHabitModal(false);
-    setPage('Habits');
-    setToast((wasEditing ? 'Habit updated.' : 'Your new habit is ready.') + reminderMessage);
-  };
-
-urrent]);
     }
     const wasEditing = Boolean(existing);
     const reminderMessage = habitDraft.reminderEnabled
