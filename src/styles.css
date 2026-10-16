@@ -3461,3 +3461,294 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   .app-shell.dark-mode .weekly-matrix { grid-template-columns: minmax(130px,1.2fr) repeat(7,minmax(31px,1fr)); min-width: 390px; }
   .app-shell.dark-mode .weekly-matrix-label>small { display: none; }
 }
+
+
+/* ───────────── Cadence finishing pass: wordmark, edit controls, charts ───────────── */
+.app-shell.dark-mode .brand-mark,
+.auth-screen .auth-brand-mark {
+  color: #d49bff !important;
+  background: linear-gradient(145deg,#292044 0%,#141023 72%,#0a0912 100%) !important;
+  border: 1px solid rgba(196,147,255,.44) !important;
+  box-shadow: 0 0 0 1px rgba(152,99,228,.14),0 6px 20px rgba(111,39,190,.2),inset 0 1px 0 rgba(255,255,255,.075) !important;
+}
+.app-shell.dark-mode .brand-lockup:hover .brand-mark {
+  border-color: rgba(216,172,255,.76) !important;
+  box-shadow: 0 0 0 4px rgba(169,99,255,.07),0 8px 28px rgba(134,47,225,.28),inset 0 1px 0 rgba(255,255,255,.1) !important;
+}
+.app-shell.dark-mode .cadence-mark-svg {
+  color: #c77bff;
+  filter: drop-shadow(0 0 3px rgba(206,137,255,.88)) drop-shadow(0 0 8px rgba(174,68,255,.42));
+}
+.app-shell.dark-mode .brand-name,
+.auth-screen .auth-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: .07em;
+  font-family: 'Space Grotesk',sans-serif;
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #c99aff !important;
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+}
+.app-shell.dark-mode .cadence-wordmark-e,
+.auth-screen .cadence-wordmark-e {
+  display: inline-flex;
+  flex: 0 0 .58em;
+  height: .78em;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  margin-inline: .01em .03em;
+}
+.cadence-wordmark-e i {
+  display: block;
+  width: 100%;
+  height: 2px;
+  min-height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg,#dcafff,#a45af0);
+  box-shadow: 0 0 5px rgba(174,99,255,.22);
+}
+.auth-screen .auth-brand-mark { color:#d39aff !important; }
+.auth-screen .auth-brand-mark svg { width:31px;height:31px;filter:drop-shadow(0 0 4px rgba(199,120,255,.7)); }
+.auth-screen .auth-wordmark { font-size:20px;letter-spacing:.12em; }
+
+/* Every habit is now a clean card with edit access and its own 14-day chart. */
+.habits-library .library-list { gap: 0; }
+.habits-library .habit-detail-card {
+  display: block;
+  min-width: 0;
+  padding: 0 2px 13px;
+  border-bottom: 1px solid var(--border-soft);
+  background: transparent;
+}
+.habits-library .habit-detail-card + .habit-detail-card { margin-top: 3px; }
+.habits-library .habit-detail-row {
+  display: grid;
+  grid-template-columns: 42px minmax(210px,1fr) minmax(105px,auto) auto;
+  align-items: center;
+  gap: 15px;
+  min-width: 0;
+  padding: 18px 2px 12px;
+  border-top: 0;
+  border-bottom: 0;
+}
+.habits-library .detail-main { min-width: 0; flex: initial; }
+.habits-library .detail-title-row { display:flex; flex-wrap:wrap; align-items:center; gap:7px; }
+.habits-library .detail-title-row>b { min-width:0; color:#f2f0ff; font:600 14px/1.35 'Space Grotesk',sans-serif; }
+.habits-library .detail-main>p { margin:7px 0 9px; color:#b8c3da; font-size:12px; line-height:1.6; overflow-wrap:anywhere; }
+.habits-library .detail-main>p span { color:#8795b2; }
+.habits-library .detail-stats { display:flex; flex-direction:column; gap:7px; margin:0; white-space:nowrap; }
+.habits-library .detail-stats>span { display:flex; align-items:center; gap:5px; color:#afbad4; font-size:11px; }
+.habits-library .detail-stats>span svg:first-child { color:#bfa4ff; }
+.habits-library .detail-actions { display:flex; align-items:center; justify-content:flex-end; gap:7px; margin:0; flex-wrap:wrap; }
+.habits-library .habit-edit-button {
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  min-height:34px; padding:0 10px; border-radius:9px;
+  color:#d6caff; background:rgba(145,113,221,.09);
+  border:1px solid rgba(166,143,239,.24); font-size:11px; font-weight:600;
+  transition:transform .18s ease,background .18s ease,border-color .18s ease;
+}
+.habits-library .habit-edit-button:hover {
+  transform:translateY(-1px); color:#fff; background:rgba(145,113,221,.18);
+  border-color:rgba(192,163,255,.58);
+}
+.habits-library .detail-check { min-height:34px; padding:0 10px; font-size:11px; border-radius:9px; }
+.habits-library .detail-check.checked { color:#e4d9ff; background:rgba(149,115,226,.15); border-color:rgba(178,149,255,.28); }
+.habits-library .delete-button { width:30px; height:30px; }
+.habit-detail-activity {
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:7px;
+  margin: 0 3px 0 58px;
+  min-width:0;
+  padding: 10px 12px 8px;
+  border:1px solid rgba(157,139,232,.13);
+  border-radius:11px;
+  background:linear-gradient(105deg,rgba(137,114,218,.055),rgba(8,12,22,.24));
+}
+.habit-activity-caption {
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  color:#9aa9c5; font:500 9px/1.4 'IBM Plex Mono',monospace; letter-spacing:.07em;
+}
+.habit-activity-caption>span:last-child { color:#b7c3dd; letter-spacing:0; font-size:10px; }
+.habit-activity-caption b { color:#d5b9ff; font-size:11px; }
+.habit-activity-chart {
+  display:grid;
+  grid-template-columns:repeat(14,minmax(0,1fr));
+  align-items:end;
+  gap:clamp(3px,.8vw,10px);
+  min-width:0;
+  min-height:47px;
+  padding:4px 3px 0;
+  border-bottom:1px solid rgba(153,165,207,.12);
+}
+.habit-activity-bar-slot {
+  height:43px; min-width:0; display:flex; align-items:center; flex-direction:column; justify-content:flex-end; gap:5px;
+}
+.habit-activity-bar-slot>i {
+  display:block; width:min(100%,18px); min-width:4px; flex:0 0 auto;
+  border-radius:5px 5px 2px 2px;
+  transform-origin:bottom;
+  animation:cadence-habit-bar-in .42s cubic-bezier(.2,.8,.2,1) both;
+}
+.habit-activity-bar-slot>i.is-done {
+  background:linear-gradient(180deg,#e0b7ff,#a36aff);
+  box-shadow:0 0 9px rgba(165,103,255,.24);
+}
+.habit-activity-bar-slot>i.is-missed { background:linear-gradient(180deg,rgba(133,125,177,.65),rgba(79,77,111,.42)); }
+.habit-activity-bar-slot>i.is-unscheduled { background:rgba(97,111,146,.22); }
+.habit-activity-bar-slot>i.is-future { background:rgba(76,216,222,.28); }
+.habit-activity-bar-slot>small { color:#8f9db9; font:9px/1 'IBM Plex Mono',monospace; }
+.habit-activity-legend { display:flex; flex-wrap:wrap; align-items:center; gap:13px; color:#a4b0cb; font-size:10px; }
+.habit-activity-legend>span { display:inline-flex; align-items:center; gap:5px; }
+.habit-activity-legend i { display:inline-block; width:7px; height:7px; border-radius:2px; background:rgba(133,125,177,.65); }
+.habit-activity-legend i.done { background:#bb8eff; }
+.habit-activity-legend i.unscheduled { background:rgba(97,111,146,.35); }
+@keyframes cadence-habit-bar-in { from { transform:scaleY(.12);opacity:.35; } to { transform:scaleY(1);opacity:1; } }
+
+/* Analytics micro-graphs are anchored in a reserved bottom band, centered below text. */
+.app-shell .analytics-metric-card {
+  min-height:146px;
+  padding:14px 15px 43px;
+  overflow:hidden;
+}
+.app-shell .analytics-metric-label,
+.app-shell .analytics-metric-value,
+.app-shell .analytics-metric-bottom { position:relative; z-index:2; }
+.app-shell .analytics-metric-bottom {
+  display:flex; align-items:flex-start; justify-content:space-between; gap:8px;
+  max-width:100%; margin-top:8px; min-height:17px; white-space:normal;
+  color:#b2bfd9; font-size:10px; line-height:1.45;
+}
+.app-shell .analytics-metric-bottom>span:first-child { min-width:0; flex:1 1 auto; }
+.app-shell .analytics-metric-bottom>span:last-child { flex:0 0 auto; }
+.app-shell .analytics-mini-bars,
+.app-shell .analytics-streak-steps,
+.app-shell .analytics-checkin-grid {
+  position:absolute!important;
+  left:50%!important;
+  right:auto!important;
+  bottom:11px!important;
+  top:auto!important;
+  z-index:1!important;
+  transform:translateX(-50%);
+  opacity:.9!important;
+  pointer-events:none;
+}
+.app-shell .analytics-mini-bars {
+  display:flex; align-items:flex-end; justify-content:center; gap:5px;
+  width:min(48%,160px); height:24px; margin:0!important;
+}
+.app-shell .analytics-mini-bars i {
+  width:5px; max-height:22px; flex:0 0 5px; border-radius:4px 4px 1px 1px;
+  background:linear-gradient(180deg,#cfabff,#8e65e9);
+  box-shadow:0 0 7px rgba(155,109,242,.12);
+}
+.app-shell .analytics-metric-line {
+  position:absolute!important; left:50%!important; bottom:13px!important; top:auto!important;
+  transform:translateX(-50%);
+  z-index:1!important; display:flex; align-items:flex-end; justify-content:center;
+  gap:5px; width:calc(100% - 44px); max-width:190px; height:21px; margin:0!important;
+  opacity:1!important;
+}
+.app-shell .analytics-metric-line i { display:block; flex:1 1 0; min-width:3px; max-width:14px; border-radius:4px 4px 1px 1px; background:linear-gradient(180deg,#c5a9ff,#8877e9); }
+.app-shell .analytics-metric-line i:nth-child(3n) { background:linear-gradient(180deg,#e0bcff,#ab7bed); }
+.app-shell .analytics-metric-line i:nth-child(4n) { background:linear-gradient(180deg,#9df2f1,#49c7d8); }
+.app-shell .analytics-streak-steps {
+  display:flex; align-items:flex-end; justify-content:center; gap:4px;
+  width:min(52%,170px); height:25px;
+}
+.app-shell .analytics-streak-steps i {
+  display:block; width:6px; max-height:23px; flex:0 1 7px;
+  border-radius:4px 4px 1px 1px;
+  background:linear-gradient(180deg,#d5b4ff,#9571e8);
+}
+.app-shell .analytics-checkin-grid {
+  display:grid; grid-template-columns:repeat(7,6px); grid-auto-rows:6px;
+  justify-content:center; align-content:center; gap:3px;
+  width:65px; height:22px;
+}
+.app-shell .analytics-checkin-grid i { display:block; width:6px; height:6px; border-radius:2px; background:rgba(161,153,209,.2); }
+.app-shell .analytics-checkin-grid i.is-filled { background:#c4a0ff; box-shadow:0 0 5px rgba(186,129,255,.3); }
+
+/* Weekly check-in grid columns stay locked to their corresponding day ticks. */
+.app-shell .weekly-matrix {
+  grid-template-columns:minmax(210px,1.65fr) repeat(7,minmax(38px,1fr));
+  column-gap:5px;
+  align-items:stretch;
+}
+.app-shell .weekly-matrix-cell { min-width:0; min-height:43px; }
+.app-shell .weekly-matrix-head { min-height:34px; display:flex; align-items:center; justify-content:flex-start; padding-left:2px; }
+.app-shell .weekly-matrix-day { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; }
+.app-shell .weekly-matrix-day b { font-size:11px!important; line-height:1.2; }
+.app-shell .weekly-matrix-day small { font-size:10px!important; line-height:1.2; }
+.app-shell .weekly-tick-cell { display:flex; align-items:center; justify-content:center; }
+.app-shell .weekly-matrix-label { min-width:0; display:flex; align-items:center; justify-content:flex-start; gap:9px; padding:0 7px 0 2px; }
+.app-shell .weekly-habit-name { min-width:0; flex:1 1 auto; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:12px!important; }
+.app-shell .weekly-matrix-label>small {
+  display:inline-flex!important; justify-content:center; align-items:center;
+  flex:0 0 57px; width:57px; margin-left:0!important; padding:4px 5px;
+  border:1px solid rgba(165,146,245,.17); border-radius:6px;
+  color:#bdc7e0!important; background:rgba(143,119,225,.08);
+  font-size:9px!important; line-height:1.2; text-align:center;
+}
+.app-shell .weekly-matrix-row { display:contents; }
+.app-shell .weekly-matrix-day.is-today,.app-shell .weekly-tick-cell.is-today { background:rgba(70,220,220,.05); }
+.app-shell .weekly-matrix-day.is-today { border-bottom-color:rgba(75,225,224,.28); }
+.app-shell .weekly-tick { width:23px; height:23px; }
+.app-shell .weekly-footer {
+  display:flex; flex-wrap:wrap; align-items:center; gap:10px 18px;
+  padding-top:13px; color:#aebbd4; font-size:10px; line-height:1.5;
+}
+.app-shell .weekly-footer>span { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+.app-shell .weekly-footer-note { margin-left:auto; white-space:normal!important; text-align:right; }
+
+/* Don't put a solid badge behind the day number: keep emphasis on its card. */
+.app-shell.dark-mode .planner-week-day.is-today .planner-week-day-number,
+.app-shell.dark-mode .planner-week-day.is-selected .planner-week-day-number {
+  background:transparent!important; border:0!important; box-shadow:none!important;
+  padding:0!important; color:#c8b8ff!important;
+}
+.app-shell.dark-mode .planner-month-day.is-today .planner-month-date,
+.app-shell.dark-mode .planner-month-day.is-selected .planner-month-date,
+.app-shell.dark-mode .planner-month-day.is-today.is-selected .planner-month-date {
+  background:transparent!important; border:0!important; box-shadow:none!important;
+  padding-inline:4px!important; color:#c8b8ff!important;
+}
+
+/* Give secondary labels breathing room without breaking compact responsive layouts. */
+.app-shell.dark-mode .detail-title-row .category-tag,
+.app-shell.dark-mode .detail-title-row .frequency-tag { font-size:10px; line-height:1.35; padding:3px 7px; }
+.app-shell.dark-mode .analytics-metric-label { font-size:10px!important; line-height:1.45; }
+.app-shell.dark-mode .analytics-metric-value { line-height:1.15; }
+.app-shell.dark-mode .analytics-metric-bottom .analytics-micro-note { color:#bdc7e0; font-size:9px; }
+@media (max-width:1100px) {
+  .habits-library .habit-detail-row { grid-template-columns:38px minmax(160px,1fr) auto; gap:11px; }
+  .habits-library .detail-actions { grid-column:2 / -1; justify-content:flex-start; }
+  .habit-detail-activity { margin-left:49px; }
+  .app-shell .weekly-matrix { grid-template-columns:minmax(175px,1.4fr) repeat(7,minmax(34px,1fr)); }
+}
+@media (max-width:700px) {
+  .habits-library .habit-detail-row { grid-template-columns:36px minmax(0,1fr); gap:9px; }
+  .habits-library .detail-main { grid-column:2; min-width:0; }
+  .habits-library .detail-stats { grid-column:2; flex-direction:row; flex-wrap:wrap; gap:10px; }
+  .habits-library .detail-actions { grid-column:1 / -1; justify-content:flex-end; }
+  .habit-detail-activity { margin:0 1px 0 0; padding:9px 8px 7px; }
+  .habit-activity-chart { gap:3px; }
+  .habit-activity-bar-slot>small { font-size:8px; }
+  .app-shell .weekly-matrix { grid-template-columns:minmax(145px,1.2fr) repeat(7,minmax(31px,1fr)); min-width:390px; }
+  .app-shell .weekly-matrix-label>small { flex-basis:45px; width:45px; font-size:8px!important; }
+  .app-shell .weekly-habit-name { font-size:11px!important; }
+  .app-shell .weekly-footer-note { margin-left:0; text-align:left; }
+  .app-shell .analytics-metric-card { min-height:146px; padding:12px 11px 43px; }
+  .app-shell .analytics-metric-bottom { gap:4px; font-size:9px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .habit-activity-bar-slot>i { animation:none!important; }
+}
