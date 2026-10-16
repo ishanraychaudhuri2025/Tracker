@@ -3415,3 +3415,49 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .app-shell.dark-mode .analytics-side-link:hover,
 .app-shell.dark-mode .analytics-chart-footer button:hover,
 .app-shell.dark-mode .analytics-table-footer>button:hover { background:rgba(96,77,174,.25)!important; }
+
+
+/* Specificity guardrails for legacy styles in earlier releases. */
+.app-shell.dark-mode .brand-mark {
+  color: #42eee5 !important;
+  background: linear-gradient(145deg,#0c2b36,#050912 78%) !important;
+  border: 1px solid rgba(66,235,230,.34) !important;
+  box-shadow: 0 0 0 1px rgba(130,112,255,.12),0 7px 24px rgba(27,202,217,.12),inset 0 1px 0 rgba(255,255,255,.06) !important;
+}
+.app-shell.dark-mode .brand-lockup:hover .brand-mark {
+  box-shadow: 0 0 0 4px rgba(66,235,230,.05),0 9px 30px rgba(27,202,217,.22) !important;
+}
+.app-shell.dark-mode .brand-name {
+  font-size: 15px !important;
+  letter-spacing: .2em !important;
+  color: #a3f9f4 !important;
+}
+.app-shell.dark-mode .weekly-matrix {
+  grid-template-columns: minmax(185px,1.5fr) repeat(7,minmax(40px,1fr));
+  column-gap: 6px;
+}
+.app-shell.dark-mode .weekly-matrix-label {
+  min-width: 0; display: flex; align-items: center; gap: 9px; padding-inline: 2px;
+}
+.app-shell.dark-mode .weekly-habit-name {
+  min-width: 0; flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: #f0f3ff; font-size: 12px !important; line-height: 1.35;
+}
+.app-shell.dark-mode .weekly-matrix-label>small {
+  flex: 0 0 auto; display: inline-flex; align-items: center;
+  padding: 3px 6px; border-radius: 6px;
+  color: #bac6df !important; background: rgba(159,143,255,.1);
+  border: 1px solid rgba(159,143,255,.15);
+  font-size: 9px !important; line-height: 1.25;
+}
+.app-shell.dark-mode .weekly-matrix-cell { min-width: 0; }
+.app-shell.dark-mode .weekly-tick-cell { display: flex; align-items: center; justify-content: center; }
+.app-shell.dark-mode .weekly-matrix-day { display: flex; align-items: center; justify-content: center; gap: 3px; }
+.app-shell.dark-mode .weekly-matrix-day b { color: #d8def0; font-size: 11px !important; }
+.app-shell.dark-mode .weekly-matrix-day small { color: #9eacc8; font-size: 10px !important; }
+.app-shell.dark-mode .weekly-matrix-cell.is-today { background: rgba(67,228,227,.055); }
+.app-shell.dark-mode .weekly-not-due { color: #66738f; font-size: 14px; }
+@media (max-width: 850px) {
+  .app-shell.dark-mode .weekly-matrix { grid-template-columns: minmax(130px,1.2fr) repeat(7,minmax(31px,1fr)); min-width: 390px; }
+  .app-shell.dark-mode .weekly-matrix-label>small { display: none; }
+}
