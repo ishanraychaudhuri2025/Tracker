@@ -21,6 +21,8 @@ export interface Habit {
   scheduleDays?: number[];
   /** Number of months to run the habit; null/undefined means forever. */
   durationMonths?: number | null;
+  /** Start date for the chosen duration; preserved on ordinary edits. */
+  durationStartedAt?: string;
   /** Optional built-in session timer length in minutes. */
   timerMinutes?: number;
 }
