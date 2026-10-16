@@ -808,7 +808,7 @@ function App() {
         {page === 'Habits' && <>
           <section className="page-intro"><div><div className="eyebrow"><span className="eyebrow-line" /> BUILD YOUR BASELINE</div><h1>Habits, <span>by design.</span></h1><p className="welcome-sub">Make good actions easier to start and easier to repeat.</p></div><button className="primary-button" type="button" onClick={openCreateHabit}><Plus size={16} /> Create habit</button></section>
           <section className="habits-overview-strip"><div><span className="strip-label">ACTIVE ROUTINES</span><b>{habits.length.toString().padStart(2, '0')}</b></div><div><span className="strip-label">CHECKED IN TODAY</span><b>{doneToday}<small> / {dueHabits.length}</small></b></div><div><span className="strip-label">WEEKLY CONSISTENCY</span><b>{consistency}<small>%</small></b></div><div className="strip-quote"><Sparkles size={18} /><span>Let the minimum version keep the habit alive.</span></div></section>
-          <section className="panel habits-library"><div className="panel-heading"><div><div className="panel-overline">YOUR PERSONAL SYSTEM</div><h3>All routines <span className="heading-count">{habits.length}</span></h3></div><div className="filter-pills"><button type="button" className={filter === 'All' ? 'selected' : ''} onClick={() => setFilter('All')}>All</button>{categories.map((cat) => <button type="button" key={cat} className={filter === cat ? 'selected' : ''} onClick={() => setFilter(cat)}>{cat}</button>)}</div></div><div className="library-list">{filteredHabits.map((habit) => <HabitDetail key={habit.id} habit={habit} today={today} onToggle={() => toggleHabit(habit.id)} onEdit={() => openEditHabit(habit)} onDelete={() => { setHabits((current) => current.filter((item) => item.id !== habit.id)); setToast('Habit removed'); }} />)}{filteredHabits.length === 0 && <EmptyState title="Nothing in this category yet" body="A good system starts small. Add a routine when you’re ready." action="Add habit" onAction={() => setShowHabitModal(true)} />}</div></section>
+          <section className="panel habits-library"><div className="panel-heading"><div><div className="panel-overline">YOUR PERSONAL SYSTEM</div><h3>All routines <span className="heading-count">{habits.length}</span></h3></div><div className="filter-pills"><button type="button" className={filter === 'All' ? 'selected' : ''} onClick={() => setFilter('All')}>All</button>{categories.map((cat) => <button type="button" key={cat} className={filter === cat ? 'selected' : ''} onClick={() => setFilter(cat)}>{cat}</button>)}</div></div><div className="library-list">{filteredHabits.map((habit) => <HabitDetail key={habit.id} habit={habit} today={today} onToggle={() => toggleHabit(habit.id)} onEdit={() => openEditHabit(habit)} onDelete={() => { setHabits((current) => current.filter((item) => item.id !== habit.id)); setToast('Habit removed'); }} />)}{filteredHabits.length === 0 && <EmptyState title="Nothing in this category yet" body="A good system starts small. Add a routine when you’re ready." action="Add habit" onAction={openCreateHabit} />}</div></section>
           <section className="principle-grid"><Principle icon={<Zap size={18} />} tag="MAKE IT EASY" title="Shrink the first step" copy="Choose a minimum version so starting takes less effort than avoiding it." /><Principle icon={<CalendarDays size={18} />} tag="MAKE IT OBVIOUS" title="Attach it to a cue" copy="Give your habit a reliable place in the day: after coffee, before lunch, or when you close your laptop." /><Principle icon={<Trophy size={18} />} tag="MAKE IT VISIBLE" title="Record each rep" copy="A small check-in creates feedback. Review the pattern, then adjust the plan—not your self-worth." /></section>
         </>}
 
@@ -1089,8 +1089,9 @@ function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habi
   const best = getBestStreak(habit, today);
   const last7 = Array.from({ length: 7 }, (_, index) => shiftKey(today, index - 6));
   const last14 = Array.from({ length: 14 }, (_, index) => shiftKey(today, index - 13));
-  const completed14 = last14.filter((key) => key <= today && isDue(habit, key) && Boolean(habit.logs[key])).length;
-  const due14 = last14.filter((key) => key <= today && isDue(habit, key)).length;
+  const tracked14 = (key: string) => key >= habit.createdAt && isDue(habit, key);
+  const completed14 = last14.filter((key) => key <= today && tracked14(key) && Boolean(habit.logs[key])).length;
+  const due14 = last14.filter((key) => key <= today && tracked14(key)).length;
   return <article className="habit-detail-card">
     <div className="habit-detail-row">
       <div className={"detail-emoji tone-" + habit.color}>{habit.emoji}</div>
@@ -1110,7 +1111,7 @@ function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habi
       <div className="habit-activity-caption"><span>LAST 14 DAYS</span><span><b>{completed14}</b> / {due14} completed</span></div>
       <div className="habit-activity-chart" role="img" aria-label={completed14 + " of " + due14 + " scheduled check-ins completed in the last 14 days"}>
         {last14.map((key, index) => {
-          const due = isDue(habit, key);
+          const due = tracked14(key);
           const done = key <= today && due && Boolean(habit.logs[key]);
           const future = key > today;
           const height = done ? 27 : due && !future ? 8 : 4;
