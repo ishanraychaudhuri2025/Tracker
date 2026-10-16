@@ -1213,15 +1213,19 @@ function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habi
           <text x="0" y="29" className="habit-chart-y-label">100%</text>
           <text x="5" y="61" className="habit-chart-y-label">50%</text>
           <text x="10" y="93" className="habit-chart-y-label">0%</text>
-          {last14.map((key, index) => index % 2 === 0 || index === 13 ? <text key={key} x={36 + index * (668 / 13)} y="119" textAnchor="middle" className="habit-chart-x-label">{new Date(key + "T12:00:00").getDate()}</text> : null)}
+          {last14.map((key, index) => <text key={key} x={36 + index * (668 / 13)} y="119" textAnchor="middle" className="habit-chart-x-label">{new Date(key + "T12:00:00").getDate()}</text>)}
           {(() => {
             const points = last14.map((key, index) => {
               const scheduled = key <= today && key >= habit.createdAt && isDue(habit, key);
               const completed = scheduled && Boolean(habit.logs[key]);
               return { key, index, scheduled, completed, x: 36 + index * (668 / 13), y: completed ? 26 : 90 };
             }).filter((point) => point.scheduled);
-            const linePath = points.map((point, index) => (index === 0 ? "M " : "L ") + point.x.toFixed(2) + " " + point.y).join(" ");
-            const areaPath = points.length > 1 ? linePath + " L " + points[points.length - 1].x.toFixed(2) + " 96 L " + points[0].x.toFixed(2) + " 96 Z" : "";
+            const linePath = points.map((point, index) => {
+              const previous = points[index - 1];
+              const move = !previous || point.index !== previous.index + 1;
+              return (move ? "M " : "L ") + point.x.toFixed(2) + " " + point.y;
+            }).join(" ");
+            const areaPath = "";
             const lineId = "cadence-habit-line-" + habit.id.replace(/[^a-zA-Z0-9_-]/g, "");
             const areaId = "cadence-habit-area-" + habit.id.replace(/[^a-zA-Z0-9_-]/g, "");
             return <>
