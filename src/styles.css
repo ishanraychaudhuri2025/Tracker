@@ -4029,3 +4029,40 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 @media (prefers-reduced-motion:reduce) {
   .habit-chart-line-path { animation:none!important;stroke-dashoffset:0!important; }
 }
+
+
+/* Use the original Cadence lockup pixels supplied by the user (transparent cutout). */
+.app-shell .brand-lockup {
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:0!important;
+  padding:4px 6px!important;
+  min-width:0;
+  max-width:100%;
+}
+.app-shell .cadence-lockup-image {
+  display:block;
+  width:146px;
+  height:auto;
+  max-width:100%;
+  object-fit:contain;
+  flex:0 1 auto;
+  image-rendering:auto;
+}
+.auth-screen .auth-brand-lockup {
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+}
+.auth-screen .cadence-lockup-image {
+  display:block;
+  width:196px;
+  height:auto;
+  max-width:100%;
+  object-fit:contain;
+}
+@media (max-width:700px) {
+  .app-shell .cadence-lockup-image { width:140px; }
+  .auth-screen .cadence-lockup-image { width:176px; }
+}
