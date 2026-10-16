@@ -272,6 +272,8 @@ function App() {
 
   const stopReminderAlarm = () => {
     setActiveReminder(null);
+    setReminderSoundStopped(false);
+    setReminderMediaReload(0);
     if (snoozeTimeoutRef.current !== null) {
       window.clearTimeout(snoozeTimeoutRef.current);
       snoozeTimeoutRef.current = null;
@@ -284,6 +286,8 @@ function App() {
     setActiveReminder(null);
     if (snoozeTimeoutRef.current !== null) window.clearTimeout(snoozeTimeoutRef.current);
     snoozeTimeoutRef.current = window.setTimeout(() => {
+      setReminderSoundStopped(false);
+      setReminderMediaReload(0);
       setActiveReminder(reminder);
       if ('Notification' in window && Notification.permission === 'granted') {
         try {
@@ -842,7 +846,7 @@ function App() {
 
           <WeeklyTracker habits={habits} today={today} onToggle={toggleHabit} />
 
-          <footer className="analytics-footer"><span><CadenceMark/> CADENCE / PERSONAL PERFORMANCE SYSTEM</span><span>YOUR PROGRESS, WITHOUT THE NOISE.</span></footer>
+          <footer className="analytics-footer"><span><img className="cadence-footer-lockup" src="/cadence-lockup.webp" alt="Cadence" width="146" height="46" /> <i>/</i> PERSONAL PERFORMANCE SYSTEM</span><span>YOUR PROGRESS, WITHOUT THE NOISE.</span></footer>
         </>}
   
         {page === 'Tasks' && <TasksPage tasks={tasks} today={today} onToggleTask={toggleTask} onAddTask={addPlannerTask} onDeleteTask={(taskId) => { setTasks((current) => current.filter((task) => task.id !== taskId)); setToast('Task removed.'); }} />}
