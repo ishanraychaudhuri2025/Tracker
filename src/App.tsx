@@ -136,6 +136,8 @@ function habitEndKey(habit: Habit): string | null {
 
 function isDue(habit: Habit, dayKey: string): boolean {
   if (habit.createdAt && dayKey < habit.createdAt) return false;
+  const durationStart = habit.durationStartedAt || habit.createdAt;
+  if (habit.durationMonths && durationStart && dayKey < durationStart) return false;
   const endKey = habitEndKey(habit);
   if (endKey && dayKey >= endKey) return false;
   const day = new Date(`${dayKey}T12:00:00`).getDay();
