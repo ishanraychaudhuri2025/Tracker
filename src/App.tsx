@@ -688,7 +688,17 @@ function App() {
       <aside className="sidebar">
         <button className="brand-lockup" onClick={() => { setPage('Today'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} type="button" aria-label="Go to Cadence dashboard">
           <span className="brand-mark"><CadenceMark /></span>
-          <span className="brand-name" aria-label="CADENCE"><span aria-hidden="true">CAD</span><span className="cadence-wordmark-e" aria-hidden="true"><i/><i/><i/></span><span aria-hidden="true">NC</span><span className="cadence-wordmark-e" aria-hidden="true"><i/><i/><i/></span></span>
+          <span className="brand-name" role="img" aria-label="CADENCE"><svg className="cadence-wordmark-svg" viewBox="0 0 220 42" aria-hidden="true" focusable="false">
+            <g fill="none" stroke="currentColor" strokeWidth="2.65" strokeLinecap="square" strokeLinejoin="miter">
+              <path d="M22 7H13C7 7 5 12 5 21S7 35 13 35H22"/>
+              <path d="M32 35 44 7 56 35"/>
+              <path d="M66 7V35H76C85 35 89 30 89 21S85 7 76 7Z"/>
+              <path d="M99 7H118M99 21H114M99 35H118"/>
+              <path d="M128 35V7L149 35V7"/>
+              <path d="M179 7H169C163 7 160 12 160 21S163 35 169 35H179"/>
+              <path d="M190 7H209M190 21H205M190 35H209"/>
+            </g>
+          </svg></span>
         </button>
         <div className="workspace-label">YOUR SPACE <span className="live-dot" /></div>
         <nav className="nav-list" aria-label="Main navigation">
@@ -1109,18 +1119,44 @@ function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habi
     </div>
     <div className="habit-detail-activity" aria-label={"Fourteen-day activity for " + habit.name}>
       <div className="habit-activity-caption"><span>LAST 14 DAYS</span><span><b>{completed14}</b> / {due14} completed</span></div>
-      <div className="habit-activity-chart" role="img" aria-label={completed14 + " of " + due14 + " scheduled check-ins completed in the last 14 days"}>
-        {last14.map((key, index) => {
-          const due = tracked14(key);
-          const done = key <= today && due && Boolean(habit.logs[key]);
-          const future = key > today;
-          const height = done ? 27 : due && !future ? 8 : 4;
-          const label = new Date(key + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
-          return <span className="habit-activity-bar-slot" key={key} title={label + ": " + (future ? "up next" : !due ? "not scheduled" : done ? "completed" : "not logged")}>
-            <i className={done ? "is-done" : future ? "is-future" : due ? "is-missed" : "is-unscheduled"} style={{ height: height + "px", animationDelay: (index * 18) + "ms" }} />
-            {(index % 2 === 0 || index === 13) && <small>{new Date(key + "T12:00:00").getDate()}</small>}
-          </span>;
-        })}
+      <div className="habit-activity-chart" role="img" aria-label={completed14 + " of " + due14 + " scheduled check-ins completed over the last 14 days. A line rises to 100 percent on completed check-ins and stays at zero for missed check-ins."}>
+        <svg className="habit-activity-line-chart" viewBox="0 0 720 132" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          <defs>
+            <linearGradient id={"cadence-habit-line-" + habit.id.replace(/[^a-zA-Z0-9_-]/g, "")} x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#9c72f4"/>
+              <stop offset="55%" stopColor="#c18aff"/>
+              <stop offset="100%" stopColor="#edc1ff"/>
+            </linearGradient>
+            <linearGradient id={"cadence-habit-area-" + habit.id.replace(/[^a-zA-Z0-9_-]/g, "")} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#b78cff" stopOpacity=".22"/>
+              <stop offset="100%" stopColor="#b78cff" stopOpacity="0"/>
+            </linearGradient>
+          </defs>
+          {[26, 58, 90].map((y) => <line key={y} x1="36" y1={y} x2="704" y2={y} className="habit-chart-grid-line"/>)}
+          <text x="0" y="29" className="habit-chart-y-label">100%</text>
+          <text x="5" y="61" className="habit-chart-y-label">50%</text>
+          <text x="10" y="93" className="habit-chart-y-label">0%</text>
+          {last14.map((key, index) => index % 2 === 0 || index === 13 ? <text key={key} x={36 + index * (668 / 13)} y="119" textAnchor="middle" className="habit-chart-x-label">{new Date(key + "T12:00:00").getDate()}</text> : null)}
+          {(() => {
+            const points = last14.map((key, index) => {
+              const scheduled = key <= today && key >= habit.createdAt && isDue(habit, key);
+              const completed = scheduled && Boolean(habit.logs[key]);
+              return { key, index, scheduled, completed, x: 36 + index * (668 / 13), y: completed ? 26 : 90 };
+            }).filter((point) => point.scheduled);
+            const linePath = points.map((point, index) => (index === 0 ? "M " : "L ") + point.x.toFixed(2) + " " + point.y).join(" ");
+            const areaPath = points.length > 1 ? linePath + " L " + points[points.length - 1].x.toFixed(2) + " 96 L " + points[0].x.toFixed(2) + " 96 Z" : "";
+            const lineId = "cadence-habit-line-" + habit.id.replace(/[^a-zA-Z0-9_-]/g, "");
+            const areaId = "cadence-habit-area-" + habit.id.replace(/[^a-zA-Z0-9_-]/g, "");
+            return <>
+              {areaPath && <path d={areaPath} fill={"url(#" + areaId + ")"} className="habit-chart-area-path"/>}
+              {linePath && <path d={linePath} fill="none" stroke={"url(#" + lineId + ")"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="habit-chart-line-path"/>}
+              {points.map((point) => <circle key={point.key} cx={point.x} cy={point.y} r="4" className={point.completed ? "habit-chart-point is-complete" : "habit-chart-point is-missed"}>
+                <title>{point.key}: {point.completed ? "completed · 100%" : "not logged · 0%"}</title>
+              </circle>)}
+            </>;
+          })()}
+        </svg>
+        {due14 === 0 && <span className="habit-chart-empty">No scheduled check-ins to plot yet</span>}
       </div>
       <div className="habit-activity-legend"><span><i className="done"/>Completed</span><span><i className="missed"/>Not logged</span><span><i className="unscheduled"/>Not scheduled</span></div>
     </div>
