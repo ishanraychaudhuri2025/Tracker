@@ -1083,11 +1083,46 @@ function MonthlyActivityCalendar({
 }
 
 
-function HabitDetail({ habit, today, onToggle, onDelete }: { habit: Habit; today: string; onToggle: () => void; onDelete: () => void }) {
+function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habit; today: string; onToggle: () => void; onEdit: () => void; onDelete: () => void }) {
   const streak = getCurrentStreak(habit, today);
   const best = getBestStreak(habit, today);
   const last7 = Array.from({ length: 7 }, (_, index) => shiftKey(today, index - 6));
-  return <div className="habit-detail-row"><div className={`detail-emoji tone-${habit.color}`}>{habit.emoji}</div><div className="detail-main"><div className="detail-title-row"><b>{habit.name}</b><span className={`category-tag ${categoryTone[habit.category]}`}>{habit.category}</span><span className="frequency-tag">{habit.frequency}</span></div><p>{habit.cue ? `Cue: ${habit.cue}` : 'Choose a consistent cue'} <span>·</span> Minimum: {habit.minimum} {habit.reminderEnabled && habit.reminderTime && <span className="habit-reminder-tag"><Bell size={11} /> Reminder {formatReminderTime(habit.reminderTime)}</span>}</p><div className="mini-week">{last7.map((key) => <span key={key} className={`${habit.logs[key] ? 'done' : ''} ${key === today ? 'current' : ''}`} title={`${key}: ${habit.logs[key] ? 'completed' : 'not logged'}`}>{new Date(`${key}T12:00:00`).toLocaleDateString('en-US', { weekday: 'narrow' })}</span>)}</div></div><div className="detail-stats"><span><Flame size={14} /> <b>{streak}</b> current</span><span><Trophy size={14} /> <b>{best}</b> best</span></div><div className="detail-actions"><button className={`detail-check ${habit.logs[today] ? 'checked' : ''}`} onClick={onToggle} type="button">{habit.logs[today] ? <><Check size={14} /> Done today</> : <><Plus size={14} /> Check in</>}</button><button className="delete-button" onClick={onDelete} type="button" aria-label={`Delete ${habit.name}`} title="Delete habit"><X size={15} /></button></div></div>;
+  const last14 = Array.from({ length: 14 }, (_, index) => shiftKey(today, index - 13));
+  const completed14 = last14.filter((key) => key <= today && isDue(habit, key) && Boolean(habit.logs[key])).length;
+  const due14 = last14.filter((key) => key <= today && isDue(habit, key)).length;
+  return <article className="habit-detail-card">
+    <div className="habit-detail-row">
+      <div className={"detail-emoji tone-" + habit.color}>{habit.emoji}</div>
+      <div className="detail-main">
+        <div className="detail-title-row"><b>{habit.name}</b><span className={"category-tag " + categoryTone[habit.category]}>{habit.category}</span><span className="frequency-tag">{habit.frequency}</span></div>
+        <p>{habit.cue ? "Cue: " + habit.cue : "Choose a consistent cue"} <span>·</span> Minimum: {habit.minimum} {habit.reminderEnabled && habit.reminderTime && <span className="habit-reminder-tag"><Bell size={11} /> Reminder {formatReminderTime(habit.reminderTime)}</span>}</p>
+        <div className="mini-week">{last7.map((key) => <span key={key} className={(habit.logs[key] ? "done " : "") + (key === today ? "current" : "")} title={key + ": " + (habit.logs[key] ? "completed" : "not logged")}>{new Date(key + "T12:00:00").toLocaleDateString("en-US", { weekday: "narrow" })}</span>)}</div>
+      </div>
+      <div className="detail-stats"><span><Flame size={14} /> <b>{streak}</b> current</span><span><Trophy size={14} /> <b>{best}</b> best</span></div>
+      <div className="detail-actions">
+        <button className="habit-edit-button" onClick={onEdit} type="button" aria-label={"Edit " + habit.name} title="Edit habit"><Pencil size={14} /> Edit</button>
+        <button className={"detail-check " + (habit.logs[today] ? "checked" : "")} onClick={onToggle} type="button">{habit.logs[today] ? <><Check size={14} /> Done today</> : <><Plus size={14} /> Check in</>}</button>
+        <button className="delete-button" onClick={onDelete} type="button" aria-label={"Delete " + habit.name} title="Delete habit"><X size={15} /></button>
+      </div>
+    </div>
+    <div className="habit-detail-activity" aria-label={"Fourteen-day activity for " + habit.name}>
+      <div className="habit-activity-caption"><span>LAST 14 DAYS</span><span><b>{completed14}</b> / {due14} completed</span></div>
+      <div className="habit-activity-chart" role="img" aria-label={completed14 + " of " + due14 + " scheduled check-ins completed in the last 14 days"}>
+        {last14.map((key, index) => {
+          const due = isDue(habit, key);
+          const done = key <= today && due && Boolean(habit.logs[key]);
+          const future = key > today;
+          const height = done ? 27 : due && !future ? 8 : 4;
+          const label = new Date(key + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
+          return <span className="habit-activity-bar-slot" key={key} title={label + ": " + (future ? "up next" : !due ? "not scheduled" : done ? "completed" : "not logged")}>
+            <i className={done ? "is-done" : future ? "is-future" : due ? "is-missed" : "is-unscheduled"} style={{ height: height + "px", animationDelay: (index * 18) + "ms" }} />
+            {(index % 2 === 0 || index === 13) && <small>{new Date(key + "T12:00:00").getDate()}</small>}
+          </span>;
+        })}
+      </div>
+      <div className="habit-activity-legend"><span><i className="done"/>Completed</span><span><i className="missed"/>Not logged</span><span><i className="unscheduled"/>Not scheduled</span></div>
+    </div>
+  </article>;
 }
 
 function Principle({ icon, tag, title, copy }: { icon: ReactNode; tag: string; title: string; copy: string }) {
