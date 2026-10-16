@@ -148,10 +148,18 @@ function isDue(habit: Habit, dayKey: string): boolean {
 function getCurrentStreak(habit: Habit, dayKey = todayKey()): number {
   let count = 0;
   let cursor = habit.logs[dayKey] ? dayKey : shiftKey(dayKey, -1);
-  // A missed day breaks the streak; today may still be completed later.
-  while (habit.logs[cursor] && count < 500) {
+  let guard = 0;
+  // Streaks count scheduled repetitions, not calendar days the habit was never due.
+  while (cursor >= habit.createdAt && guard < 1500) {
+    if (!isDue(habit, cursor)) {
+      cursor = shiftKey(cursor, -1);
+      guard += 1;
+      continue;
+    }
+    if (!habit.logs[cursor]) break;
     count += 1;
     cursor = shiftKey(cursor, -1);
+    guard += 1;
   }
   return count;
 }
@@ -162,6 +170,11 @@ function getBestStreak(habit: Habit, dayKey = todayKey()): number {
   let cursor = habit.createdAt || Object.keys(habit.logs).sort()[0] || dayKey;
   let guard = 0;
   while (cursor <= dayKey && guard < 20000) {
+    if (!isDue(habit, cursor)) {
+      cursor = shiftKey(cursor, 1);
+      guard += 1;
+      continue;
+    }
     if (habit.logs[cursor]) {
       current += 1;
       best = Math.max(best, current);
@@ -1121,6 +1134,33 @@ function MonthlyActivityCalendar({
 }
 
 
+function HabitSessionTimer({ minutes }: { minutes: number }) {
+  const [remaining, setRemaining] = useState(minutes * 60);
+  const [running, setRunning] = useState(false);
+  useEffect(() => {
+    setRunning(false);
+    setRemaining(minutes * 60);
+  }, [minutes]);
+  useEffect(() => {
+    if (!running) return undefined;
+    const interval = window.setInterval(() => setRemaining((current) => Math.max(0, current - 1)), 1000);
+    return () => window.clearInterval(interval);
+  }, [running]);
+  useEffect(() => {
+    if (remaining === 0) setRunning(false);
+  }, [remaining]);
+  const minutesLeft = Math.floor(remaining / 60);
+  const secondsLeft = remaining % 60;
+  return <div className="habit-session-timer">
+    <span className="habit-session-timer-icon"><Timer size={14}/></span>
+    <span className="habit-session-timer-copy"><small>SESSION TIMER</small><b>{String(minutesLeft).padStart(2, '0')}:{String(secondsLeft).padStart(2, '0')}</b><em>{remaining === 0 ? 'Session complete' : running ? 'In progress' : 'Ready when you are'}</em></span>
+    <div className="habit-session-timer-actions">
+      <button type="button" className="habit-session-timer-start" disabled={remaining === 0} onClick={() => setRunning((value) => !value)}>{running ? 'Pause' : remaining === minutes * 60 ? 'Start' : 'Resume'}</button>
+      <button type="button" className="habit-session-timer-reset" onClick={() => { setRunning(false); setRemaining(minutes * 60); }} aria-label="Reset habit timer" title="Reset timer"><RotateCcw size={13}/></button>
+    </div>
+  </div>;
+}
+
 function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habit; today: string; onToggle: () => void; onEdit: () => void; onDelete: () => void }) {
   const streak = getCurrentStreak(habit, today);
   const best = getBestStreak(habit, today);
@@ -1133,9 +1173,14 @@ function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habi
     <div className="habit-detail-row">
       <div className={"detail-emoji tone-" + habit.color}>{habit.emoji}</div>
       <div className="detail-main">
-        <div className="detail-title-row"><b>{habit.name}</b><span className={"category-tag " + categoryTone[habit.category]}>{habit.category}</span><span className="frequency-tag">{habit.frequency}</span></div>
+        <div className="detail-title-row"><b>{habit.name}</b><span className={"category-tag " + categoryTone[habit.category]}>{habit.category}</span><span className="frequency-tag">{habit.frequency === 'Custom' ? 'Custom days' : habit.frequency}</span>{habit.durationMonths ? <span className="habit-duration-tag">{habit.durationMonths} mo plan</span> : null}</div>
         <p>{habit.cue ? "Cue: " + habit.cue : "Choose a consistent cue"} <span>·</span> Minimum: {habit.minimum} {habit.reminderEnabled && habit.reminderTime && <span className="habit-reminder-tag"><Bell size={11} /> Reminder {formatReminderTime(habit.reminderTime)}</span>}</p>
         <div className="mini-week">{last7.map((key) => <span key={key} className={(habit.logs[key] ? "done " : "") + (key === today ? "current" : "")} title={key + ": " + (habit.logs[key] ? "completed" : "not logged")}>{new Date(key + "T12:00:00").toLocaleDateString("en-US", { weekday: "narrow" })}</span>)}</div>
+        <div className="habit-plan-meta">
+          {habit.frequency === 'Custom' && <span><CalendarDays size={11}/>{(habit.scheduleDays ?? []).map((day) => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][day]).join(' · ') || 'No days selected'}</span>}
+          {habit.durationMonths ? <span><Clock3 size={11}/>{habit.durationMonths} month{habit.durationMonths === 1 ? '' : 's'} total</span> : <span><RotateCcw size={11}/>Ongoing</span>}
+          {habit.timerMinutes ? <span><Timer size={11}/>{habit.timerMinutes} min timer</span> : null}
+        </div>
       </div>
       <div className="detail-stats"><span><Flame size={14} /> <b>{streak}</b> current</span><span><Trophy size={14} /> <b>{best}</b> best</span></div>
       <div className="detail-actions">
@@ -1144,6 +1189,7 @@ function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habi
         <button className="delete-button" onClick={onDelete} type="button" aria-label={"Delete " + habit.name} title="Delete habit"><X size={15} /></button>
       </div>
     </div>
+    {habit.timerMinutes && habit.timerMinutes > 0 ? <HabitSessionTimer key={habit.id + ":" + habit.timerMinutes} minutes={habit.timerMinutes} /> : null}
     <div className="habit-detail-activity" aria-label={"Fourteen-day activity for " + habit.name}>
       <div className="habit-activity-caption"><span>LAST 14 DAYS</span><span><b>{completed14}</b> / {due14} completed</span></div>
       <div className="habit-activity-chart" role="img" aria-label={completed14 + " of " + due14 + " scheduled check-ins completed over the last 14 days. A line rises to 100 percent on completed check-ins and stays at zero for missed check-ins."}>
