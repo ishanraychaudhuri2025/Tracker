@@ -4,7 +4,7 @@ import type { Session } from '@supabase/supabase-js';
 import {
   Activity, ArrowRight, ArrowUpRight, BarChart3, Bell, BookOpen,
   CalendarDays, CalendarRange, Check, CheckCheck, ChevronDown, CircleHelp, Clock3, Flame, Focus,
-  Gauge, Leaf, ListTodo, LogOut, Moon, MoreHorizontal, Plus, RotateCcw, Settings2, ShieldCheck,
+  Gauge, Leaf, ListTodo, LogOut, Moon, MoreHorizontal, Pencil, Plus, RotateCcw, Settings2, ShieldCheck,
   Sparkles, Sun, Target, Timer, Trophy, X, Zap,
 } from 'lucide-react';
 import type { Category, Frequency, Habit, Page, Task } from './types';
@@ -165,7 +165,9 @@ function App() {
   const [page, setPage] = useState<Page>('Today');
   const [filter, setFilter] = useState<'All' | Category>('All');
   const [showHabitModal, setShowHabitModal] = useState(false);
-  const [habitDraft, setHabitDraft] = useState({ name: '', category: 'Craft' as Category, frequency: 'Daily' as Frequency, cue: '', minimum: '', reminderEnabled: false, reminderTime: '09:00', reminderSoundUrl: '' });
+  const [editingHabitId, setEditingHabitId] = useState<string | null>(null);
+  const emptyHabitDraft = { name: '', category: 'Craft' as Category, frequency: 'Daily' as Frequency, cue: '', minimum: '', reminderEnabled: false, reminderTime: '09:00', reminderSoundUrl: '' };
+  const [habitDraft, setHabitDraft] = useState(emptyHabitDraft);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>(typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'unsupported');
   const [activeReminder, setActiveReminder] = useState<ActiveReminder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -594,6 +596,27 @@ function App() {
     if (nextValue) setToast('Logged: ' + habit.name + (dayKey === today ? '' : ' · ' + dayKey));
   };
 
+  const openEditHabit = (habit: Habit) => {
+    setEditingHabitId(habit.id);
+    setHabitDraft({
+      name: habit.name,
+      category: habit.category,
+      frequency: habit.frequency,
+      cue: habit.cue,
+      minimum: habit.minimum,
+      reminderEnabled: Boolean(habit.reminderEnabled),
+      reminderTime: habit.reminderTime || '09:00',
+      reminderSoundUrl: habit.reminderSoundUrl || '',
+    });
+    setShowHabitModal(true);
+  };
+
+  const openCreateHabit = () => {
+    setEditingHabitId(null);
+    setHabitDraft({ ...emptyHabitDraft });
+    setShowHabitModal(true);
+  };
+
   const addHabit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const name = habitDraft.name.trim();
@@ -605,29 +628,36 @@ function App() {
     }
     const tone = categoryTone[habitDraft.category];
     const emoji = habitDraft.category === 'Body' ? '↗' : habitDraft.category === 'Mind' ? '◌' : habitDraft.category === 'Life' ? '✳' : '⌘';
+    const existing = editingHabitId ? habits.find((habit) => habit.id === editingHabitId) : undefined;
     const next: Habit = {
-      id: `h-${crypto.randomUUID()}`,
+      id: existing?.id ?? 'h-' + crypto.randomUUID(),
       name,
       emoji,
       category: habitDraft.category,
       frequency: habitDraft.frequency,
       cue: habitDraft.cue.trim() || 'Choose a consistent moment',
       minimum: habitDraft.minimum.trim() || 'Do the smallest version for two minutes',
-      logs: {},
-      createdAt: today,
+      logs: existing?.logs ?? {},
+      createdAt: existing?.createdAt ?? today,
       color: tone,
       reminderEnabled: habitDraft.reminderEnabled,
       ...(habitDraft.reminderEnabled ? { reminderTime: habitDraft.reminderTime } : {}),
       ...(habitDraft.reminderEnabled && reminderMedia ? { reminderSoundUrl: reminderMedia.originalUrl } : {}),
     };
-    setHabits((current) => [next, ...current]);
+    if (existing) {
+      setHabits((current) => current.map((habit) => habit.id === existing.id ? next : habit));
+    } else {
+      setHabits((current) => [next, ...current]);
+    }
+    const wasEditing = Boolean(existing);
     const reminderMessage = habitDraft.reminderEnabled
-      ? ` Reminder set for ${formatReminderTime(habitDraft.reminderTime)}; keep Cadence open for alerts.`
+      ? ' Reminder set for ' + formatReminderTime(habitDraft.reminderTime) + '; keep Cadence open for alerts.'
       : '';
-    setHabitDraft({ name: '', category: 'Craft', frequency: 'Daily', cue: '', minimum: '', reminderEnabled: false, reminderTime: '09:00', reminderSoundUrl: '' });
+    setHabitDraft({ ...emptyHabitDraft });
+    setEditingHabitId(null);
     setShowHabitModal(false);
     setPage('Habits');
-    setToast('Your new habit is ready.' + reminderMessage);
+    setToast((wasEditing ? 'Habit updated.' : 'Your new habit is ready.') + reminderMessage);
   };
 
   const toggleTask = (id: string, dayKey = today) => setTasks((current) => current.map((task) => {
@@ -658,7 +688,7 @@ function App() {
       <aside className="sidebar">
         <button className="brand-lockup" onClick={() => { setPage('Today'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} type="button" aria-label="Go to Cadence dashboard">
           <span className="brand-mark"><CadenceMark /></span>
-          <span className="brand-name">CADENCE</span>
+          <span className="brand-name" aria-label="CADENCE"><span aria-hidden="true">CAD</span><span className="cadence-wordmark-e" aria-hidden="true"><i/><i/><i/></span><span aria-hidden="true">NC</span><span className="cadence-wordmark-e" aria-hidden="true"><i/><i/><i/></span></span>
         </button>
         <div className="workspace-label">YOUR SPACE <span className="live-dot" /></div>
         <nav className="nav-list" aria-label="Main navigation">
@@ -675,7 +705,7 @@ function App() {
             </button>
           ))}
         </nav>
-        <div className="sidebar-section-head"><span>YOUR ROUTINES</span><IconButton label="Create a habit" onClick={() => setShowHabitModal(true)}><Plus size={15} /></IconButton></div>
+        <div className="sidebar-section-head"><span>YOUR ROUTINES</span><IconButton label="Create a habit" onClick={openCreateHabit}><Plus size={15} /></IconButton></div>
         <div className="routine-list">
           {habits.slice(0, 5).map((habit) => (
             <button className="routine-mini" key={habit.id} type="button" onClick={() => { setPage('Habits'); setFilter(habit.category); }}>
@@ -709,7 +739,7 @@ function App() {
             <div className="analytics-header-actions">
               <span className="analytics-saved"><i/> SAVED LOCALLY</span>
               <button type="button" className="secondary-button analytics-plain-button" onClick={() => setPage('Planner')}><CalendarDays size={14}/> Planner <ArrowUpRight size={13}/></button>
-              <button type="button" className="primary-button analytics-create-button" onClick={() => setShowHabitModal(true)}><Plus size={15}/> New routine</button>
+              <button type="button" className="primary-button analytics-create-button" onClick={openCreateHabit}><Plus size={15}/> New routine</button>
             </div>
           </section>
 
@@ -776,9 +806,9 @@ function App() {
         {page === 'Planner' && <PlannerPage habits={habits} tasks={tasks} today={today} onToggleHabit={toggleHabit} onToggleTask={toggleTask} onAddTask={addPlannerTask} />}
 
         {page === 'Habits' && <>
-          <section className="page-intro"><div><div className="eyebrow"><span className="eyebrow-line" /> BUILD YOUR BASELINE</div><h1>Habits, <span>by design.</span></h1><p className="welcome-sub">Make good actions easier to start and easier to repeat.</p></div><button className="primary-button" type="button" onClick={() => setShowHabitModal(true)}><Plus size={16} /> Create habit</button></section>
+          <section className="page-intro"><div><div className="eyebrow"><span className="eyebrow-line" /> BUILD YOUR BASELINE</div><h1>Habits, <span>by design.</span></h1><p className="welcome-sub">Make good actions easier to start and easier to repeat.</p></div><button className="primary-button" type="button" onClick={openCreateHabit}><Plus size={16} /> Create habit</button></section>
           <section className="habits-overview-strip"><div><span className="strip-label">ACTIVE ROUTINES</span><b>{habits.length.toString().padStart(2, '0')}</b></div><div><span className="strip-label">CHECKED IN TODAY</span><b>{doneToday}<small> / {dueHabits.length}</small></b></div><div><span className="strip-label">WEEKLY CONSISTENCY</span><b>{consistency}<small>%</small></b></div><div className="strip-quote"><Sparkles size={18} /><span>Let the minimum version keep the habit alive.</span></div></section>
-          <section className="panel habits-library"><div className="panel-heading"><div><div className="panel-overline">YOUR PERSONAL SYSTEM</div><h3>All routines <span className="heading-count">{habits.length}</span></h3></div><div className="filter-pills"><button type="button" className={filter === 'All' ? 'selected' : ''} onClick={() => setFilter('All')}>All</button>{categories.map((cat) => <button type="button" key={cat} className={filter === cat ? 'selected' : ''} onClick={() => setFilter(cat)}>{cat}</button>)}</div></div><div className="library-list">{filteredHabits.map((habit) => <HabitDetail key={habit.id} habit={habit} today={today} onToggle={() => toggleHabit(habit.id)} onDelete={() => { setHabits((current) => current.filter((item) => item.id !== habit.id)); setToast('Habit removed'); }} />)}{filteredHabits.length === 0 && <EmptyState title="Nothing in this category yet" body="A good system starts small. Add a routine when you’re ready." action="Add habit" onAction={() => setShowHabitModal(true)} />}</div></section>
+          <section className="panel habits-library"><div className="panel-heading"><div><div className="panel-overline">YOUR PERSONAL SYSTEM</div><h3>All routines <span className="heading-count">{habits.length}</span></h3></div><div className="filter-pills"><button type="button" className={filter === 'All' ? 'selected' : ''} onClick={() => setFilter('All')}>All</button>{categories.map((cat) => <button type="button" key={cat} className={filter === cat ? 'selected' : ''} onClick={() => setFilter(cat)}>{cat}</button>)}</div></div><div className="library-list">{filteredHabits.map((habit) => <HabitDetail key={habit.id} habit={habit} today={today} onToggle={() => toggleHabit(habit.id)} onEdit={() => openEditHabit(habit)} onDelete={() => { setHabits((current) => current.filter((item) => item.id !== habit.id)); setToast('Habit removed'); }} />)}{filteredHabits.length === 0 && <EmptyState title="Nothing in this category yet" body="A good system starts small. Add a routine when you’re ready." action="Add habit" onAction={openCreateHabit} />}</div></section>
           <section className="principle-grid"><Principle icon={<Zap size={18} />} tag="MAKE IT EASY" title="Shrink the first step" copy="Choose a minimum version so starting takes less effort than avoiding it." /><Principle icon={<CalendarDays size={18} />} tag="MAKE IT OBVIOUS" title="Attach it to a cue" copy="Give your habit a reliable place in the day: after coffee, before lunch, or when you close your laptop." /><Principle icon={<Trophy size={18} />} tag="MAKE IT VISIBLE" title="Record each rep" copy="A small check-in creates feedback. Review the pattern, then adjust the plan—not your self-worth." /></section>
         </>}
 
@@ -796,7 +826,7 @@ function App() {
         </>}
       </main>
 
-      {showHabitModal && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowHabitModal(false); }}><section className="habit-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div className="modal-top"><div><div className="panel-overline">START SMALL, STAY CONSISTENT</div><h2 id="modal-title">Create a habit</h2><p>Design the start, not just the finish line.</p></div><IconButton label="Close modal" onClick={() => setShowHabitModal(false)}><X size={18} /></IconButton></div><form onSubmit={addHabit}><label className="field-label">Habit name<input autoFocus value={habitDraft.name} onChange={(event) => setHabitDraft((draft) => ({ ...draft, name: event.target.value }))} placeholder="e.g. Practice coding" maxLength={70} required /></label><label className="field-label">Area of life<div className="category-select">{categories.map((category) => <button type="button" key={category} className={habitDraft.category === category ? `selected ${categoryTone[category]}` : ''} onClick={() => setHabitDraft((draft) => ({ ...draft, category }))}><span>{categoryEmoji[category]}</span>{category}</button>)}</div></label><label className="field-label">Frequency<select value={habitDraft.frequency} onChange={(event) => setHabitDraft((draft) => ({ ...draft, frequency: event.target.value as Frequency }))}>{frequencies.map((frequency) => <option key={frequency}>{frequency}</option>)}</select></label><label className="field-label">When will you do it? <span className="field-hint">A reliable cue</span><input value={habitDraft.cue} onChange={(event) => setHabitDraft((draft) => ({ ...draft, cue: event.target.value }))} placeholder="After I finish breakfast…" maxLength={100} /></label><label className="field-label">Your minimum version <span className="field-hint">Make it hard to say no</span><input value={habitDraft.minimum} onChange={(event) => setHabitDraft((draft) => ({ ...draft, minimum: event.target.value }))} placeholder="Read one page, write one line…" maxLength={100} /></label>
+      {showHabitModal && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) { setShowHabitModal(false); setEditingHabitId(null); setHabitDraft({ ...emptyHabitDraft }); } }}><section className="habit-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div className="modal-top"><div><div className="panel-overline">START SMALL, STAY CONSISTENT</div><h2 id="modal-title">{editingHabitId ? 'Edit habit' : 'Create a habit'}</h2><p>{editingHabitId ? 'Update your routine without losing its history.' : 'Design the start, not just the finish line.'}</p></div><IconButton label="Close modal" onClick={() => setShowHabitModal(false)}><X size={18} /></IconButton></div><form onSubmit={addHabit}><label className="field-label">Habit name<input autoFocus value={habitDraft.name} onChange={(event) => setHabitDraft((draft) => ({ ...draft, name: event.target.value }))} placeholder="e.g. Practice coding" maxLength={70} required /></label><label className="field-label">Area of life<div className="category-select">{categories.map((category) => <button type="button" key={category} className={habitDraft.category === category ? `selected ${categoryTone[category]}` : ''} onClick={() => setHabitDraft((draft) => ({ ...draft, category }))}><span>{categoryEmoji[category]}</span>{category}</button>)}</div></label><label className="field-label">Frequency<select value={habitDraft.frequency} onChange={(event) => setHabitDraft((draft) => ({ ...draft, frequency: event.target.value as Frequency }))}>{frequencies.map((frequency) => <option key={frequency}>{frequency}</option>)}</select></label><label className="field-label">When will you do it? <span className="field-hint">A reliable cue</span><input value={habitDraft.cue} onChange={(event) => setHabitDraft((draft) => ({ ...draft, cue: event.target.value }))} placeholder="After I finish breakfast…" maxLength={100} /></label><label className="field-label">Your minimum version <span className="field-hint">Make it hard to say no</span><input value={habitDraft.minimum} onChange={(event) => setHabitDraft((draft) => ({ ...draft, minimum: event.target.value }))} placeholder="Read one page, write one line…" maxLength={100} /></label>
           <section className="reminder-settings" aria-label="Habit reminder settings">
             <div className="reminder-settings-heading">
               <span className="reminder-bell-icon"><Bell size={17} /></span>
@@ -822,7 +852,7 @@ function App() {
               <p className="reminder-footnote">Reminders run while Cadence is open (including a minimized tab). Browser permission is needed for desktop notifications. You can snooze or stop the sound when it rings.</p>
             </div>}
           </section>
-          <div className="if-then-preview"><span><Sparkles size={15} /></span><p><b>Your if–then plan</b><br />If {habitDraft.cue.trim() || 'my cue happens'}, then I’ll {habitDraft.minimum.trim() || 'do the smallest version'}.</p></div><div className="modal-actions"><button className="secondary-button" type="button" onClick={() => setShowHabitModal(false)}>Cancel</button><button className="primary-button" type="submit"><Plus size={15} /> Create habit</button></div></form></section></div>}
+          <div className="if-then-preview"><span><Sparkles size={15} /></span><p><b>Your if–then plan</b><br />If {habitDraft.cue.trim() || 'my cue happens'}, then I’ll {habitDraft.minimum.trim() || 'do the smallest version'}.</p></div><div className="modal-actions"><button className="secondary-button" type="button" onClick={() => { setShowHabitModal(false); setEditingHabitId(null); setHabitDraft({ ...emptyHabitDraft }); }}>Cancel</button><button className="primary-button" type="submit">{editingHabitId ? <><Check size={15} /> Save changes</> : <><Plus size={15} /> Create habit</>}</button></div></form></section></div>}
       {activeReminder && <div className="reminder-alarm-backdrop" role="presentation">
         <section className="reminder-alarm" role="alertdialog" aria-modal="true" aria-labelledby="reminder-alarm-title">
           <span className="reminder-alarm-icon"><Bell size={22} /></span>
@@ -859,8 +889,9 @@ function CadenceMark() {
   return <svg className="cadence-mark-svg" viewBox="0 0 44 44" role="img" aria-label="Cadence waveform">
     <defs>
       <linearGradient id="cadence-wave-stroke" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#72FFF2" />
-        <stop offset="100%" stopColor="#16C9D9" />
+        <stop offset="0%" stopColor="#E3B4FF" />
+        <stop offset="48%" stopColor="#C16BFF" />
+        <stop offset="100%" stopColor="#8B35E6" />
       </linearGradient>
     </defs>
     <path d="M2 23 C7 23 8 23 11 20 C14 17 14 10 18 10 C22 10 22 34 27 34 C31 34 32 6 36 6 C39 6 40 21 42 21" fill="none" stroke="url(#cadence-wave-stroke)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
@@ -1053,11 +1084,47 @@ function MonthlyActivityCalendar({
 }
 
 
-function HabitDetail({ habit, today, onToggle, onDelete }: { habit: Habit; today: string; onToggle: () => void; onDelete: () => void }) {
+function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habit; today: string; onToggle: () => void; onEdit: () => void; onDelete: () => void }) {
   const streak = getCurrentStreak(habit, today);
   const best = getBestStreak(habit, today);
   const last7 = Array.from({ length: 7 }, (_, index) => shiftKey(today, index - 6));
-  return <div className="habit-detail-row"><div className={`detail-emoji tone-${habit.color}`}>{habit.emoji}</div><div className="detail-main"><div className="detail-title-row"><b>{habit.name}</b><span className={`category-tag ${categoryTone[habit.category]}`}>{habit.category}</span><span className="frequency-tag">{habit.frequency}</span></div><p>{habit.cue ? `Cue: ${habit.cue}` : 'Choose a consistent cue'} <span>·</span> Minimum: {habit.minimum} {habit.reminderEnabled && habit.reminderTime && <span className="habit-reminder-tag"><Bell size={11} /> Reminder {formatReminderTime(habit.reminderTime)}</span>}</p><div className="mini-week">{last7.map((key) => <span key={key} className={`${habit.logs[key] ? 'done' : ''} ${key === today ? 'current' : ''}`} title={`${key}: ${habit.logs[key] ? 'completed' : 'not logged'}`}>{new Date(`${key}T12:00:00`).toLocaleDateString('en-US', { weekday: 'narrow' })}</span>)}</div></div><div className="detail-stats"><span><Flame size={14} /> <b>{streak}</b> current</span><span><Trophy size={14} /> <b>{best}</b> best</span></div><div className="detail-actions"><button className={`detail-check ${habit.logs[today] ? 'checked' : ''}`} onClick={onToggle} type="button">{habit.logs[today] ? <><Check size={14} /> Done today</> : <><Plus size={14} /> Check in</>}</button><button className="delete-button" onClick={onDelete} type="button" aria-label={`Delete ${habit.name}`} title="Delete habit"><X size={15} /></button></div></div>;
+  const last14 = Array.from({ length: 14 }, (_, index) => shiftKey(today, index - 13));
+  const tracked14 = (key: string) => key >= habit.createdAt && isDue(habit, key);
+  const completed14 = last14.filter((key) => key <= today && tracked14(key) && Boolean(habit.logs[key])).length;
+  const due14 = last14.filter((key) => key <= today && tracked14(key)).length;
+  return <article className="habit-detail-card">
+    <div className="habit-detail-row">
+      <div className={"detail-emoji tone-" + habit.color}>{habit.emoji}</div>
+      <div className="detail-main">
+        <div className="detail-title-row"><b>{habit.name}</b><span className={"category-tag " + categoryTone[habit.category]}>{habit.category}</span><span className="frequency-tag">{habit.frequency}</span></div>
+        <p>{habit.cue ? "Cue: " + habit.cue : "Choose a consistent cue"} <span>·</span> Minimum: {habit.minimum} {habit.reminderEnabled && habit.reminderTime && <span className="habit-reminder-tag"><Bell size={11} /> Reminder {formatReminderTime(habit.reminderTime)}</span>}</p>
+        <div className="mini-week">{last7.map((key) => <span key={key} className={(habit.logs[key] ? "done " : "") + (key === today ? "current" : "")} title={key + ": " + (habit.logs[key] ? "completed" : "not logged")}>{new Date(key + "T12:00:00").toLocaleDateString("en-US", { weekday: "narrow" })}</span>)}</div>
+      </div>
+      <div className="detail-stats"><span><Flame size={14} /> <b>{streak}</b> current</span><span><Trophy size={14} /> <b>{best}</b> best</span></div>
+      <div className="detail-actions">
+        <button className="habit-edit-button" onClick={onEdit} type="button" aria-label={"Edit " + habit.name} title="Edit habit"><Pencil size={14} /> Edit</button>
+        <button className={"detail-check " + (habit.logs[today] ? "checked" : "")} onClick={onToggle} type="button">{habit.logs[today] ? <><Check size={14} /> Done today</> : <><Plus size={14} /> Check in</>}</button>
+        <button className="delete-button" onClick={onDelete} type="button" aria-label={"Delete " + habit.name} title="Delete habit"><X size={15} /></button>
+      </div>
+    </div>
+    <div className="habit-detail-activity" aria-label={"Fourteen-day activity for " + habit.name}>
+      <div className="habit-activity-caption"><span>LAST 14 DAYS</span><span><b>{completed14}</b> / {due14} completed</span></div>
+      <div className="habit-activity-chart" role="img" aria-label={completed14 + " of " + due14 + " scheduled check-ins completed in the last 14 days"}>
+        {last14.map((key, index) => {
+          const due = tracked14(key);
+          const done = key <= today && due && Boolean(habit.logs[key]);
+          const future = key > today;
+          const height = done ? 27 : due && !future ? 8 : 4;
+          const label = new Date(key + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
+          return <span className="habit-activity-bar-slot" key={key} title={label + ": " + (future ? "up next" : !due ? "not scheduled" : done ? "completed" : "not logged")}>
+            <i className={done ? "is-done" : future ? "is-future" : due ? "is-missed" : "is-unscheduled"} style={{ height: height + "px", animationDelay: (index * 18) + "ms" }} />
+            {(index % 2 === 0 || index === 13) && <small>{new Date(key + "T12:00:00").getDate()}</small>}
+          </span>;
+        })}
+      </div>
+      <div className="habit-activity-legend"><span><i className="done"/>Completed</span><span><i className="missed"/>Not logged</span><span><i className="unscheduled"/>Not scheduled</span></div>
+    </div>
+  </article>;
 }
 
 function Principle({ icon, tag, title, copy }: { icon: ReactNode; tag: string; title: string; copy: string }) {
