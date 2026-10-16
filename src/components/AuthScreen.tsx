@@ -83,18 +83,7 @@ export default function AuthScreen({ initialMode = 'signin' }: AuthScreenProps) 
     <section className="auth-layout">
       <div className="auth-brand-column">
         <div className="auth-brand-lockup">
-          <span className="auth-brand-mark"><svg viewBox="0 0 44 44" aria-hidden="true"><path d="M2 23 C7 23 8 23 11 20 C14 17 14 10 18 10 C22 10 22 34 27 34 C31 34 32 6 36 6 C39 6 40 21 42 21" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
-          <span className="auth-wordmark" role="img" aria-label="CADENCE"><svg className="cadence-wordmark-svg" viewBox="0 0 226 32" aria-hidden="true" focusable="false">
-            <g fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="square" strokeLinejoin="miter">
-              <path d="M24 5H14C8 5 5 9 5 16S8 27 14 27H24"/>
-              <path d="M35 27 48 5 61 27"/>
-              <path d="M72 5V27H82C90 27 94 23 94 16S90 5 82 5Z"/>
-              <path d="M105 5H125M105 16H121M105 27H125"/>
-              <path d="M136 27V5L156 27V5"/>
-              <path d="M187 5H177C170 5 167 9 167 16S170 27 177 27H187"/>
-              <path d="M198 5H219M198 16H215M198 27H219"/>
-            </g>
-          </svg></span>
+          <img className="cadence-lockup-image" src="/cadence-lockup.webp" alt="Cadence" width="163" height="52" />
         </div>
         <div className="auth-brand-copy">
           <span className="auth-eyebrow"><span/> YOUR PERSONAL PERFORMANCE SYSTEM</span>
