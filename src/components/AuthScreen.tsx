@@ -83,8 +83,8 @@ export default function AuthScreen({ initialMode = 'signin' }: AuthScreenProps) 
     <section className="auth-layout">
       <div className="auth-brand-column">
         <div className="auth-brand-lockup">
-          <span className="auth-brand-mark"><svg viewBox="0 0 36 36" aria-hidden="true"><path d="M19.8 3.5 7 20.2h8.2l-1.8 12.3L29 14.9h-8.4L19.8 3.5Z" fill="currentColor"/></svg></span>
-          <span>streako <i>/ OS</i></span>
+          <span className="auth-brand-mark"><svg viewBox="0 0 44 44" aria-hidden="true"><path d="M2 23 C7 23 8 23 11 20 C14 17 14 10 18 10 C22 10 22 34 27 34 C31 34 32 6 36 6 C39 6 40 21 42 21" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
+          <span className="auth-wordmark">CADENCE</span>
         </div>
         <div className="auth-brand-copy">
           <span className="auth-eyebrow"><span/> YOUR PERSONAL PERFORMANCE SYSTEM</span>
@@ -96,7 +96,7 @@ export default function AuthScreen({ initialMode = 'signin' }: AuthScreenProps) 
             <div><span><Sparkles size={16}/></span><div><b>Progress without pressure</b><small>Small, repeatable actions beat perfect streaks.</small></div></div>
           </div>
         </div>
-        <div className="auth-footnote">STREAKO ANALYTICS · PERSONAL DATA SYSTEM</div>
+        <div className="auth-footnote">CADENCE · PERSONAL PERFORMANCE SYSTEM</div>
       </div>
 
       <div className="auth-form-column">
@@ -104,7 +104,7 @@ export default function AuthScreen({ initialMode = 'signin' }: AuthScreenProps) 
           <span className="auth-form-icon"><LockKeyhole size={17}/></span>
           <span className="auth-form-kicker">{mode === 'signup' ? 'START YOUR WORKSPACE' : mode === 'reset' || mode === 'update' ? 'ACCOUNT RECOVERY' : 'WELCOME BACK'}</span>
         </div>
-        <h2>{mode === 'signup' ? 'Create your account' : mode === 'reset' ? 'Reset your password' : mode === 'update' ? 'Choose a new password' : 'Sign in to Streako'}</h2>
+        <h2>{mode === 'signup' ? 'Create your account' : mode === 'reset' ? 'Reset your password' : mode === 'update' ? 'Choose a new password' : 'Sign in to Cadence'}</h2>
         <p className="auth-form-subtitle">{mode === 'signup' ? 'A calmer system starts with a clean slate.' : mode === 'reset' ? 'We’ll email you a secure reset link.' : mode === 'update' ? 'Choose a fresh password to secure your workspace.' : 'Your next small win is waiting.'}</p>
         <form onSubmit={submit} className="auth-form">
           {mode !== 'update' && <label>Email address <span className="auth-input-wrap"><Mail size={15}/><input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" required maxLength={254}/></span></label>}
@@ -118,7 +118,7 @@ export default function AuthScreen({ initialMode = 'signin' }: AuthScreenProps) 
         {mode === 'signup' ? <p className="auth-switch">Already have an account? <button type="button" onClick={() => switchMode('signin')}>Sign in</button></p>
           : mode === 'reset' ? <p className="auth-switch"><button type="button" onClick={() => switchMode('signin')}>Back to sign in</button></p>
           : mode === 'update' ? <p className="auth-switch">Use a password you haven’t used here before.</p>
-          : <p className="auth-switch">New to Streako? <button type="button" onClick={() => switchMode('signup')}>Create an account</button></p>}
+          : <p className="auth-switch">New to Cadence? <button type="button" onClick={() => switchMode('signup')}>Create an account</button></p>}
         <div className="auth-secure-note"><ShieldCheck size={13}/> Secure account access · Encrypted in transit</div>
       </div>
     </section>

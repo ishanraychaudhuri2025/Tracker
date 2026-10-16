@@ -16,6 +16,7 @@ export interface Habit {
   color: string;
   reminderEnabled?: boolean;
   reminderTime?: string;
+  reminderSoundUrl?: string;
 }
 
 export interface Task {

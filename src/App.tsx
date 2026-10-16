@@ -25,7 +25,46 @@ const categories: Category[] = ['Mind', 'Body', 'Craft', 'Life'];
 const frequencies: Frequency[] = ['Daily', 'Weekdays', 'Weekends', '3× / week'];
 const categoryTone: Record<Category, string> = { Mind: 'violet', Body: 'lime', Craft: 'orange', Life: 'blue' };
 const categoryEmoji: Record<Category, string> = { Mind: '◌', Body: '↗', Craft: '✳', Life: '⌂' };
-type ActiveReminder = { habitId: string; habitName: string; reminderTime: string };
+type ActiveReminder = { habitId: string; habitName: string; reminderTime: string; reminderSoundUrl?: string };
+
+type ReminderMedia = { provider: 'YouTube' | 'Spotify'; originalUrl: string; embedUrl: string };
+
+function parseReminderMedia(input?: string): ReminderMedia | null {
+  if (!input?.trim()) return null;
+  try {
+    const parsed = new URL(input.trim());
+    const host = parsed.hostname.toLowerCase().replace(/^www\./, '');
+    if (host === 'youtu.be' || host === 'youtube.com' || host === 'm.youtube.com' || host === 'youtube-nocookie.com') {
+      const segments = parsed.pathname.split('/').filter(Boolean);
+      const videoId = host === 'youtu.be'
+        ? segments[0]
+        : parsed.searchParams.get('v') || (['embed', 'shorts', 'live'].includes(segments[0] || '') ? segments[1] : undefined);
+      if (!videoId || !/^[a-zA-Z0-9_-]{6,20}$/.test(videoId)) return null;
+      return {
+        provider: 'YouTube',
+        originalUrl: parsed.toString(),
+        embedUrl: 'https://www.youtube-nocookie.com/embed/' + videoId + '?autoplay=1&rel=0&playsinline=1',
+      };
+    }
+    if (host === 'open.spotify.com') {
+      const segments = parsed.pathname.split('/').filter(Boolean);
+      const types = ['track', 'album', 'playlist', 'episode', 'show'];
+      const typeIndex = segments.findIndex((segment) => types.includes(segment));
+      const type = segments[typeIndex];
+      const mediaId = segments[typeIndex + 1];
+      if (!type || !mediaId || !/^[a-zA-Z0-9]+$/.test(mediaId)) return null;
+      return {
+        provider: 'Spotify',
+        originalUrl: parsed.toString(),
+        embedUrl: 'https://open.spotify.com/embed/' + type + '/' + mediaId + '?utm_source=generator',
+      };
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 const formatReminderTime = (time: string) => {
   const [hours, minutes] = time.split(':').map(Number);
   return new Date(2000, 0, 1, hours, minutes).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
@@ -126,7 +165,7 @@ function App() {
   const [page, setPage] = useState<Page>('Today');
   const [filter, setFilter] = useState<'All' | Category>('All');
   const [showHabitModal, setShowHabitModal] = useState(false);
-  const [habitDraft, setHabitDraft] = useState({ name: '', category: 'Craft' as Category, frequency: 'Daily' as Frequency, cue: '', minimum: '', reminderEnabled: false, reminderTime: '09:00' });
+  const [habitDraft, setHabitDraft] = useState({ name: '', category: 'Craft' as Category, frequency: 'Daily' as Frequency, cue: '', minimum: '', reminderEnabled: false, reminderTime: '09:00', reminderSoundUrl: '' });
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>(typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'unsupported');
   const [activeReminder, setActiveReminder] = useState<ActiveReminder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -146,6 +185,7 @@ function App() {
   const [cloudStatus, setCloudStatus] = useState(supabaseConfigured ? 'Connecting…' : 'Saved locally');
   const [cloudError, setCloudError] = useState('');
   const today = todayKey();
+  const activeReminderMedia = parseReminderMedia(activeReminder?.reminderSoundUrl);
 
   const unlockReminderAudio = () => {
     if (typeof window === 'undefined' || !window.AudioContext) return;
@@ -182,7 +222,7 @@ function App() {
     }
     if (Notification.permission === 'denied') {
       setNotificationPermission('denied');
-      setToast('Notifications are blocked. Open the site controls beside the address bar and allow notifications for Streako.');
+      setToast('Notifications are blocked. Open the site controls beside the address bar and allow notifications for Cadence.');
       return;
     }
     try {
@@ -190,7 +230,7 @@ function App() {
       setNotificationPermission(permission);
       setToast(permission === 'granted'
         ? 'Desktop notifications enabled for habit reminders.'
-        : 'Notifications were not allowed. Your in-app sound reminder can still work while Streako is open.');
+        : 'Notifications were not allowed. Your in-app sound reminder can still work while Cadence is open.');
     } catch {
       setToast('The browser could not request notification permission. Check this site’s browser settings.');
     }
@@ -213,12 +253,12 @@ function App() {
       setActiveReminder(reminder);
       if ('Notification' in window && Notification.permission === 'granted') {
         try {
-          new Notification(`Time for ${reminder.habitName}`, { body: 'Your snoozed Streako habit reminder is here.' });
+          new Notification(`Time for ${reminder.habitName}`, { body: 'Your snoozed Cadence habit reminder is here.' });
         } catch { /* In-app alarm still appears if desktop notifications are unavailable. */ }
       }
       snoozeTimeoutRef.current = null;
     }, 10 * 60 * 1000);
-    setToast('Reminder snoozed for 10 minutes. Keep Streako open.');
+    setToast('Reminder snoozed for 10 minutes. Keep Cadence open.');
   };
 
   useEffect(() => {
@@ -414,7 +454,7 @@ function App() {
         if ('Notification' in window && Notification.permission === 'granted') {
           try {
             const notification = new Notification(`Time for ${habit.name}`, {
-              body: 'A small step is enough. Open Streako to check in.',
+              body: 'A small step is enough. Open Cadence to check in.',
               tag: `streako-${habit.id}-${day}`,
             });
             notification.onclick = () => {
@@ -428,6 +468,7 @@ function App() {
         habitId: fresh[0].id,
         habitName: fresh[0].name,
         reminderTime: currentTime,
+        reminderSoundUrl: fresh[0].reminderSoundUrl,
       });
     };
     const interval = window.setInterval(checkReminders, 10000);
@@ -437,7 +478,10 @@ function App() {
 
   useEffect(() => {
     if (!activeReminder) return undefined;
+    // A custom player is shown for linked music; one native chime still alerts
+    // the user because browser autoplay policies can block embedded media.
     playReminderMelody();
+    if (activeReminder.reminderSoundUrl) return undefined;
     const interval = window.setInterval(playReminderMelody, 2800);
     return () => window.clearInterval(interval);
   }, [activeReminder]);
@@ -554,6 +598,11 @@ function App() {
     event.preventDefault();
     const name = habitDraft.name.trim();
     if (!name) return;
+    const reminderMedia = parseReminderMedia(habitDraft.reminderSoundUrl);
+    if (habitDraft.reminderSoundUrl.trim() && !reminderMedia) {
+      setToast('Add a valid YouTube or Spotify track, album, or playlist link.');
+      return;
+    }
     const tone = categoryTone[habitDraft.category];
     const emoji = habitDraft.category === 'Body' ? '↗' : habitDraft.category === 'Mind' ? '◌' : habitDraft.category === 'Life' ? '✳' : '⌘';
     const next: Habit = {
@@ -569,12 +618,13 @@ function App() {
       color: tone,
       reminderEnabled: habitDraft.reminderEnabled,
       ...(habitDraft.reminderEnabled ? { reminderTime: habitDraft.reminderTime } : {}),
+      ...(habitDraft.reminderEnabled && reminderMedia ? { reminderSoundUrl: reminderMedia.originalUrl } : {}),
     };
     setHabits((current) => [next, ...current]);
     const reminderMessage = habitDraft.reminderEnabled
-      ? ` Reminder set for ${formatReminderTime(habitDraft.reminderTime)}; keep Streako open for alerts.`
+      ? ` Reminder set for ${formatReminderTime(habitDraft.reminderTime)}; keep Cadence open for alerts.`
       : '';
-    setHabitDraft({ name: '', category: 'Craft', frequency: 'Daily', cue: '', minimum: '', reminderEnabled: false, reminderTime: '09:00' });
+    setHabitDraft({ name: '', category: 'Craft', frequency: 'Daily', cue: '', minimum: '', reminderEnabled: false, reminderTime: '09:00', reminderSoundUrl: '' });
     setShowHabitModal(false);
     setPage('Habits');
     setToast('Your new habit is ready.' + reminderMessage);
@@ -596,7 +646,7 @@ function App() {
 
   if (supabaseConfigured && passwordRecovery) return <AuthScreen initialMode="update" />;
     if (supabaseConfigured && !authReady) {
-    return <div className="auth-loading-screen"><div className="auth-loading-mark"><BoltMark /></div><h1>Preparing your workspace</h1><p>Securely loading your routines and task history…</p></div>;
+    return <div className="auth-loading-screen"><div className="auth-loading-mark"><CadenceMark /></div><h1>Preparing your workspace</h1><p>Securely loading your routines and task history…</p></div>;
   }
   if (supabaseConfigured && !authSession) return <AuthScreen />;
   if (supabaseConfigured && authSession && !workspaceReady) {
@@ -606,9 +656,9 @@ function App() {
   return (
     <div className={`app-shell ${dark ? 'dark-mode' : 'light-mode'}`}>
       <aside className="sidebar">
-        <button className="brand-lockup" onClick={() => setPage('Today')} type="button" aria-label="Go to today">
-          <span className="brand-mark"><BoltMark /></span>
-          <span className="brand-name">streako<span className="brand-elite"> / OS</span></span>
+        <button className="brand-lockup" onClick={() => { setPage('Today'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} type="button" aria-label="Go to Cadence dashboard">
+          <span className="brand-mark"><CadenceMark /></span>
+          <span className="brand-name">CADENCE</span>
         </button>
         <div className="workspace-label">YOUR SPACE <span className="live-dot" /></div>
         <nav className="nav-list" aria-label="Main navigation">
@@ -619,7 +669,7 @@ function App() {
             { label: 'Insights' as Page, icon: BarChart3, sub: 'Patterns & progress' },
             { label: 'Focus' as Page, icon: Focus, sub: 'Make room for deep work' },
           ]).map(({ label, icon: Icon, sub }) => (
-            <button key={label} className={`nav-item ${page === label ? 'active' : ''}`} onClick={() => setPage(label)} type="button">
+            <button key={label} className={`nav-item ${page === label ? 'active' : ''}`} onClick={() => { setPage(label); window.scrollTo({ top: 0, behavior: 'smooth' }); }} type="button">
               <span className="nav-icon"><Icon size={17} /></span><span className="nav-copy"><b>{label}</b><small>{sub}</small></span>
               {label === 'Today' && <span className="nav-count">{Math.max(0, dueHabits.length - doneToday)}</span>}
             </button>
@@ -646,7 +696,7 @@ function App() {
       <main className="main-content">
         <header className="topbar">
           <div className="breadcrumbs"><span>Workspace</span><span className="crumb-slash">/</span><b>{page}</b></div>
-          <div className="topbar-actions"><span className="local-save" title={cloudError || cloudStatus}><span className="save-dot" /> {cloudStatus}</span><IconButton label="Notifications and reminders" onClick={() => { const count = habits.filter((habit) => habit.reminderEnabled).length; setToast(count ? `${count} habit reminder${count === 1 ? '' : 's'} scheduled. Streako must remain open for alerts.` : 'No reminders yet. Enable one when creating a habit.'); }}><Bell size={17} /></IconButton><button className="date-chip" type="button" onClick={() => setPage('Today')}><CalendarDays size={15} />{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}<ChevronDown size={13} /></button></div>
+          <div className="topbar-actions"><span className="local-save" title={cloudError || cloudStatus}><span className="save-dot" /> {cloudStatus}</span><IconButton label="Notifications and reminders" onClick={() => { const count = habits.filter((habit) => habit.reminderEnabled).length; setToast(count ? `${count} habit reminder${count === 1 ? '' : 's'} scheduled. Cadence must remain open for alerts.` : 'No reminders yet. Enable one when creating a habit.'); }}><Bell size={17} /></IconButton><button className="date-chip" type="button" onClick={() => setPage('Today')}><CalendarDays size={15} />{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}<ChevronDown size={13} /></button></div>
         </header>
 
         {page === 'Today' && <>
@@ -720,7 +770,7 @@ function App() {
 
           <WeeklyTracker habits={habits} today={today} onToggle={toggleHabit} />
 
-          <footer className="analytics-footer"><span><BoltMark/> STREAKO ANALYTICS / PERSONAL DATA SYSTEM</span><span>YOUR PROGRESS, WITHOUT THE NOISE.</span></footer>
+          <footer className="analytics-footer"><span><CadenceMark/> CADENCE / PERSONAL PERFORMANCE SYSTEM</span><span>YOUR PROGRESS, WITHOUT THE NOISE.</span></footer>
         </>}
   
         {page === 'Planner' && <PlannerPage habits={habits} tasks={tasks} today={today} onToggleHabit={toggleHabit} onToggleTask={toggleTask} onAddTask={addPlannerTask} />}
@@ -761,20 +811,38 @@ function App() {
               <label className="field-label reminder-time-label">Reminder time
                 <input type="time" value={habitDraft.reminderTime} onChange={(event) => setHabitDraft((draft) => ({ ...draft, reminderTime: event.target.value }))} required />
               </label>
+              <label className="field-label reminder-sound-label">Custom music link <span className="field-hint">Optional · YouTube or Spotify</span>
+                <input type="url" value={habitDraft.reminderSoundUrl} onChange={(event) => setHabitDraft((draft) => ({ ...draft, reminderSoundUrl: event.target.value }))} placeholder="https://open.spotify.com/track/…" autoComplete="url" />
+              </label>
+              <p className="reminder-music-help">Add a song, album or playlist. When the alarm appears, Cadence will show its player; YouTube and Spotify may require you to press Play or sign in. A Cadence chime remains as a fallback.</p>
               <div className="reminder-notification-option">
                 <span className="reminder-permission-status">{notificationPermission === 'granted' ? 'Desktop notifications enabled' : notificationPermission === 'denied' ? 'Browser notifications are blocked' : notificationPermission === 'unsupported' ? 'Desktop notifications unavailable' : 'Allow desktop notifications'}</span>
                 <button type="button" className="secondary-button notification-permission-button" onClick={() => { void enableDesktopNotifications(); }}>{notificationPermission === 'granted' ? 'Enabled' : notificationPermission === 'denied' ? 'How to allow' : notificationPermission === 'unsupported' ? 'Not supported' : 'Enable'}</button>
               </div>
-              <p className="reminder-footnote">Reminders run while Streako is open (including a minimized tab). Browser permission is needed for desktop notifications. You can snooze or stop the sound when it rings.</p>
+              <p className="reminder-footnote">Reminders run while Cadence is open (including a minimized tab). Browser permission is needed for desktop notifications. You can snooze or stop the sound when it rings.</p>
             </div>}
           </section>
           <div className="if-then-preview"><span><Sparkles size={15} /></span><p><b>Your if–then plan</b><br />If {habitDraft.cue.trim() || 'my cue happens'}, then I’ll {habitDraft.minimum.trim() || 'do the smallest version'}.</p></div><div className="modal-actions"><button className="secondary-button" type="button" onClick={() => setShowHabitModal(false)}>Cancel</button><button className="primary-button" type="submit"><Plus size={15} /> Create habit</button></div></form></section></div>}
       {activeReminder && <div className="reminder-alarm-backdrop" role="presentation">
         <section className="reminder-alarm" role="alertdialog" aria-modal="true" aria-labelledby="reminder-alarm-title">
           <span className="reminder-alarm-icon"><Bell size={22} /></span>
-          <span className="reminder-alarm-kicker">STREAKO REMINDER · {formatReminderTime(activeReminder.reminderTime)}</span>
+          <span className="reminder-alarm-kicker">CADENCE REMINDER · {formatReminderTime(activeReminder.reminderTime)}</span>
           <h2 id="reminder-alarm-title">Time for {activeReminder.habitName}</h2>
           <p>A small step counts. Check in now, or snooze this reminder for ten minutes.</p>
+          {activeReminderMedia && <section className="reminder-media-player" aria-label="Custom reminder music">
+            <div className="reminder-media-heading"><span className="reminder-media-wave"><CadenceMark /></span><div><b>Your reminder soundtrack</b><small>{activeReminderMedia?.provider} player</small></div></div>
+            <iframe
+              src={activeReminderMedia?.embedUrl}
+              title={'Cadence reminder music from ' + activeReminderMedia?.provider}
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              referrerPolicy="strict-origin-when-cross-origin"
+              loading="eager"
+              className="reminder-media-iframe"
+            />
+            <a className="reminder-media-open" href={activeReminderMedia?.originalUrl} target="_blank" rel="noreferrer">
+              Open in {activeReminderMedia?.provider} <ArrowUpRight size={13}/>
+            </a>
+          </section>}
           <div className="reminder-alarm-actions">
             <button type="button" className="secondary-button" onClick={snoozeReminderAlarm}><Clock3 size={15} /> Snooze 10 min</button>
             <button type="button" className="primary-button" onClick={() => { toggleHabit(activeReminder.habitId); stopReminderAlarm(); }}><Check size={15} /> Mark done</button>
@@ -787,10 +855,15 @@ function App() {
   );
 }
 
-function BoltMark() {
-  return <svg className="bolt-mark-svg" viewBox="0 0 36 36" aria-hidden="true" focusable="false">
-    <path d="M19.8 3.5 7 20.2h8.2l-1.8 12.3L29 14.9h-8.4L19.8 3.5Z" fill="currentColor" />
-    <path d="m7 20.2 8.2 0" fill="none" stroke="rgba(255,255,255,.65)" strokeWidth="1.1" strokeLinecap="round" />
+function CadenceMark() {
+  return <svg className="cadence-mark-svg" viewBox="0 0 44 44" role="img" aria-label="Cadence waveform">
+    <defs>
+      <linearGradient id="cadence-wave-stroke" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#72FFF2" />
+        <stop offset="100%" stopColor="#16C9D9" />
+      </linearGradient>
+    </defs>
+    <path d="M2 23 C7 23 8 23 11 20 C14 17 14 10 18 10 C22 10 22 34 27 34 C31 34 32 6 36 6 C39 6 40 21 42 21" fill="none" stroke="url(#cadence-wave-stroke)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>;
 }
 function StatCard({ icon, label, value, detail, tone }: { icon: ReactNode; label: string; value: string; detail: string; tone: string }) {
