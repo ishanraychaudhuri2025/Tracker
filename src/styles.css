@@ -3383,3 +3383,35 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   .app-shell :is(.panel,.stat-card,.analytics-metric-card,.analytics-chart-panel,.analytics-side-card,.analytics-table-panel,.nav-item,.primary-button,.secondary-button) { transition: none !important; }
   .reminder-alarm { animation: none !important; }
 }
+
+
+/* High-specificity final state colors; override legacy lime rules in older CSS. */
+.app-shell.dark-mode :is(.habit-checkbox.checked,.todo-box.checked,.weekly-tick.done,.analytics-tick.checked,.analytics-today-toggle.checked,.planner-check.checked) {
+  color: #080b16 !important;
+  background: linear-gradient(135deg,#c6b7ff,#8f8dff) !important;
+  border-color: #b6a8ff !important;
+  box-shadow: 0 0 12px rgba(160,140,255,.16) !important;
+}
+.app-shell.dark-mode :is(.weekly-legend-box.done,.planner-legend-dot.done,.weekly-chart-day.is-today .weekly-bar-track>span) {
+  background: linear-gradient(90deg,#b9a6ff,#3fe4e3) !important;
+}
+.app-shell.dark-mode .weekly-chart-day.is-today { border-color:rgba(67,228,227,.42)!important; }
+.app-shell.dark-mode .weekly-chart-day.is-today .weekly-chart-top b,
+.app-shell.dark-mode .weekly-chart-day.is-today .weekly-day-label { color:#6cf0ec!important; }
+.app-shell.dark-mode .planner-week-day.is-today .planner-week-day-number,
+.app-shell.dark-mode .planner-month-day.is-today .planner-month-date {
+  color:#071016!important;
+  background:#56e8e4!important;
+  border-color:#56e8e4!important;
+}
+.app-shell.dark-mode .planner-month-day.is-selected { background:rgba(153,128,255,.18)!important; }
+.app-shell.dark-mode .planner-week-day.is-selected {
+  border-color:rgba(180,160,255,.72)!important;
+  background:linear-gradient(145deg,rgba(126,94,226,.2),rgba(10,19,31,.92))!important;
+}
+.app-shell.dark-mode .analytics-side-link,
+.app-shell.dark-mode .analytics-chart-footer button,
+.app-shell.dark-mode .analytics-table-footer>button { background:rgba(17,23,41,.92)!important; }
+.app-shell.dark-mode .analytics-side-link:hover,
+.app-shell.dark-mode .analytics-chart-footer button:hover,
+.app-shell.dark-mode .analytics-table-footer>button:hover { background:rgba(96,77,174,.25)!important; }
