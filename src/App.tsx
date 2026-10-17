@@ -157,6 +157,7 @@ function MomentumChart({ habits, today }: { habits: Habit[]; today: string }) {
   };
   const latest = series[series.length - 1];
   const selected = series.find((day) => day.key === selectedKey) ?? latest;
+  const hasScheduledData = series.some((day) => day.total > 0);
   const setPreset = (next: '7D' | '30D' | 'CUSTOM') => {
     setRange(next);
     if (next === 'CUSTOM') {
@@ -212,6 +213,7 @@ function MomentumChart({ habits, today }: { habits: Habit[]; today: string }) {
           <linearGradient id="momentumLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#8e58d9"/><stop offset="55%" stopColor="#b78aff"/><stop offset="100%" stopColor="#dfc6ff"/></linearGradient>
         </defs>
         {[18,60,102,144,186].map((y) => <line key={y} x1="18" x2="644" y1={y} y2={y} className="analytics-grid-line"/>)}
+        {!hasScheduledData && <text x="331" y="110" textAnchor="middle">No scheduled check-ins in this range</text>}
         {areaPaths.map((path, index) => <path key={'area-' + index} d={path} fill="url(#momentumArea)" className="analytics-area-path"/>)}
         {linePaths.map((path, index) => <path key={'line-' + index} d={path} fill="none" stroke="url(#momentumLine)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="analytics-trend-path"/>)}
         {points.filter((point) => point.value !== null && point.y !== null).map((point) => {
