@@ -3,7 +3,7 @@ import type { CSSProperties, FormEvent, ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
   Activity, ArrowRight, ArrowUpRight, BarChart3, Bell, BookOpen, Brain, Coffee, Compass, Code2, Droplets, Dumbbell, Flower2,
-  CalendarDays, CalendarRange, Check, CheckCheck, ChevronDown, CircleHelp, Clock3, Flame, Focus,
+  CalendarDays, Check, CheckCheck, CircleHelp, Clock3, Flame, Focus,
   Gauge, Heart, Leaf, ListTodo, LogOut, Moon, MoreHorizontal, Pencil, PenTool, Plus, RotateCcw, Settings2, ShieldCheck,
   Sparkles, Sun, Target, Timer, Trophy, X, Zap,
 } from 'lucide-react';
@@ -806,30 +806,21 @@ function App() {
       <main className="main-content">
         <header className="topbar">
           <div className="breadcrumbs"><span>Workspace</span><span className="crumb-slash">/</span><b>{page}</b></div>
-          <div className="topbar-actions"><span className="local-save" title={cloudError || cloudStatus}><span className="save-dot" /> {cloudStatus}</span><IconButton label="Notifications and reminders" onClick={() => { const count = habits.filter((habit) => habit.reminderEnabled).length; setToast(count ? `${count} habit reminder${count === 1 ? '' : 's'} scheduled. Cadence must remain open for alerts.` : 'No reminders yet. Enable one when creating a habit.'); }}><Bell size={17} /></IconButton><button className="date-chip" type="button" onClick={() => setPage('Today')}><CalendarDays size={15} />{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}<ChevronDown size={13} /></button></div>
+          <div className="topbar-actions"><span className="local-save" title={cloudError || cloudStatus}><span className="save-dot" /> {cloudStatus}</span><IconButton label="Notifications and reminders" onClick={() => { const count = habits.filter((habit) => habit.reminderEnabled).length; setToast(count ? `${count} habit reminder${count === 1 ? '' : 's'} scheduled. Cadence must remain open for alerts.` : 'No reminders yet. Enable one when creating a habit.'); }}><Bell size={17} /></IconButton><button className="date-chip" type="button" onClick={() => { setPage('Planner'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} aria-label={'Open planner for ' + new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} title="Open planner"><CalendarDays size={15} />{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}<ArrowUpRight size={12} /></button></div>
         </header>
 
         {page === 'Today' && <>
           <section className="analytics-page-header">
             <div>
               <div className="analytics-kicker"><span className="analytics-live"/> PERSONAL PERFORMANCE <i/> {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()}</div>
-              <h1>Habit <span>Analytics</span></h1>
-              <p>Consistency, made visible. Review your patterns and make the next action easier.</p>
+              <h1>Today, <span>by design.</span></h1>
+              <p>Your routines, progress and next small action—together in one place.</p>
             </div>
             <div className="analytics-header-actions">
-              <span className="analytics-saved"><i/> SAVED LOCALLY</span>
               <button type="button" className="secondary-button analytics-plain-button" onClick={() => setPage('Planner')}><CalendarDays size={14}/> Planner <ArrowUpRight size={13}/></button>
               <button type="button" className="primary-button analytics-create-button" onClick={openCreateHabit}><Plus size={15}/> New routine</button>
             </div>
           </section>
-
-          <nav className="analytics-view-tabs" aria-label="Analytics sections">
-            <button type="button" className="active" onClick={() => setPage('Today')}><BarChart3 size={13}/> Overview</button>
-            <button type="button" onClick={() => setPage('Habits')}><Target size={13}/> Routines</button>
-            <button type="button" onClick={() => setPage('Planner')}><CalendarRange size={13}/> Calendar</button>
-            <button type="button" onClick={() => setPage('Focus')}><Focus size={13}/> Focus sessions</button>
-            <button type="button" onClick={() => setPage('Insights')}><Activity size={13}/> Reports</button>
-          </nav>
 
           <section className="analytics-metric-grid">
             <article className="analytics-metric-card analytics-metric-primary">
