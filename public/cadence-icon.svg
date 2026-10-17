@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="tile" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#24113C"/>
+      <stop offset="1" stop-color="#08060F"/>
+    </linearGradient>
+    <linearGradient id="frame" x1="8" y1="5" x2="56" y2="59" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#9E58F4"/>
+      <stop offset=".55" stop-color="#57279A"/>
+      <stop offset="1" stop-color="#32164E"/>
+    </linearGradient>
+    <linearGradient id="wave" x1="4" y1="20" x2="60" y2="44" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D4A5FF"/>
+      <stop offset=".45" stop-color="#F0C9FF"/>
+      <stop offset="1" stop-color="#A45CFA"/>
+    </linearGradient>
+    <filter id="waveSoftGlow" x="-20%" y="-30%" width="140%" height="160%">
+      <feGaussianBlur stdDeviation="1.1" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect x="2.5" y="2.5" width="59" height="59" rx="15" fill="url(#tile)" stroke="url(#frame)" stroke-width="1.7"/>
+  <rect x="5.5" y="5.5" width="53" height="53" rx="12" stroke="#B783FF" stroke-opacity=".12"/>
+  <path d="M5 34 C10 34 11.5 20 16.5 20 S22 44.5 27 44.5 S32.8 14.5 38 14.5 S43.5 39 48.5 39 S54 27 59 27" stroke="#A75BFF" stroke-opacity=".42" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M5 34 C10 34 11.5 20 16.5 20 S22 44.5 27 44.5 S32.8 14.5 38 14.5 S43.5 39 48.5 39 S54 27 59 27" stroke="url(#wave)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#waveSoftGlow)"/>
+</svg>
