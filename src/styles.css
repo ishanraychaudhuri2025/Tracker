@@ -9344,8 +9344,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 #root .app-shell .habits-overview-cards > .analytics-metric-card {
   min-width: 0 !important;
-  min-height: 126px !important;
-  height: 126px !important;
+  min-height: 122px !important;
+  height: 122px !important;
   padding: 13px 14px 31px !important;
   border: 1px solid rgba(172, 137, 193, .14) !important;
   border-radius: 11px !important;
@@ -9458,13 +9458,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 @media (max-width: 900px) {
   #root .app-shell .habits-overview-cards { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
-  #root .app-shell .habits-overview-cards > .analytics-metric-card { min-height: 122px !important; height: 122px !important; }
+  #root .app-shell .habits-overview-cards > .analytics-metric-card { min-height: 118px !important; height: 118px !important; }
 }
 @media (max-width: 520px) {
   #root .app-shell .habits-overview-cards { gap: 7px !important; }
   #root .app-shell .habits-overview-cards > .analytics-metric-card {
-    min-height: 116px !important;
-    height: 116px !important;
+    min-height: 112px !important;
+    height: 112px !important;
     padding: 11px 10px 30px !important;
   }
   #root .app-shell .habits-overview-cards .analytics-metric-label { font-size: 7px !important; letter-spacing: .025em !important; }
@@ -9472,3 +9472,5 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   #root .app-shell .habits-overview-cards .analytics-metric-value { font-size: 25px !important; }
   #root .app-shell .habits-overview-cards .analytics-metric-bottom { font-size: 7px !important; }
 }
+
+/* Deployment verification: final compact Habits metric dimensions. */
