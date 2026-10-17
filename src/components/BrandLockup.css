@@ -1,0 +1,132 @@
+.cadence-brand-lockup {
+  --brand-mark-size: 50px;
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+  min-height: var(--brand-mark-size);
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  color: var(--cadence-text-primary, #f5effb);
+  background: transparent;
+  box-shadow: none;
+  text-align: left;
+  text-decoration: none;
+  line-height: 1;
+}
+
+button.cadence-brand-lockup {
+  appearance: none;
+  cursor: pointer;
+}
+
+button.cadence-brand-lockup:hover,
+button.cadence-brand-lockup:active {
+  color: inherit;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+button.cadence-brand-lockup:focus-visible {
+  outline: 2px solid var(--cadence-violet-400, #b78aff);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.cadence-brand-icon {
+  display: block;
+  flex: 0 0 var(--brand-mark-size);
+  width: var(--brand-mark-size);
+  height: var(--brand-mark-size);
+  min-width: var(--brand-mark-size);
+  max-width: none;
+  object-fit: contain;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  filter: none;
+  opacity: 1;
+}
+
+.cadence-brand-wordmark {
+  display: block;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
+  color: var(--cadence-violet-300, #c5a0ff);
+  font-family: var(--cadence-font-wordmark, 'Montserrat', sans-serif);
+  font-size: 15px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: .115em;
+  text-align: left;
+  text-indent: 0;
+  text-transform: uppercase;
+  text-shadow: none;
+  filter: none;
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  white-space: nowrap;
+  opacity: 1;
+  transform: none;
+}
+
+.cadence-brand-lockup--sidebar {
+  width: 100%;
+  min-height: 60px;
+  height: 60px;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 0 2px;
+  margin-bottom: 4px;
+}
+
+.cadence-brand-lockup--auth {
+  width: max-content;
+  max-width: 100%;
+  min-height: 54px;
+  gap: 12px;
+}
+
+.cadence-brand-lockup--auth .cadence-brand-wordmark {
+  font-size: 17px;
+  letter-spacing: .14em;
+}
+
+@media (max-width: 850px) {
+  .cadence-brand-lockup--sidebar {
+    width: 54px;
+    min-width: 54px;
+    height: 56px;
+    min-height: 56px;
+    justify-content: center;
+    padding: 0;
+    margin: 0 auto 7px;
+    overflow: hidden;
+    gap: 0;
+  }
+
+  .cadence-brand-lockup--sidebar .cadence-brand-wordmark {
+    display: none;
+  }
+
+  .cadence-brand-lockup--sidebar .cadence-brand-icon {
+    --brand-mark-size: 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cadence-brand-lockup,
+  .cadence-brand-icon,
+  .cadence-brand-wordmark {
+    transition: none !important;
+    animation: none !important;
+  }
+}
