@@ -94,6 +94,49 @@ export function taskIsDone(task: Task, key: string) {
   return task.date === key && task.completed;
 }
 
+/** Return the next scheduled occurrence strictly after `afterKey`, if one exists. */
+export function nextTaskOccurrence(task: Task, afterKey: string): string | null {
+  if ((task.recurrence ?? 'None') === 'None') {
+    return task.date > afterKey ? task.date : null;
+  }
+  // All supported recurring schedules occur at least once within this horizon.
+  let cursor = shiftKey(afterKey, 1);
+  for (let offset = 1; offset <= 366; offset += 1) {
+    if (taskOccursOn(task, cursor)) return cursor;
+    cursor = shiftKey(cursor, 1);
+  }
+  return null;
+}
+
+/** Completed occurrence keys, not merely tasks that have ever been completed. */
+export function completedTaskOccurrenceKeys(task: Task, throughKey: string): string[] {
+  if ((task.recurrence ?? 'None') === 'None') {
+    return task.completed && task.date <= throughKey ? [task.date] : [];
+  }
+  return Array.from(new Set(task.completedDates ?? []))
+    .filter((key) => key <= throughKey && taskOccursOn(task, key) && taskIsDone(task, key))
+    .sort((a, b) => a.localeCompare(b));
+}
+
+/**
+ * Return unresolved past occurrences. One-off tasks remain overdue regardless of age;
+ * recurring tasks are bounded to the most recent 90 days to prevent an unbounded list
+ * for a daily recurrence that has been missed for years.
+ */
+export function overdueTaskOccurrenceKeys(task: Task, today: string): string[] {
+  if ((task.recurrence ?? 'None') === 'None') {
+    return task.date < today && !task.completed ? [task.date] : [];
+  }
+  const earliest = shiftKey(today, -90);
+  let cursor = task.date > earliest ? task.date : earliest;
+  const result: string[] = [];
+  while (cursor < today) {
+    if (taskOccursOn(task, cursor) && !taskIsDone(task, cursor)) result.push(cursor);
+    cursor = shiftKey(cursor, 1);
+  }
+  return result;
+}
+
 function timeLabel(time?: string) {
   if (!time) return 'Flexible';
   const [hours, minutes] = time.split(':').map(Number);
