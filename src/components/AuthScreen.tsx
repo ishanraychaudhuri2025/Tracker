@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck, Sparkles, Zap } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import BrandLockup from './BrandLockup';
 
 type AuthMode = 'signin' | 'signup' | 'reset' | 'update';
 
@@ -82,9 +83,7 @@ export default function AuthScreen({ initialMode = 'signin' }: AuthScreenProps) 
     <div className="auth-orbit auth-orbit-two" aria-hidden="true"/>
     <section className="auth-layout">
       <div className="auth-brand-column">
-        <div className="auth-brand-lockup">
-          <img className="cadence-lockup-image" src="/cadence-lockup.webp" alt="Cadence" width="163" height="52" />
-        </div>
+        <BrandLockup variant="auth" />
         <div className="auth-brand-copy">
           <span className="auth-eyebrow"><span/> YOUR PERSONAL PERFORMANCE SYSTEM</span>
           <h1>Build momentum.<br/><em>Keep what matters.</em></h1>
