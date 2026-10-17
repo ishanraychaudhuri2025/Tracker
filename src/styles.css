@@ -7263,3 +7263,230 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   }
   #root .app-shell .nav-item:hover { transform: none; }
 }
+
+
+/* Phase 10 — targeted fixes from the latest visual review. */
+
+/* Auth: keep the password field calm and compact; controls should feel intentional,
+   not like oversized browser widgets. */
+#root .auth-form-column .auth-input-wrap {
+  min-height: 48px;
+  box-sizing: border-box;
+}
+#root .auth-form-column .auth-input-wrap input {
+  min-width: 0;
+  width: 100%;
+  height: 44px;
+  font-size: 13px !important;
+  line-height: 1.25 !important;
+  letter-spacing: 0 !important;
+}
+#root .auth-form-column .auth-input-wrap input[type="password"] {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  letter-spacing: .08em !important;
+}
+#root .auth-form-column .auth-input-wrap input::placeholder {
+  font-size: 13px;
+  letter-spacing: 0 !important;
+  color: #907b9f;
+}
+#root .auth-form-column .auth-password-toggle {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  padding: 0;
+  border: 1px solid rgba(188, 148, 220, .2);
+  border-radius: 8px;
+  color: #c7a7e3;
+  background: rgba(164, 102, 219, .08);
+  transition: color .2s ease, background .2s ease, border-color .2s ease, transform .2s ease;
+}
+#root .auth-form-column .auth-password-toggle:hover {
+  color: #fff;
+  border-color: rgba(214, 174, 255, .52);
+  background: rgba(164, 102, 219, .18);
+  transform: scale(1.03);
+}
+#root .auth-form-column .auth-forgot {
+  justify-self: end;
+  align-self: end;
+  width: fit-content;
+  min-height: 30px;
+  margin: -7px 0 0 auto;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(188, 148, 220, .18);
+  border-radius: 8px;
+  color: #c9a5e8;
+  background: rgba(164, 102, 219, .055);
+  font: 500 11px/1.2 var(--cadence-font-ui);
+  text-decoration: none;
+  transition: color .2s ease, background .2s ease, border-color .2s ease;
+}
+#root .auth-form-column .auth-forgot:hover {
+  color: #f4e7ff;
+  border-color: rgba(205, 166, 255, .42);
+  background: rgba(164, 102, 219, .13);
+}
+
+/* Insights: keep the plotted area, date labels, selected-day detail and footer in
+   separate predictable rows. No selected-day copy can sit on top of the graph. */
+#root .app-shell .analytics-chart-panel {
+  min-width: 0;
+  overflow: hidden;
+}
+#root .app-shell .analytics-line-chart {
+  height: 220px !important;
+  min-height: 220px;
+  margin-bottom: 0;
+  overflow: hidden;
+}
+#root .app-shell .analytics-line-chart svg {
+  display: block;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden !important;
+}
+#root .app-shell .analytics-x-labels {
+  position: relative;
+  z-index: 1;
+  min-height: 20px;
+  margin-top: 5px;
+  margin-bottom: 0;
+  padding-bottom: 2px;
+  line-height: 1.4;
+}
+#root .app-shell .analytics-selected-day {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(72px, .7fr) auto minmax(0, 2fr);
+  align-items: center;
+  gap: 8px 14px;
+  width: 100%;
+  min-width: 0;
+  min-height: 58px;
+  box-sizing: border-box;
+  margin: 8px 0 0;
+  padding: 11px 14px;
+  overflow-wrap: anywhere;
+  border: 1px solid rgba(183, 138, 255, .17);
+  border-radius: 10px;
+  background: linear-gradient(110deg, rgba(183, 138, 255, .075), rgba(183, 138, 255, .025));
+}
+#root .app-shell .analytics-selected-day > div {
+  min-width: 0;
+  margin: 0;
+}
+#root .app-shell .analytics-selected-day > strong {
+  justify-self: start;
+  font-size: 18px;
+  white-space: nowrap;
+}
+#root .app-shell .analytics-selected-day > span {
+  min-width: 0;
+  line-height: 1.5;
+}
+#root .app-shell .analytics-chart-footer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 9px;
+  line-height: 1.5;
+}
+#root .app-shell .analytics-chart-footer > span {
+  min-width: 0;
+}
+
+/* Sidebar active state: one clean rounded surface with a slim lavender rail and
+   soft icon glow. Remove competing pseudo-elements that created stray edges. */
+#root .app-shell .nav-item {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid transparent !important;
+  border-radius: 11px !important;
+  box-shadow: none !important;
+}
+#root .app-shell .nav-item::before {
+  content: none !important;
+}
+#root .app-shell .nav-item.active {
+  color: #f4eaff !important;
+  border-color: rgba(193, 151, 255, .2) !important;
+  background: linear-gradient(100deg, rgba(154, 91, 221, .2), rgba(100, 55, 135, .085)) !important;
+  box-shadow: inset 3px 0 0 #c99aff, 0 5px 18px rgba(88, 43, 126, .1) !important;
+}
+#root .app-shell .nav-item.active .nav-icon {
+  color: #e4c9ff !important;
+  border-color: rgba(201, 154, 255, .28);
+  background: rgba(178, 117, 245, .16) !important;
+  box-shadow: 0 0 15px rgba(174, 111, 242, .12);
+}
+#root .app-shell .nav-item.active .nav-copy b {
+  color: #f4eaff !important;
+}
+
+/* Weekday picker: clear abbreviated day labels, balanced spacing and distinct
+   selected states without making the controls bulky. */
+#root .app-shell .habit-modal .habit-weekday-picker {
+  gap: 7px;
+}
+#root .app-shell .habit-modal .habit-weekday-picker button {
+  min-width: 0;
+  min-height: 42px;
+  padding: 0 2px;
+  border: 1px solid rgba(190, 151, 220, .2);
+  border-radius: 10px;
+  color: #cdb8dd;
+  background: linear-gradient(180deg, rgba(35, 22, 44, .95), rgba(20, 12, 27, .98));
+  font: 600 12px/1 var(--cadence-font-ui);
+  letter-spacing: .01em;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+  transition: transform .2s ease, border-color .2s ease, color .2s ease, background .2s ease, box-shadow .2s ease;
+}
+#root .app-shell .habit-modal .habit-weekday-picker button:hover {
+  transform: translateY(-2px);
+  border-color: rgba(205, 166, 255, .55);
+  color: #fff;
+}
+#root .app-shell .habit-modal .habit-weekday-picker button.selected {
+  color: #180d22;
+  border-color: rgba(224, 194, 255, .9);
+  background: linear-gradient(145deg, #e0c4ff, #b786f2);
+  box-shadow: 0 4px 13px rgba(151, 88, 214, .2), inset 0 1px 0 rgba(255,255,255,.65);
+}
+#root .app-shell .habit-modal .habit-weekday-picker button:focus-visible,
+#root .auth-form-column .auth-password-toggle:focus-visible,
+#root .auth-form-column .auth-forgot:focus-visible {
+  outline: 2px solid #d8b5ff;
+  outline-offset: 3px;
+}
+@media (max-width: 600px) {
+  #root .app-shell .analytics-selected-day {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 7px 10px;
+  }
+  #root .app-shell .analytics-selected-day > span {
+    grid-column: 1 / -1;
+  }
+  #root .app-shell .habit-modal .habit-weekday-picker { gap: 4px; }
+  #root .app-shell .habit-modal .habit-weekday-picker button {
+    min-height: 38px;
+    font-size: 11px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #root .app-shell .habit-modal .habit-weekday-picker button,
+  #root .auth-form-column .auth-password-toggle,
+  #root .auth-form-column .auth-forgot {
+    transition: none !important;
+  }
+}
