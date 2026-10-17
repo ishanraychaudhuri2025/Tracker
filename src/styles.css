@@ -4353,3 +4353,130 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 @media (prefers-reduced-motion:reduce) {
   .tasks-summary-card,.tasks-filter-tabs button,.habit-weekday-picker button { transition:none!important; }
 }
+
+
+/* Cadence UI refinement — clear chart typography, balanced weekday controls, and a deliberate active nav state. */
+.app-shell .brand-lockup {
+  width:100%;
+  min-height:66px;
+  padding:5px 2px!important;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  overflow:visible;
+}
+.app-shell .cadence-lockup-image {
+  width:176px!important;
+  max-width:100%;
+  height:auto!important;
+  max-height:76px;
+  object-fit:contain!important;
+  object-position:left center;
+  image-rendering:auto;
+  filter:none!important;
+  mix-blend-mode:normal!important;
+}
+.app-shell .nav-item {
+  position:relative;
+  min-height:47px;
+  margin:3px 0;
+  padding:9px 11px;
+  border:1px solid transparent;
+  border-radius:13px;
+  gap:11px;
+  color:#aab4ce;
+  transition:background .2s ease,border-color .2s ease,box-shadow .2s ease,transform .2s ease;
+}
+.app-shell .nav-item:hover {
+  transform:translateX(2px);
+  color:#f4efff;
+  background:rgba(162,128,255,.075);
+  border-color:rgba(177,144,255,.12);
+}
+.app-shell .nav-item.active {
+  color:#f6f0ff!important;
+  background:linear-gradient(105deg,rgba(161,111,255,.22),rgba(102,87,164,.10) 72%,rgba(15,17,31,.35))!important;
+  border-color:rgba(181,145,255,.36)!important;
+  box-shadow:inset 3px 0 0 #c39aff,0 6px 20px rgba(102,62,178,.12),inset 0 1px 0 rgba(255,255,255,.045)!important;
+}
+.app-shell .nav-item.active .nav-icon {
+  color:#e0c7ff!important;
+  background:linear-gradient(145deg,rgba(174,130,255,.25),rgba(135,107,208,.12))!important;
+  box-shadow:0 0 0 1px rgba(190,157,255,.14),0 0 18px rgba(164,111,255,.1);
+}
+.app-shell .habit-chart-y-label {
+  font-family:'Inter',system-ui,sans-serif!important;
+  font-size:12px!important;
+  font-weight:500!important;
+  letter-spacing:0!important;
+  fill:#c0c9df!important;
+}
+.app-shell .habit-chart-x-label {
+  font-family:'Inter',system-ui,sans-serif!important;
+  font-size:12px!important;
+  font-weight:500!important;
+  font-variant-numeric:tabular-nums;
+  letter-spacing:0!important;
+  fill:#c5cde1!important;
+}
+.app-shell .habit-activity-line-chart { height:158px; }
+.app-shell .habit-activity-caption { font-size:12px!important; line-height:1.5; }
+.app-shell .habit-activity-legend { font-size:12px!important; line-height:1.5; }
+.app-shell .habit-schedule-days { padding:15px 14px 13px; }
+.app-shell .habit-schedule-days legend { font-size:13px; }
+.app-shell .habit-weekday-picker { gap:8px; }
+.app-shell .habit-weekday-picker button {
+  min-height:44px;
+  padding:0 3px;
+  border-radius:11px;
+  font-family:'Inter',system-ui,sans-serif;
+  font-size:13px;
+  font-weight:650;
+  letter-spacing:.01em;
+  color:#d4d9ed;
+  background:linear-gradient(180deg,rgba(31,34,55,.96),rgba(16,18,34,.96));
+  border-color:rgba(157,143,204,.26);
+}
+.app-shell .habit-weekday-picker button.selected {
+  color:#fff!important;
+  border-color:rgba(205,174,255,.85)!important;
+  background:linear-gradient(145deg,#a978f0,#8055d4)!important;
+  box-shadow:0 4px 15px rgba(150,96,235,.22),inset 0 1px 0 rgba(255,255,255,.22)!important;
+}
+.app-shell .habit-schedule-days>p { font-size:13px; line-height:1.55; }
+.app-shell .weekly-chart-day {
+  border-radius:13px!important;
+}
+.app-shell .weekly-chart-top b {
+  font-family:'Inter',system-ui,sans-serif!important;
+  font-size:13px!important;
+  font-weight:650!important;
+  font-variant-numeric:tabular-nums;
+  letter-spacing:-.2px!important;
+}
+.app-shell .weekly-chart-top small {
+  font-family:'Inter',system-ui,sans-serif!important;
+  font-size:11px!important;
+  font-weight:500!important;
+  letter-spacing:.02em!important;
+}
+.app-shell .weekly-day-label b {
+  font-family:'Inter',system-ui,sans-serif!important;
+  font-size:12px!important;
+  font-weight:650!important;
+}
+.app-shell .weekly-day-label small {
+  font-family:'Inter',system-ui,sans-serif!important;
+  font-size:11px!important;
+  font-weight:500!important;
+  font-variant-numeric:tabular-nums;
+}
+@media (max-width:700px) {
+  .app-shell .cadence-lockup-image { width:150px!important; }
+  .app-shell .habit-weekday-picker { gap:4px; }
+  .app-shell .habit-weekday-picker button { min-height:40px;font-size:12px; }
+  .app-shell .weekly-chart-top b { font-size:11px!important; }
+  .app-shell .weekly-chart-top small { font-size:9px!important; }
+  .app-shell .weekly-day-label b { font-size:10px!important; }
+  .app-shell .weekly-day-label small { font-size:10px!important; }
+}
