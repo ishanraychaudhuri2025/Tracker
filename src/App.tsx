@@ -765,8 +765,8 @@ function App() {
     <div className={`app-shell ${dark ? 'dark-mode' : 'light-mode'}`}>
       <aside className="sidebar">
         <button className="brand-lockup cadence-brand-lockup" onClick={() => { setPage('Today'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} type="button" aria-label="Go to Cadence dashboard">
-          <span className="cadence-brand-icon" aria-hidden="true"><img src="/cadence-lockup-original.webp" alt="" /></span>
-          <span className="cadence-brand-text">CADENCE</span>
+          <img className="cadence-brand-icon" src="/cadence-icon.svg" alt="" aria-hidden="true" />
+          <img className="cadence-brand-wordmark" src="/cadence-wordmark.svg" alt="" aria-hidden="true" />
         </button>
         <div className="workspace-label">YOUR SPACE <span className="live-dot" /></div>
         <nav className="nav-list" aria-label="Main navigation">
