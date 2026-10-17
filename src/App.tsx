@@ -3,7 +3,7 @@ import type { CSSProperties, FormEvent, ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
   Activity, ArrowRight, ArrowUpRight, BarChart3, Bell, BookOpen, Brain, Coffee, Compass, Code2, Droplets, Dumbbell, Flower2,
-  CalendarDays, CalendarRange, Check, CheckCheck, ChevronDown, CircleHelp, Clock3, Flame, Focus,
+  CalendarDays, Check, CheckCheck, CircleHelp, Clock3, Flame, Focus,
   Gauge, Heart, Leaf, ListTodo, LogOut, Moon, MoreHorizontal, Pencil, PenTool, Plus, RotateCcw, Settings2, ShieldCheck,
   Sparkles, Sun, Target, Timer, Trophy, X, Zap,
 } from 'lucide-react';
