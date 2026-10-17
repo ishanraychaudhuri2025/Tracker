@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import type { Recurrence, Task, TaskCategory } from './types';
 import type { PlannerTaskDraft } from './Planner';
-import { taskIsDone, taskOccursOn } from './Planner';
+import { completedTaskOccurrenceKeys, nextTaskOccurrence, overdueTaskOccurrenceKeys, taskIsDone, taskOccursOn } from './Planner';
 
 type TaskFilter = 'All' | 'Today' | 'Upcoming' | 'Overdue' | 'Completed';
 
@@ -33,15 +33,11 @@ function formatTime(time?: string) {
   const [hours, minutes] = time.split(':').map(Number);
   return new Date(2000, 0, 1, hours, minutes).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 }
-function currentTaskDone(task: Task, today: string) {
-  const key = taskOccursOn(task, today) ? today : task.date;
-  return taskIsDone(task, key);
-}
-function hasAnyCompletion(task: Task) {
-  return (task.recurrence ?? 'None') === 'None'
-    ? task.completed
-    : Boolean(task.completedDates?.length);
-}
+type TaskListEntry = {
+  task: Task;
+  occurrenceDate: string;
+  kind: 'series' | 'upcoming' | 'completed' | 'overdue';
+};
 
 export default function TasksPage({ tasks, today, onToggleTask, onAddTask, onDeleteTask }: TasksPageProps) {
   const [filter, setFilter] = useState<TaskFilter>('All');
@@ -60,31 +56,64 @@ export default function TasksPage({ tasks, today, onToggleTask, onAddTask, onDel
   const stats = useMemo(() => {
     const dueToday = tasks.filter((task) => taskOccursOn(task, today));
     const openToday = dueToday.filter((task) => !taskIsDone(task, today));
-    const overdue = tasks.filter((task) => (task.recurrence ?? 'None') === 'None' && task.date < today && !task.completed);
-    const completed = tasks.filter((task) => hasAnyCompletion(task));
-    return { total: tasks.length, openToday: openToday.length, overdue: overdue.length, completed: completed.length };
+    const overdue = tasks.reduce((total, task) => total + overdueTaskOccurrenceKeys(task, today).length, 0);
+    const completed = tasks.reduce((total, task) => total + completedTaskOccurrenceKeys(task, today).length, 0);
+    const upcoming = tasks.filter((task) => nextTaskOccurrence(task, today) !== null).length;
+    return { total: tasks.length, openToday: openToday.length, overdue, completed, upcoming };
   }, [tasks, today]);
 
   const shownTasks = useMemo(() => {
     const normalized = search.trim().toLowerCase();
-    return tasks.filter((task) => {
-      const isDueToday = taskOccursOn(task, today);
-      const isDoneToday = taskIsDone(task, isDueToday ? today : task.date);
-      const isDone = hasAnyCompletion(task);
-      const isOverdue = (task.recurrence ?? 'None') === 'None' && task.date < today && !task.completed;
-      if (filter === 'Today' && !isDueToday) return false;
-      if (filter === 'Upcoming' && task.date <= today) return false;
-      if (filter === 'Overdue' && !isOverdue) return false;
-      if (filter === 'Completed' && !(isDone || isDoneToday)) return false;
+    const entries: TaskListEntry[] = [];
+
+    tasks.forEach((task) => {
+      if (filter === 'Completed') {
+        completedTaskOccurrenceKeys(task, today).forEach((occurrenceDate) => {
+          entries.push({ task, occurrenceDate, kind: 'completed' });
+        });
+        return;
+      }
+      if (filter === 'Overdue') {
+        overdueTaskOccurrenceKeys(task, today).forEach((occurrenceDate) => {
+          entries.push({ task, occurrenceDate, kind: 'overdue' });
+        });
+        return;
+      }
+      if (filter === 'Today') {
+        if (taskOccursOn(task, today)) entries.push({ task, occurrenceDate: today, kind: 'series' });
+        return;
+      }
+      if (filter === 'Upcoming') {
+        const occurrenceDate = nextTaskOccurrence(task, today);
+        if (occurrenceDate) entries.push({ task, occurrenceDate, kind: 'upcoming' });
+        return;
+      }
+
+      // All shows one row per task series. Its checkbox represents today's
+      // occurrence when due, otherwise the next upcoming occurrence for a series.
+      const recurrence = task.recurrence ?? 'None';
+      const occurrenceDate = taskOccursOn(task, today)
+        ? today
+        : recurrence === 'None' ? task.date : (nextTaskOccurrence(task, today) ?? task.date);
+      entries.push({ task, occurrenceDate, kind: 'series' });
+    });
+
+    return entries.filter(({ task }) => {
       if (category !== 'All' && (task.category ?? 'Personal') !== category) return false;
       if (normalized && !task.title.toLowerCase().includes(normalized)) return false;
       return true;
     }).sort((a, b) => {
-      const aDone = currentTaskDone(a, today);
-      const bDone = currentTaskDone(b, today);
-      if (aDone !== bDone) return Number(aDone) - Number(bDone);
-      if (a.date !== b.date) return a.date.localeCompare(b.date);
-      return (a.time || '99:99').localeCompare(b.time || '99:99');
+      if (filter === 'Completed') {
+        if (a.occurrenceDate !== b.occurrenceDate) return b.occurrenceDate.localeCompare(a.occurrenceDate);
+      } else if (filter === 'Overdue') {
+        if (a.occurrenceDate !== b.occurrenceDate) return b.occurrenceDate.localeCompare(a.occurrenceDate);
+      } else {
+        const aDone = taskIsDone(a.task, a.occurrenceDate);
+        const bDone = taskIsDone(b.task, b.occurrenceDate);
+        if (aDone !== bDone) return Number(aDone) - Number(bDone);
+        if (a.occurrenceDate !== b.occurrenceDate) return a.occurrenceDate.localeCompare(b.occurrenceDate);
+      }
+      return (a.task.time || '99:99').localeCompare(b.task.time || '99:99') || a.task.title.localeCompare(b.task.title);
     });
   }, [tasks, today, filter, category, search]);
 
@@ -123,18 +152,18 @@ export default function TasksPage({ tasks, today, onToggleTask, onAddTask, onDel
     <section className="tasks-summary-grid">
       <article className="tasks-summary-card"><span className="tasks-summary-icon"><ListTodo size={17}/></span><small>OPEN TODAY</small><b>{stats.openToday}</b><span>Tasks ready for action</span></article>
       <article className="tasks-summary-card"><span className="tasks-summary-icon violet"><Clock3 size={17}/></span><small>OVERDUE</small><b>{stats.overdue}</b><span>One step at a time</span></article>
-      <article className="tasks-summary-card"><span className="tasks-summary-icon cyan"><CheckCircle2 size={17}/></span><small>COMPLETED</small><b>{stats.completed}</b><span>Wins recorded so far</span></article>
+      <article className="tasks-summary-card"><span className="tasks-summary-icon violet"><CheckCircle2 size={17}/></span><small>COMPLETED OCCURRENCES</small><b>{stats.completed}</b><span>Each completed repeat counts once</span></article>
       <article className="tasks-summary-card tasks-summary-note"><Zap size={18}/><div><b>Keep it achievable.</b><p>Give tasks an estimate and a clear priority. Small, finishable actions make plans easier to follow.</p></div></article>
     </section>
 
     <section className="panel tasks-board">
       <div className="panel-heading tasks-board-heading">
-        <div><div className="panel-overline">YOUR ACTION LIST</div><h3>All tasks <span className="heading-count">{tasks.length}</span></h3></div>
+        <div><div className="panel-overline">YOUR ACTION LIST</div><h3>{filter === 'Completed' ? 'Completed occurrences' : filter === 'Overdue' ? 'Past-due occurrences' : filter === 'Upcoming' ? 'Upcoming occurrences' : filter === 'Today' ? 'Today's tasks' : 'All tasks'} <span className="heading-count">{filter === 'All' ? tasks.length : shownTasks.length}</span></h3></div>
         <span className="tasks-board-count">{shownTasks.length} shown</span>
       </div>
       <div className="tasks-toolbar">
         <div className="tasks-filter-tabs" role="group" aria-label="Filter tasks">
-          {filters.map((item) => <button type="button" key={item} className={filter === item ? 'selected' : ''} onClick={() => setFilter(item)}>{item}{item === 'Today' && stats.openToday > 0 ? <span>{stats.openToday}</span> : null}{item === 'Overdue' && stats.overdue > 0 ? <span>{stats.overdue}</span> : null}</button>)}
+          {filters.map((item) => <button type="button" key={item} className={filter === item ? 'selected' : ''} onClick={() => setFilter(item)}>{item}{item === 'Today' && stats.openToday > 0 ? <span>{stats.openToday}</span> : null}{item === 'Upcoming' && stats.upcoming > 0 ? <span>{stats.upcoming}</span> : null}{item === 'Overdue' && stats.overdue > 0 ? <span>{stats.overdue}</span> : null}{item === 'Completed' && stats.completed > 0 ? <span>{stats.completed}</span> : null}</button>)}
         </div>
         <div className="tasks-search-filter">
           <label className="tasks-search"><Search size={15}/><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search tasks…" aria-label="Search tasks"/></label>
@@ -143,26 +172,33 @@ export default function TasksPage({ tasks, today, onToggleTask, onAddTask, onDel
       </div>
 
       <div className="tasks-list">
-        {shownTasks.map((task) => {
-          const scheduledToday = taskOccursOn(task, today);
-          const activeKey = scheduledToday ? today : task.date;
-          const done = taskIsDone(task, activeKey);
-          const overdue = (task.recurrence ?? 'None') === 'None' && task.date < today && !task.completed;
-          const future = task.date > today && !scheduledToday;
-          return <article className={'tasks-list-row ' + (done ? 'is-completed ' : '') + (overdue ? 'is-overdue ' : '')} key={task.id}>
-            <button type="button" className={'tasks-check ' + (done ? 'checked' : '')} disabled={future} onClick={() => onToggleTask(task.id, activeKey)} aria-label={(done ? 'Undo ' : 'Complete ') + task.title} title={future ? 'Available on its scheduled date' : done ? 'Mark as open' : 'Mark as complete'}>{done ? <Check size={15} strokeWidth={2.8}/> : null}</button>
+        {filter === 'Overdue' && shownTasks.length > 0 && <p className="tasks-filter-context">Showing unresolved one-off tasks and recurring occurrences missed in the last 90 days. Older recurring history remains available in Planner.</p>}
+        {filter === 'Completed' && shownTasks.length > 0 && <p className="tasks-filter-context">Each row represents one completed occurrence. Repeating tasks can appear more than once.</p>}
+        {filter === 'Upcoming' && shownTasks.length > 0 && <p className="tasks-filter-context">Repeating tasks show their next scheduled date, even when the series started in the past.</p>}
+        {shownTasks.map(({ task, occurrenceDate, kind }) => {
+          const scheduledToday = occurrenceDate === today && taskOccursOn(task, today);
+          const done = taskIsDone(task, occurrenceDate);
+          const overdue = kind === 'overdue';
+          const future = occurrenceDate > today;
+          const rowKey = task.id + ':' + occurrenceDate;
+          const occurrenceLabel = kind === 'upcoming' && (task.recurrence ?? 'None') !== 'None'
+            ? 'Next · ' + formatDate(occurrenceDate)
+            : scheduledToday ? 'Today' : formatDate(occurrenceDate);
+          return <article className={'tasks-list-row ' + (done ? 'is-completed ' : '') + (overdue ? 'is-overdue ' : '') + (kind !== 'series' ? 'is-occurrence-row ' : '')} key={rowKey}>
+            <button type="button" className={'tasks-check ' + (done ? 'checked' : '')} disabled={future && kind !== 'completed'} onClick={() => onToggleTask(task.id, occurrenceDate)} aria-label={(done ? 'Undo ' : 'Complete ') + task.title + ' for ' + formatDate(occurrenceDate)} title={future && kind !== 'completed' ? 'Available on its scheduled date' : done ? 'Mark this occurrence as open' : 'Mark this occurrence complete'}>{done ? <Check size={15} strokeWidth={2.8}/> : null}</button>
             <div className="tasks-list-copy">
               <b>{task.title}</b>
+              {kind === 'completed' && (task.recurrence ?? 'None') !== 'None' && <small className="tasks-occurrence-caption">Completed occurrence</small>}
               <div className="tasks-list-meta">
                 <span className={'tasks-category-tag tasks-cat-' + (task.category ?? 'Personal').toLowerCase()}>{task.category ?? 'Personal'}</span>
                 <span><Clock3 size={12}/>{formatTime(task.time)} · {task.estimate} min</span>
-                <span><CalendarDays size={12}/>{scheduledToday ? 'Today' : formatDate(task.date)}</span>
+                <span><CalendarDays size={12}/>{occurrenceLabel}</span>
                 {(task.recurrence ?? 'None') !== 'None' && <span className="tasks-repeat-tag">{task.recurrence}</span>}
               </div>
             </div>
             <span className={'tasks-priority priority-' + task.priority.toLowerCase()}>{task.priority}</span>
             <span className={'tasks-state ' + (done ? 'done' : overdue ? 'overdue' : '')}>{done ? 'COMPLETE' : overdue ? 'OVERDUE' : future ? 'UP NEXT' : 'OPEN'}</span>
-            <button type="button" className="tasks-delete" aria-label={'Delete task ' + task.title} title="Delete task" onClick={() => setDeleteTarget(task.id)}><Trash2 size={15}/></button>
+            <button type="button" className="tasks-delete" aria-label={'Delete task ' + task.title} title="Delete task series and all its history" onClick={() => setDeleteTarget(task.id)}><Trash2 size={15}/></button>
           </article>;
         })}
         {shownTasks.length === 0 && <div className="tasks-empty"><span><CheckCircle2 size={24}/></span><b>{tasks.length ? 'Nothing matches this view.' : 'Start with one clear next step.'}</b><p>{tasks.length ? 'Try another filter or search term.' : 'Add a task and choose when it belongs in your day.'}</p><button className="secondary-button" type="button" onClick={() => setShowCreate(true)}><Plus size={14}/> Create your first task</button></div>}
