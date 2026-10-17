@@ -2,9 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, FormEvent, ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
-  Activity, ArrowRight, ArrowUpRight, BarChart3, Bell, BookOpen,
+  Activity, ArrowRight, ArrowUpRight, BarChart3, Bell, BookOpen, Brain, Coffee, Compass, Code2, Droplets, Dumbbell, Flower2,
   CalendarDays, CalendarRange, Check, CheckCheck, ChevronDown, CircleHelp, Clock3, Flame, Focus,
-  Gauge, Leaf, ListTodo, LogOut, Moon, MoreHorizontal, Pencil, Plus, RotateCcw, Settings2, ShieldCheck,
+  Gauge, Heart, Leaf, ListTodo, LogOut, Moon, MoreHorizontal, Pencil, PenTool, Plus, RotateCcw, Settings2, ShieldCheck,
   Sparkles, Sun, Target, Timer, Trophy, X, Zap,
 } from 'lucide-react';
 import type { Category, Frequency, Habit, Page, Task } from './types';
@@ -24,8 +24,32 @@ const shiftKey = (key: string, delta: number) => {
 };
 const categories: Category[] = ['Mind', 'Body', 'Craft', 'Life'];
 const frequencies: Frequency[] = ['Daily', 'Weekdays', 'Weekends', '3× / week', 'Custom'];
-const categoryTone: Record<Category, string> = { Mind: 'violet', Body: 'lime', Craft: 'orange', Life: 'blue' };
-const categoryEmoji: Record<Category, string> = { Mind: '◌', Body: '↗', Craft: '✳', Life: '⌂' };
+const categoryTone: Record<Category, string> = { Mind: 'violet', Body: 'violet', Craft: 'violet', Life: 'violet' };
+
+function CategoryGlyph({ category, size = 14 }: { category: Category; size?: number }) {
+  if (category === 'Mind') return <Brain size={size} strokeWidth={1.7} />;
+  if (category === 'Body') return <Dumbbell size={size} strokeWidth={1.7} />;
+  if (category === 'Craft') return <PenTool size={size} strokeWidth={1.7} />;
+  return <Compass size={size} strokeWidth={1.7} />;
+}
+
+function HabitGlyph({ habit, size = 17 }: { habit: Habit; size?: number }) {
+  const name = habit.name.toLowerCase();
+  const iconProps = { size, strokeWidth: 1.8, 'aria-hidden': true as const };
+  if (/(work.?out|gym|exercise|fitness|training|strength|lift)/.test(name)) return <Dumbbell {...iconProps} />;
+  if (/(meditat|breath|mindful|calm|reflection|gratitude)/.test(name)) return <Flower2 {...iconProps} />;
+  if (/(read|book|study|learn|language|course|lecture)/.test(name)) return <BookOpen {...iconProps} />;
+  if (/(code|program|develop|software|coding|algorithm)/.test(name)) return <Code2 {...iconProps} />;
+  if (/(write|journal|draw|design|craft|create|sketch)/.test(name)) return <PenTool {...iconProps} />;
+  if (/(water|hydrate|drink)/.test(name)) return <Droplets {...iconProps} />;
+  if (/(coffee|morning|routine)/.test(name)) return <Coffee {...iconProps} />;
+  if (/(walk|run|steps|outdoor|nature|stretch)/.test(name)) return <Activity {...iconProps} />;
+  if (/(family|friend|connect|care|health)/.test(name)) return <Heart {...iconProps} />;
+  if (habit.category === 'Mind') return <Brain {...iconProps} />;
+  if (habit.category === 'Body') return <Dumbbell {...iconProps} />;
+  if (habit.category === 'Craft') return <PenTool {...iconProps} />;
+  return <Compass {...iconProps} />;
+}
 type ActiveReminder = { habitId: string; habitName: string; reminderTime: string; reminderSoundUrl?: string };
 
 type ReminderMedia = { provider: 'YouTube' | 'Spotify'; originalUrl: string; embedUrl: string };
@@ -109,7 +133,7 @@ function MomentumChart({ habits, today }: { habits: Habit[]; today: string }) {
     <div className="analytics-line-chart">
       <div className="analytics-y-labels"><span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span></div>
       <svg viewBox="0 0 660 220" preserveAspectRatio="none" role="img" aria-label={range==='7D'?'Seven day consistency chart':'Thirty day consistency chart'}>
-        <defs><linearGradient id="momentumArea" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#9cafff" stopOpacity=".27"/><stop offset="100%" stopColor="#9cafff" stopOpacity="0"/></linearGradient><linearGradient id="momentumLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#9aaaff"/><stop offset="55%" stopColor="#b6c2ff"/><stop offset="100%" stopColor="#c9ff75"/></linearGradient></defs>
+        <defs><linearGradient id="momentumArea" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#9cafff" stopOpacity=".27"/><stop offset="100%" stopColor="#9cafff" stopOpacity="0"/></linearGradient><linearGradient id="momentumLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#8e58d9"/><stop offset="55%" stopColor="#b78aff"/><stop offset="100%" stopColor="#dfc6ff"/></linearGradient></defs>
         {[18,60,102,144,186].map((y)=><line key={y} x1="18" x2="644" y1={y} y2={y} className="analytics-grid-line"/> )}
         <path d={areaPath} fill="url(#momentumArea)" className="analytics-area-path"/>
         <path d={linePath} fill="none" stroke="url(#momentumLine)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="analytics-trend-path"/>
@@ -741,7 +765,8 @@ function App() {
     <div className={`app-shell ${dark ? 'dark-mode' : 'light-mode'}`}>
       <aside className="sidebar">
         <button className="brand-lockup" onClick={() => { setPage('Today'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} type="button" aria-label="Go to Cadence dashboard">
-          <img className="cadence-lockup-image" src="/cadence-lockup-original.webp" alt="Cadence" width="210" height="60" />
+          <span className="cadence-logo-crop" aria-hidden="true"><img src="/cadence-lockup-original.webp" alt="" /></span>
+          <span className="cadence-wordmark">CADENCE</span>
         </button>
         <div className="workspace-label">YOUR SPACE <span className="live-dot" /></div>
         <nav className="nav-list" aria-label="Main navigation">
@@ -764,7 +789,7 @@ function App() {
         <div className="routine-list">
           {habits.slice(0, 5).map((habit) => (
             <button className="routine-mini" key={habit.id} type="button" onClick={() => { setPage('Habits'); setFilter(habit.category); }}>
-              <span className={`mini-emoji tone-${habit.color}`}>{habit.emoji}</span><span>{habit.name}</span><span className={`mini-check ${habit.logs[today] ? 'checked' : ''}`}>{habit.logs[today] ? <Check size={11} /> : ''}</span>
+              <span className="mini-emoji tone-violet"><HabitGlyph habit={habit} size={13} /></span><span>{habit.name}</span><span className={`mini-check ${habit.logs[today] ? 'checked' : ''}`}>{habit.logs[today] ? <Check size={11} /> : ''}</span>
             </button>
           ))}
           {habits.length === 0 && <p className="sidebar-empty">Your first routine starts here.</p>}
@@ -817,7 +842,7 @@ function App() {
               <div className="analytics-metric-label"><span>7-DAY CONSISTENCY</span><span className="analytics-metric-icon tone-blue"><CalendarDays size={14}/></span></div>
               <div className="analytics-metric-value">{consistency}<small>%</small></div>
               <div className="analytics-metric-bottom"><span>Last seven days</span><span className="analytics-micro-note">{consistency >= 70 ? 'ON TRACK' : 'BUILDING'}</span></div>
-              <div className="analytics-metric-line analytics-line-blue" aria-label="Daily completion over the last seven days">{Array.from({ length: 7 }, (_, index) => { const dayKey = shiftKey(today, index - 6); const due = habits.filter((habit) => isDue(habit, dayKey)); const done = due.filter((habit) => Boolean(habit.logs[dayKey])).length; const height = due.length ? Math.max(3, Math.round((done / due.length) * 17)) : 3; return <i key={dayKey} title={dayKey + ': ' + done + '/' + due.length + ' completed'} style={{ height: height + 'px', opacity: due.length ? 0.85 : 0.22, background: due.length && done === due.length ? '#a6d8ec' : undefined }} />; })}</div>
+              <div className="analytics-metric-line analytics-line-blue" aria-label="Daily completion over the last seven days">{Array.from({ length: 7 }, (_, index) => { const dayKey = shiftKey(today, index - 6); const due = habits.filter((habit) => isDue(habit, dayKey)); const done = due.filter((habit) => Boolean(habit.logs[dayKey])).length; const height = due.length ? Math.max(3, Math.round((done / due.length) * 17)) : 3; return <i key={dayKey} title={dayKey + ': ' + done + '/' + due.length + ' completed'} style={{ height: height + 'px', opacity: due.length ? 0.85 : 0.22, background: due.length && done === due.length ? '#b78aff' : undefined }} />; })}</div>
             </article>
             <article className="analytics-metric-card">
               <div className="analytics-metric-label"><span>ACTIVE STREAKS</span><span className="analytics-metric-icon tone-pink"><Flame size={14}/></span></div>
@@ -873,7 +898,7 @@ function App() {
           <section className="page-intro"><div><div className="eyebrow"><span className="eyebrow-line" /> THE PATTERNS BEHIND PROGRESS</div><h1>Notice what <span>works.</span></h1><p className="welcome-sub">Use the evidence you create to make tomorrow easier.</p></div><div className="review-date-chip"><CalendarDays size={15} /> Last 7 days</div></section>
           <section className="insights-stat-grid"><StatCard icon={<Activity size={17} />} label="Consistency" value={habits.length ? `${consistency}%` : '—'} detail={habits.length ? "Of scheduled habit check-ins" : "Add a routine to establish a baseline"} tone="lime" /><StatCard icon={<CheckCheck size={17} />} label="Logged actions" value={String(totalWins)} detail="Across your habit history" tone="violet" /><StatCard icon={<Flame size={17} />} label="Active routines" value={String(activeStreaks)} detail="With a current streak" tone="orange" /></section>
           <div className="insight-activity"><MonthlyActivityCalendar habits={habits} tasks={tasks} today={today} onToggleHabit={toggleHabit} onToggleTask={toggleTask} /></div>
-          <div className="content-grid insight-bottom"><section className="panel"><div className="panel-heading"><div><div className="panel-overline">WHAT THE DATA SAYS</div><h3>Your strongest routines</h3></div><Trophy size={18} className="muted-icon" /></div><div className="ranking-list">{[...habits].sort((a, b) => getBestStreak(b, today) - getBestStreak(a, today)).slice(0, 4).map((habit, index) => <div className="ranking-row" key={habit.id}><span className="rank-number">0{index + 1}</span><span className={`rank-emoji tone-${habit.color}`}>{habit.emoji}</span><span className="rank-name"><b>{habit.name}</b><small>{habit.category} · {habit.frequency.toLowerCase()}</small></span><span className="rank-streak"><Flame size={13} /> {getCurrentStreak(habit, today)} days</span><div className="rank-bar"><span style={{ width: `${Math.min(100, getBestStreak(habit, today) / Math.max(1, bestStreak) * 100)}%` }} /></div></div>)}{habits.length === 0 && <p className="quiet-empty">Add routines to start seeing patterns.</p>}</div></section><section className="panel reflection-panel"><div className="panel-heading"><div><div className="panel-overline">YOUR NEXT EXPERIMENT</div><h3>Make it easier</h3></div><Sparkles size={17} className="accent-icon" /></div><div className="reflection-quote">“Success is often a better-designed starting point.”</div><div className="experiment-row"><span className="experiment-number">01</span><div><b>Pick one habit to protect</b><p>Which routine would make the rest of your day feel better?</p></div></div><div className="experiment-row"><span className="experiment-number">02</span><div><b>Make a specific if–then plan</b><p>“After <em>your cue</em>, I’ll do <em>the smallest version</em>.”</p></div></div><div className="experiment-row"><span className="experiment-number">03</span><div><b>Review, don’t judge</b><p>At week’s end, adjust the cue, effort, or timing that got in the way.</p></div></div><button className="secondary-button full-button" type="button" onClick={() => setPage('Habits')}>Tune my habits <ArrowRight size={15} /></button></section></div>
+          <div className="content-grid insight-bottom"><section className="panel"><div className="panel-heading"><div><div className="panel-overline">WHAT THE DATA SAYS</div><h3>Your strongest routines</h3></div><Trophy size={18} className="muted-icon" /></div><div className="ranking-list">{[...habits].sort((a, b) => getBestStreak(b, today) - getBestStreak(a, today)).slice(0, 4).map((habit, index) => <div className="ranking-row" key={habit.id}><span className="rank-number">0{index + 1}</span><span className="rank-emoji tone-violet"><HabitGlyph habit={habit} size={16} /></span><span className="rank-name"><b>{habit.name}</b><small>{habit.category} · {habit.frequency.toLowerCase()}</small></span><span className="rank-streak"><Flame size={13} /> {getCurrentStreak(habit, today)} days</span><div className="rank-bar"><span style={{ width: `${Math.min(100, getBestStreak(habit, today) / Math.max(1, bestStreak) * 100)}%` }} /></div></div>)}{habits.length === 0 && <p className="quiet-empty">Add routines to start seeing patterns.</p>}</div></section><section className="panel reflection-panel"><div className="panel-heading"><div><div className="panel-overline">YOUR NEXT EXPERIMENT</div><h3>Make it easier</h3></div><Sparkles size={17} className="accent-icon" /></div><div className="reflection-quote">“Success is often a better-designed starting point.”</div><div className="experiment-row"><span className="experiment-number">01</span><div><b>Pick one habit to protect</b><p>Which routine would make the rest of your day feel better?</p></div></div><div className="experiment-row"><span className="experiment-number">02</span><div><b>Make a specific if–then plan</b><p>“After <em>your cue</em>, I’ll do <em>the smallest version</em>.”</p></div></div><div className="experiment-row"><span className="experiment-number">03</span><div><b>Review, don’t judge</b><p>At week’s end, adjust the cue, effort, or timing that got in the way.</p></div></div><button className="secondary-button full-button" type="button" onClick={() => setPage('Habits')}>Tune my habits <ArrowRight size={15} /></button></section></div>
           <section className="research-note"><div className="research-icon"><BookOpen size={17} /></div><div><b>Grounded in behavior research</b><p>Progress monitoring, context cues, and specific if–then plans are established approaches—not guarantees. This tracker turns them into repeatable prompts.</p></div><button type="button" onClick={() => setToast('Research references are included in the project README.')}><CircleHelp size={16} /> About the method</button></section>
         </>}
 
@@ -883,7 +908,7 @@ function App() {
         </>}
       </main>
 
-      {showHabitModal && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) { setShowHabitModal(false); setEditingHabitId(null); setHabitDraft({ ...emptyHabitDraft }); } }}><section className="habit-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div className="modal-top"><div><div className="panel-overline">START SMALL, STAY CONSISTENT</div><h2 id="modal-title">{editingHabitId ? 'Edit habit' : 'Create a habit'}</h2><p>{editingHabitId ? 'Update your routine without losing its history.' : 'Design the start, not just the finish line.'}</p></div><IconButton label="Close modal" onClick={() => setShowHabitModal(false)}><X size={18} /></IconButton></div><form onSubmit={addHabit}><label className="field-label">Habit name<input autoFocus value={habitDraft.name} onChange={(event) => setHabitDraft((draft) => ({ ...draft, name: event.target.value }))} placeholder="e.g. Practice coding" maxLength={70} required /></label><label className="field-label">Area of life<div className="category-select">{categories.map((category) => <button type="button" key={category} className={habitDraft.category === category ? `selected ${categoryTone[category]}` : ''} onClick={() => setHabitDraft((draft) => ({ ...draft, category }))}><span>{categoryEmoji[category]}</span>{category}</button>)}</div></label><label className="field-label">Frequency<select value={habitDraft.frequency} onChange={(event) => setHabitDraft((draft) => ({ ...draft, frequency: event.target.value as Frequency }))}>{frequencies.map((frequency) => <option key={frequency}>{frequency}</option>)}</select></label>
+      {showHabitModal && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) { setShowHabitModal(false); setEditingHabitId(null); setHabitDraft({ ...emptyHabitDraft }); } }}><section className="habit-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div className="modal-top"><div><div className="panel-overline">START SMALL, STAY CONSISTENT</div><h2 id="modal-title">{editingHabitId ? 'Edit habit' : 'Create a habit'}</h2><p>{editingHabitId ? 'Update your routine without losing its history.' : 'Design the start, not just the finish line.'}</p></div><IconButton label="Close modal" onClick={() => setShowHabitModal(false)}><X size={18} /></IconButton></div><form onSubmit={addHabit}><label className="field-label">Habit name<input autoFocus value={habitDraft.name} onChange={(event) => setHabitDraft((draft) => ({ ...draft, name: event.target.value }))} placeholder="e.g. Practice coding" maxLength={70} required /></label><label className="field-label">Area of life<div className="category-select">{categories.map((category) => <button type="button" key={category} className={habitDraft.category === category ? `selected ${categoryTone[category]}` : ''} onClick={() => setHabitDraft((draft) => ({ ...draft, category }))}><CategoryGlyph category={category} size={15} />{category}</button>)}</div></label><label className="field-label">Frequency<select value={habitDraft.frequency} onChange={(event) => setHabitDraft((draft) => ({ ...draft, frequency: event.target.value as Frequency }))}>{frequencies.map((frequency) => <option key={frequency}>{frequency}</option>)}</select></label>
           {habitDraft.frequency === 'Custom' && <fieldset className="habit-schedule-days"><legend>Repeat on these days</legend><div className="habit-weekday-picker">{[{ label: 'Sun', value: 0 }, { label: 'Mon', value: 1 }, { label: 'Tue', value: 2 }, { label: 'Wed', value: 3 }, { label: 'Thu', value: 4 }, { label: 'Fri', value: 5 }, { label: 'Sat', value: 6 }].map(({ label, value }) => <button type="button" key={value} className={habitDraft.customDays.includes(value) ? 'selected' : ''} aria-pressed={habitDraft.customDays.includes(value)} onClick={() => setHabitDraft((draft) => ({ ...draft, customDays: draft.customDays.includes(value) ? draft.customDays.filter((day) => day !== value) : [...draft.customDays, value].sort((left, right) => left - right) }))}>{label}</button>)}</div><p>Choose one or more weekdays. Only selected days count toward consistency and reminders.</p></fieldset>}<label className="field-label">When will you do it? <span className="field-hint">A reliable cue</span><input value={habitDraft.cue} onChange={(event) => setHabitDraft((draft) => ({ ...draft, cue: event.target.value }))} placeholder="After I finish breakfast…" maxLength={100} /></label><label className="field-label">Your minimum version <span className="field-hint">Make it hard to say no</span><input value={habitDraft.minimum} onChange={(event) => setHabitDraft((draft) => ({ ...draft, minimum: event.target.value }))} placeholder="Read one page, write one line…" maxLength={100} /></label>
           <div className="habit-configuration-grid">
             <label className="field-label">Duration<select value={String(habitDraft.durationMonths)} onChange={(event) => setHabitDraft((draft) => ({ ...draft, durationMonths: Number(event.target.value) }))}><option value="0">Forever</option><option value="1">1 month</option><option value="3">3 months</option><option value="6">6 months</option><option value="12">12 months</option></select><span className="field-hint">Starts on the creation date. Your history stays saved after it ends.</span></label>
@@ -1135,7 +1160,7 @@ function MonthlyActivityCalendar({
             const done = Boolean(habit.logs[selectedDate]);
             return <div className={'monthly-detail-row ' + (done ? 'is-done' : '')} key={habit.id}>
               <button type="button" className={'monthly-detail-check ' + (done ? 'checked' : '')} disabled={selected.isFuture} onClick={() => onToggleHabit(habit.id, selectedDate)} aria-label={(done ? 'Undo ' : 'Complete ') + habit.name}>{done ? <Check size={12}/> : null}</button>
-              <span className="monthly-detail-emoji">{habit.emoji}</span>
+              <span className="monthly-detail-emoji tone-violet"><HabitGlyph habit={habit} size={15} /></span>
               <span className="monthly-detail-item-copy"><b>{habit.name}</b><small>{habit.cue || habit.category}</small></span>
               <span className={'monthly-item-status ' + (done ? 'is-done' : '')}>{done ? 'DONE' : selected.isFuture ? 'UP NEXT' : 'OPEN'}</span>
             </div>;
@@ -1202,7 +1227,7 @@ function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habi
   const chartId = habit.id.replace(/[^a-zA-Z0-9_-]/g, "");
   return <article className="habit-detail-card">
     <div className="habit-detail-row">
-      <div className={"detail-emoji tone-" + habit.color}>{habit.emoji}</div>
+      <div className="detail-emoji tone-violet"><HabitGlyph habit={habit} size={20} /></div>
       <div className="detail-main">
         <div className="detail-title-row"><b>{habit.name}</b><span className={"category-tag " + categoryTone[habit.category]}>{habit.category}</span><span className="frequency-tag">{habit.frequency === 'Custom' ? 'Custom days' : habit.frequency}</span>{habit.durationMonths ? <span className="habit-duration-tag">{habit.durationMonths} mo plan</span> : null}</div>
         <p>{habit.cue ? "Cue: " + habit.cue : "Choose a consistent cue"} <span>·</span> Minimum: {habit.minimum} {habit.reminderEnabled && habit.reminderTime && <span className="habit-reminder-tag"><Bell size={11} /> Reminder {formatReminderTime(habit.reminderTime)}</span>}</p>
