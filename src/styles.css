@@ -8044,3 +8044,533 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     transition: none !important;
   }
 }
+
+
+/* Phase 16 — unified editorial metrics, quieter calendar surfaces, no sidebar strokes. */
+
+/* HABITS: turn four mini-cards into one tailored metric rail. */
+#root .app-shell .habits-overview-strip {
+  display: grid !important;
+  grid-template-columns: .82fr .9fr 1fr 1.45fr !important;
+  align-items: stretch !important;
+  gap: 0 !important;
+  width: 100%;
+  margin: 8px 0 17px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-top: 1px solid rgba(191, 169, 204, .2) !important;
+  border-bottom: 1px solid rgba(191, 169, 204, .2) !important;
+  border-radius: 0 !important;
+  background: linear-gradient(105deg, rgba(24, 16, 29, .68), rgba(10, 8, 13, .26)) !important;
+  box-shadow: none !important;
+}
+#root .app-shell .habits-overview-strip > div {
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: flex-start !important;
+  gap: 9px !important;
+  min-width: 0 !important;
+  min-height: 88px !important;
+  padding: 15px 20px !important;
+  border: 0 !important;
+  border-right: 1px solid rgba(191, 169, 204, .14) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+#root .app-shell .habits-overview-strip > div::before { content: none !important; display:none !important; }
+#root .app-shell .habits-overview-strip > div:first-child { padding-left: 2px !important; }
+#root .app-shell .habits-overview-strip > div:nth-child(3) { border-right: 1px solid rgba(191, 169, 204, .14) !important; }
+#root .app-shell .habits-overview-strip > div:last-child { border-right: 0 !important; }
+#root .app-shell .habits-overview-strip .strip-label {
+  color: #a99bb2 !important;
+  font: 500 8px/1.4 var(--cadence-font-ui) !important;
+  letter-spacing: .12em !important;
+  text-transform: uppercase !important;
+}
+#root .app-shell .habits-overview-strip b {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 3px !important;
+  color: #f4edf7 !important;
+  font: 400 29px/.95 var(--cadence-font-display) !important;
+  letter-spacing: -.045em !important;
+  font-variant-numeric: tabular-nums;
+}
+#root .app-shell .habits-overview-strip b small {
+  color: #a999b2 !important;
+  font: 500 10px/1 var(--cadence-font-ui) !important;
+  letter-spacing: 0 !important;
+}
+#root .app-shell .habits-overview-strip > .strip-quote {
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 15px 22px !important;
+  color: #bdaec6 !important;
+  font: italic 400 12px/1.6 var(--cadence-font-display) !important;
+}
+#root .app-shell .habits-overview-strip > .strip-quote svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  color: #bca1cf !important;
+}
+@media (max-width: 1050px) {
+  #root .app-shell .habits-overview-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+  #root .app-shell .habits-overview-strip > .strip-quote {
+    grid-column: 1 / -1;
+    min-height: 52px !important;
+    padding: 11px 2px !important;
+    border-top: 1px solid rgba(191,169,204,.12) !important;
+    border-right: 0 !important;
+  }
+}
+@media (max-width: 600px) {
+  #root .app-shell .habits-overview-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  #root .app-shell .habits-overview-strip > div,
+  #root .app-shell .habits-overview-strip > div:first-child {
+    min-height: 73px !important;
+    padding: 12px !important;
+  }
+  #root .app-shell .habits-overview-strip > div:nth-child(2) { border-right: 0 !important; }
+  #root .app-shell .habits-overview-strip > div:nth-child(3) {
+    padding-left: 12px !important;
+    border-top: 1px solid rgba(191,169,204,.12) !important;
+  }
+  #root .app-shell .habits-overview-strip > .strip-quote {
+    grid-column: 1 / -1;
+    min-height: 52px !important;
+    padding: 10px 12px !important;
+  }
+  #root .app-shell .habits-overview-strip b { font-size: 25px !important; }
+}
+
+/* INSIGHTS: one continuous three-column summary surface, rather than three
+   oversized floating cards. Finer type hierarchy, ample reading room, no orbs. */
+#root .app-shell .insights-stat-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0 !important;
+  width: 100%;
+  margin: 0 0 20px !important;
+  padding: 0 !important;
+  border: 1px solid rgba(190, 165, 204, .17) !important;
+  border-radius: 10px !important;
+  background: linear-gradient(110deg, rgba(24, 17, 29, .76), rgba(10, 8, 13, .88)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
+  overflow: hidden;
+}
+#root .app-shell .insights-stat-grid > .insights-stat-card {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: 27px minmax(0,1fr) !important;
+  grid-template-rows: 27px auto auto !important;
+  align-content: center !important;
+  align-items: center !important;
+  column-gap: 10px !important;
+  row-gap: 0 !important;
+  min-width: 0 !important;
+  min-height: 126px !important;
+  padding: 19px 22px 18px !important;
+  border: 0 !important;
+  border-right: 1px solid rgba(190, 165, 204, .14) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+  animation: none !important;
+  transition: background .18s ease !important;
+}
+#root .app-shell .insights-stat-grid > .insights-stat-card:last-child { border-right: 0 !important; }
+#root .app-shell .insights-stat-grid > .insights-stat-card::before,
+#root .app-shell .insights-stat-grid > .insights-stat-card::after {
+  content: none !important;
+  display: none !important;
+}
+#root .app-shell .insights-stat-grid > .insights-stat-card:hover {
+  background: rgba(187, 154, 209, .035) !important;
+  border-color: rgba(190,165,204,.14) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+#root .app-shell .insights-stat-grid .stat-top { display: contents !important; }
+#root .app-shell .insights-stat-grid .stat-icon {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 27px !important;
+  height: 27px !important;
+  border: 1px solid rgba(190,165,204,.18) !important;
+  border-radius: 5px !important;
+  color: #c7afd7 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+#root .app-shell .insights-stat-grid .stat-icon.lime,
+#root .app-shell .insights-stat-grid .stat-icon.violet,
+#root .app-shell .insights-stat-grid .stat-icon.orange {
+  color: #c7afd7 !important;
+  background: transparent !important;
+}
+#root .app-shell .insights-stat-grid .stat-indicator { display: none !important; }
+#root .app-shell .insights-stat-grid .stat-label {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  align-self: center !important;
+  margin: 0 !important;
+  color: #b9a6c4 !important;
+  font: 500 9px/1.4 var(--cadence-font-ui) !important;
+  letter-spacing: .1em !important;
+  text-transform: uppercase !important;
+}
+#root .app-shell .insights-stat-grid .stat-value {
+  grid-column: 1 / -1 !important;
+  grid-row: 2 !important;
+  margin: 16px 0 0 !important;
+  color: #f6eff9 !important;
+  font: 400 clamp(30px, 3vw, 37px)/1.04 var(--cadence-font-display) !important;
+  letter-spacing: -.045em !important;
+  font-variant-numeric: tabular-nums;
+}
+#root .app-shell .insights-stat-grid .stat-detail {
+  grid-column: 1 / -1 !important;
+  grid-row: 3 !important;
+  max-width: 100% !important;
+  margin: 5px 0 0 !important;
+  color: #a99ab2 !important;
+  font: 400 10px/1.5 var(--cadence-font-ui) !important;
+}
+@media (max-width: 720px) {
+  #root .app-shell .insights-stat-grid { grid-template-columns: minmax(0,1fr) !important; }
+  #root .app-shell .insights-stat-grid > .insights-stat-card {
+    grid-template-columns: 27px minmax(0,1fr) !important;
+    grid-template-rows: 27px auto auto !important;
+    min-height: 104px !important;
+    padding: 14px 17px !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid rgba(190,165,204,.12) !important;
+  }
+  #root .app-shell .insights-stat-grid > .insights-stat-card:last-child { border-bottom: 0 !important; }
+}
+
+/* MONTHLY EXECUTION: editorial page section with restrained outer framing,
+   cohesive statistic ledger and quieter day cells. Preserve all calendar logic. */
+#root .app-shell .monthly-activity {
+  position: relative !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 23px 0 14px !important;
+  border: 0 !important;
+  border-top: 1px solid rgba(190,165,204,.17) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  transform: none !important;
+  transition: none !important;
+}
+#root .app-shell .monthly-activity::before,
+#root .app-shell .monthly-activity::after { content: none !important; display:none !important; }
+#root .app-shell .monthly-activity:hover {
+  transform: none !important;
+  border-color: transparent !important;
+  border-top-color: rgba(190,165,204,.17) !important;
+  box-shadow: none !important;
+}
+#root .app-shell .monthly-activity-header {
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: space-between !important;
+  gap: 18px !important;
+  padding: 0 0 19px !important;
+  border-bottom: 1px solid rgba(190,165,204,.12) !important;
+}
+#root .app-shell .monthly-title-block h3 {
+  margin: 8px 0 7px !important;
+  color: #f5edf8 !important;
+  font: 400 clamp(26px, 2.45vw, 33px)/1.12 var(--cadence-font-display) !important;
+  letter-spacing: -.04em !important;
+}
+#root .app-shell .monthly-title-block h3 span {
+  color: #bba3c8 !important;
+  font-weight: 400 !important;
+}
+#root .app-shell .monthly-title-block p {
+  max-width: 60ch !important;
+  color: #a99ab2 !important;
+  font: 400 11px/1.65 var(--cadence-font-ui) !important;
+}
+#root .app-shell .monthly-navigation { gap: 5px !important; }
+#root .app-shell .monthly-navigation .monthly-nav-arrow,
+#root .app-shell .monthly-navigation .monthly-today-button,
+#root .app-shell .monthly-navigation .monthly-current-month {
+  min-height: 34px !important;
+  height: 34px !important;
+  border: 1px solid rgba(190,165,204,.17) !important;
+  border-radius: 5px !important;
+  background: transparent !important;
+  color: #c4b4ce !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+#root .app-shell .monthly-navigation .monthly-nav-arrow { width: 30px !important; padding: 0 !important; }
+#root .app-shell .monthly-navigation .monthly-current-month { padding: 0 10px !important; }
+#root .app-shell .monthly-current-month svg { color: #bba1cc !important; }
+#root .app-shell .monthly-current-month b {
+  color: #e8ddec !important;
+  font: 500 10px/1 var(--cadence-font-ui) !important;
+  letter-spacing: .01em !important;
+}
+#root .app-shell .monthly-navigation button:hover {
+  color: #fff !important;
+  border-color: rgba(202,174,221,.4) !important;
+  background: rgba(184,147,207,.06) !important;
+}
+
+/* Monthly metrics become one continuous ledger instead of separate colored chips. */
+#root .app-shell .monthly-stats-row {
+  display: grid !important;
+  grid-template-columns: repeat(3,minmax(0,1fr)) !important;
+  gap: 0 !important;
+  margin: 16px 0 17px !important;
+  padding: 4px 0 !important;
+  border-top: 1px solid rgba(190,165,204,.1) !important;
+  border-bottom: 1px solid rgba(190,165,204,.1) !important;
+  background: transparent !important;
+}
+#root .app-shell .monthly-stats-row .monthly-stat {
+  display: flex !important;
+  align-items: center !important;
+  min-width: 0 !important;
+  min-height: 61px !important;
+  gap: 10px !important;
+  padding: 10px 17px !important;
+  border: 0 !important;
+  border-right: 1px solid rgba(190,165,204,.12) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+#root .app-shell .monthly-stats-row .monthly-stat:first-child { padding-left: 2px !important; }
+#root .app-shell .monthly-stats-row .monthly-stat:last-child { padding-right: 2px !important; border-right: 0 !important; }
+#root .app-shell .monthly-stat-icon,
+#root .app-shell .monthly-stat-icon.habits-icon,
+#root .app-shell .monthly-stat-icon.days-icon {
+  width: 23px !important;
+  height: 23px !important;
+  flex: 0 0 23px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  color: #bba2c9 !important;
+  background: transparent !important;
+}
+#root .app-shell .monthly-stat > div { display: grid !important; gap: 5px !important; min-width: 0 !important; }
+#root .app-shell .monthly-stat small {
+  color: #a798b0 !important;
+  font: 500 8px/1.35 var(--cadence-font-ui) !important;
+  letter-spacing: .1em !important;
+  white-space: normal !important;
+}
+#root .app-shell .monthly-stat b {
+  color: #f3edf6 !important;
+  font: 400 24px/1 var(--cadence-font-display) !important;
+  letter-spacing: -.035em !important;
+}
+#root .app-shell .monthly-stat b i {
+  color: #a99ab2 !important;
+  font: 400 10px/1 var(--cadence-font-ui) !important;
+}
+#root .app-shell .monthly-calendar-shell {
+  padding: 4px 0 2px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+#root .app-shell .monthly-weekday-row {
+  gap: 5px !important;
+  margin-bottom: 5px !important;
+}
+#root .app-shell .monthly-weekday-row > span {
+  padding: 7px 8px !important;
+  color: #a895b1 !important;
+  font: 500 8px/1.2 var(--cadence-font-ui) !important;
+  letter-spacing: .13em !important;
+}
+#root .app-shell .monthly-calendar-grid { gap: 5px !important; }
+#root .app-shell .monthly-day-empty { min-height: 96px !important; }
+#root .app-shell .monthly-day-cell {
+  display: flex !important;
+  min-width: 0 !important;
+  min-height: 96px !important;
+  gap: 6px !important;
+  padding: 7px 8px 6px !important;
+  border: 1px solid rgba(190,165,204,.1) !important;
+  border-radius: 5px !important;
+  background: rgba(255,255,255,.009) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+#root .app-shell .monthly-day-cell:hover:not(.is-future) {
+  border-color: rgba(202,174,221,.32) !important;
+  background: rgba(184,147,207,.04) !important;
+  transform: none !important;
+}
+#root .app-shell .monthly-day-top > b {
+  width: 22px !important;
+  height: 22px !important;
+  border: 0 !important;
+  border-radius: 3px !important;
+  color: #ded1e4 !important;
+  background: transparent !important;
+  font: 500 10px/1 var(--cadence-font-ui) !important;
+}
+#root .app-shell .monthly-day-top > i {
+  color: #cbb0dc !important;
+  font: 500 7px/1 var(--cadence-font-ui) !important;
+  letter-spacing: .06em !important;
+}
+#root .app-shell .monthly-day-cell.is-today {
+  border-color: rgba(195,160,218,.47) !important;
+  background: rgba(183,145,207,.045) !important;
+  box-shadow: inset 0 1px 0 rgba(213,185,230,.06) !important;
+}
+#root .app-shell .monthly-day-cell.is-today .monthly-day-top > b {
+  color: #17101c !important;
+  background: #ccb2dd !important;
+}
+#root .app-shell .monthly-day-cell.is-selected {
+  border-color: rgba(207,180,225,.6) !important;
+  background: rgba(183,145,207,.06) !important;
+  box-shadow: inset 0 0 0 1px rgba(207,180,225,.06) !important;
+}
+#root .app-shell .monthly-day-cell.is-selected .monthly-day-top > b {
+  color: #17101c !important;
+  background: #dfcce9 !important;
+}
+#root .app-shell .monthly-day-task-count > strong {
+  color: #e6d6ef !important;
+  font: 400 15px/1 var(--cadence-font-display) !important;
+}
+#root .app-shell .monthly-day-task-count > small,
+#root .app-shell .monthly-day-habit-count > small { color: #a99ab2 !important; font-size: 8px !important; }
+#root .app-shell .monthly-day-habit-count {
+  gap: 5px !important;
+  color: #bea4d0 !important;
+  font: 500 8px/1.2 var(--cadence-font-ui) !important;
+}
+#root .app-shell .monthly-habit-dot { background: #c7a4db !important; }
+#root .app-shell .monthly-day-progress {
+  height: 2px !important;
+  background: rgba(189,162,205,.12) !important;
+}
+#root .app-shell .monthly-day-progress > i { background: linear-gradient(90deg,#a98abd,#dec9e9) !important; }
+#root .app-shell .monthly-day-status {
+  color: #a99ab2 !important;
+  font: 500 6px/1.3 var(--cadence-font-ui) !important;
+  letter-spacing: .07em !important;
+}
+#root .app-shell .monthly-day-no-activity {
+  color: #786c81 !important;
+  font: 400 9px/1.4 var(--cadence-font-ui) !important;
+}
+#root .app-shell .monthly-calendar-legend {
+  gap: 12px 18px !important;
+  margin-top: 12px !important;
+  padding: 0 2px !important;
+  color: #a99ab2 !important;
+  font: 400 9px/1.4 var(--cadence-font-ui) !important;
+}
+#root .app-shell .monthly-legend-task,
+#root .app-shell .monthly-legend-habit,
+#root .app-shell .monthly-legend-today {
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 1px !important;
+  background: #c8abd9 !important;
+}
+#root .app-shell .monthly-legend-habit { background: #a991c1 !important; }
+#root .app-shell .monthly-legend-today { border-color: #d5b6e7 !important; background: transparent !important; }
+#root .app-shell .monthly-week-note { color: #81748a !important; }
+#root .app-shell .monthly-day-detail {
+  margin-top: 16px !important;
+  padding: 16px 0 0 !important;
+  border: 0 !important;
+  border-top: 1px solid rgba(190,165,204,.12) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+#root .app-shell .monthly-detail-header h4 {
+  color: #f2eaf5 !important;
+  font: 400 22px/1.2 var(--cadence-font-display) !important;
+}
+#root .app-shell .monthly-detail-header p { color: #a99ab2 !important; font-size: 10px !important; }
+#root .app-shell .monthly-detail-group {
+  border: 1px solid rgba(190,165,204,.11) !important;
+  border-radius: 6px !important;
+  background: rgba(255,255,255,.009) !important;
+}
+@media (max-width: 900px) {
+  #root .app-shell .monthly-activity { padding: 18px 0 12px !important; }
+  #root .app-shell .monthly-activity-header { align-items: flex-start !important; flex-direction: column; }
+  #root .app-shell .monthly-navigation { max-width: 100%; flex-wrap: wrap; }
+  #root .app-shell .monthly-calendar-grid { gap: 4px !important; }
+  #root .app-shell .monthly-day-cell { min-height: 83px !important; padding: 6px 5px !important; gap: 5px !important; }
+  #root .app-shell .monthly-day-empty { min-height: 83px !important; }
+}
+@media (max-width: 600px) {
+  #root .app-shell .monthly-stats-row { grid-template-columns: minmax(0,1fr) !important; padding: 0 !important; }
+  #root .app-shell .monthly-stats-row .monthly-stat {
+    min-height: 46px !important;
+    padding: 8px 0 !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid rgba(190,165,204,.09) !important;
+  }
+  #root .app-shell .monthly-stats-row .monthly-stat:last-child { border-bottom: 0 !important; }
+  #root .app-shell .monthly-calendar-grid,
+  #root .app-shell .monthly-weekday-row { gap: 3px !important; }
+  #root .app-shell .monthly-day-cell { min-height: 69px !important; padding: 5px 3px !important; gap: 4px !important; }
+  #root .app-shell .monthly-day-empty { min-height: 69px !important; }
+  #root .app-shell .monthly-day-task-count > small,
+  #root .app-shell .monthly-day-habit-count > small,
+  #root .app-shell .monthly-day-status { display: none !important; }
+  #root .app-shell .monthly-day-task-count > strong { font-size: 13px !important; }
+  #root .app-shell .monthly-day-habit-count { font-size: 8px !important; }
+  #root .app-shell .monthly-calendar-legend { gap: 8px 11px !important; }
+}
+
+/* Sidebar active state: remove both decorative strokes. Keep only a soft
+   icon tone and typographic contrast so the current location reads cleanly. */
+#root .app-shell .sidebar .nav-list > .nav-item::before,
+#root .app-shell .sidebar .nav-list > .nav-item::after {
+  content: none !important;
+  display: none !important;
+}
+#root .app-shell .sidebar .nav-list > .nav-item.active::before,
+#root .app-shell .sidebar .nav-list > .nav-item.active::after {
+  content: none !important;
+  display: none !important;
+}
+#root .app-shell .sidebar .nav-list > .nav-item.active {
+  border: 0 !important;
+  border-radius: 4px !important;
+  background: rgba(183,145,207,.055) !important;
+  box-shadow: none !important;
+}
+#root .app-shell .sidebar .nav-list > .nav-item.active .nav-icon {
+  border-color: transparent !important;
+  color: #d1b9de !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+#root .app-shell .sidebar .nav-list > .nav-item.active .nav-copy b {
+  color: #f4eaf8 !important;
+}
