@@ -270,7 +270,7 @@ function App() {
     ].join(',');
 
     const targets = Array.from(pageRoot.querySelectorAll<HTMLElement>(revealSelector))
-      .filter((element) => !element.hasAttribute('data-motion-reveal'));
+      .filter((element) => element.dataset.motionReveal !== 'visible');
 
     if (!targets.length) return;
 
