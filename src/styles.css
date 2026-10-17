@@ -6403,3 +6403,116 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .app-shell .tasks-filter-context { font-size: 10px; }
   .app-shell .tasks-occurrence-caption { font-size: 8px; }
 }
+
+
+/* Workspace backup and restore */
+.backup-modal-backdrop { z-index: 60; }
+.workspace-backup-modal {
+  width: min(590px, calc(100vw - 30px));
+  max-height: min(86vh, 820px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.workspace-backup-modal .modal-top { margin-bottom: 18px; }
+.backup-privacy-note {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: start;
+  gap: 11px;
+  padding: 14px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(191, 142, 255, .2);
+  border-radius: 12px;
+  color: var(--text);
+  background: linear-gradient(135deg, rgba(130, 73, 176, .14), rgba(28, 18, 37, .16));
+}
+.backup-privacy-note > svg { margin-top: 2px; color: #cba0ff; }
+.backup-privacy-note p { display: grid; gap: 4px; margin: 0; }
+.backup-privacy-note b { font-size: 12px; font-weight: 650; }
+.backup-privacy-note span { color: var(--muted); font-size: 11px; line-height: 1.65; }
+.backup-download-button { width: 100%; min-height: 46px; justify-content: space-between; gap: 10px; padding: 0 15px; }
+.backup-restore-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 18px 0;
+  margin-top: 7px;
+  border-bottom: 1px solid var(--border);
+}
+.backup-restore-row > div { min-width: 0; }
+.backup-restore-row b { display: block; color: var(--text); font-size: 12px; }
+.backup-restore-row p { margin: 5px 0 0; max-width: 325px; color: var(--muted); font-size: 11px; line-height: 1.65; }
+.backup-restore-row .secondary-button { flex: 0 0 auto; min-height: 38px; font-size: 11px; }
+.backup-import-error {
+  margin: 13px 0 0;
+  padding: 11px 12px;
+  border: 1px solid rgba(192, 128, 255, .28);
+  border-radius: 9px;
+  color: #e4c7ff;
+  background: rgba(113, 57, 151, .13);
+  font-size: 11px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.backup-preview {
+  margin-top: 15px;
+  padding: 14px;
+  border: 1px solid rgba(182, 136, 241, .32);
+  border-radius: 12px;
+  background: rgba(103, 59, 143, .1);
+}
+.backup-preview-file { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.backup-file-glyph {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border: 1px solid rgba(195, 150, 255, .25);
+  border-radius: 9px;
+  color: #d5b3ff;
+  background: rgba(128, 78, 177, .17);
+}
+.backup-preview-file > span:last-child { display: grid; gap: 4px; min-width: 0; }
+.backup-preview-file b { color: var(--text); font-size: 11px; overflow-wrap: anywhere; }
+.backup-preview-file small { color: var(--muted); font-size: 9px; overflow-wrap: anywhere; }
+.backup-preview-counts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+.backup-preview-counts > span {
+  display: grid;
+  gap: 4px;
+  padding: 11px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: rgba(10, 8, 14, .17);
+}
+.backup-preview-counts b { color: var(--text); font-size: 18px; font-weight: 650; letter-spacing: -.4px; }
+.backup-preview-counts small { color: var(--muted); font-size: 9px; }
+.backup-replace-warning {
+  margin: 13px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.7;
+}
+.backup-preview .modal-actions { margin-top: 14px; }
+.backup-preview .modal-actions > button { min-height: 40px; font-size: 11px; }
+.backup-footer-note {
+  margin: 16px 0 0;
+  color: var(--subtle);
+  font-size: 10px;
+  line-height: 1.7;
+}
+@media (max-width: 560px) {
+  .workspace-backup-modal { padding: 19px; }
+  .backup-restore-row { align-items: stretch; flex-direction: column; }
+  .backup-restore-row p { max-width: none; }
+  .backup-restore-row .secondary-button { justify-content: center; }
+  .backup-preview-counts { gap: 6px; }
+  .backup-preview-counts > span { padding: 9px 7px; }
+  .backup-preview-counts b { font-size: 16px; }
+}
