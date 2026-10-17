@@ -1,0 +1,116 @@
+:root {
+  color-scheme: dark;
+  font-family: 'Montserrat', sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --cadence-ink: #07060B;
+  --cadence-surface-1: #0C0A13;
+  --cadence-surface-2: #110E1A;
+  --cadence-surface-3: #171226;
+  --cadence-border: #302044;
+  --cadence-border-subtle: #21172E;
+  --cadence-text-primary: #F5EFFB;
+  --cadence-text-secondary: #C7B8DC;
+  --cadence-text-muted: #9B88B5;
+  --cadence-violet-100: #EDE0FF;
+  --cadence-violet-200: #DFC6FF;
+  --cadence-violet-300: #C5A0FF;
+  --cadence-violet-400: #B78AFF;
+  --cadence-violet-500: #A875EE;
+  --cadence-violet-600: #7544AD;
+  --cadence-violet-700: #4A2E70;
+  --cadence-violet-800: #261938;
+  --cadence-font-body: 'Montserrat', sans-serif;
+  --cadence-font-display: 'Playfair Display', Georgia, serif;
+  --cadence-font-wordmark: 'Montserrat', sans-serif;
+  --cadence-font-mono: 'IBM Plex Mono', monospace;
+  --cadence-radius-sm: 7px;
+  --cadence-radius-md: 12px;
+  --cadence-radius-lg: 18px;
+  --cadence-space-1: 4px;
+  --cadence-space-2: 8px;
+  --cadence-space-3: 12px;
+  --cadence-space-4: 16px;
+  --cadence-space-6: 24px;
+  --cadence-space-8: 32px;
+}
+
+html {
+  background: var(--cadence-ink);
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background: var(--cadence-ink) !important;
+  color: var(--cadence-text-primary);
+  font-family: var(--cadence-font-body);
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: var(--cadence-font-body);
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline-color: var(--cadence-violet-400);
+}
+
+.app-shell,
+.app-shell.dark-mode,
+.app-shell.light-mode {
+  --bg: var(--cadence-ink);
+  --panel: var(--cadence-surface-1);
+  --panel-raised: var(--cadence-surface-2);
+  --panel-soft: var(--cadence-surface-3);
+  --border: var(--cadence-border);
+  --border-soft: var(--cadence-border-subtle);
+  --text: var(--cadence-text-primary);
+  --muted: var(--cadence-text-secondary);
+  --subtle: var(--cadence-text-muted);
+  --lime: var(--cadence-violet-400);
+  --lime-strong: var(--cadence-violet-300);
+  --lime-soft: rgba(183, 138, 255, .12);
+  --orange: var(--cadence-violet-300);
+  --violet: var(--cadence-violet-300);
+  --blue: var(--cadence-violet-400);
+  --shadow: rgba(0, 0, 0, .32);
+  color: var(--cadence-text-primary);
+  font-family: var(--cadence-font-body);
+  background: var(--cadence-ink);
+  color-scheme: dark;
+}
+
+.app-shell h1,
+.app-shell h2,
+.app-shell h3,
+.app-shell h4,
+.app-shell h5,
+.app-shell h6 {
+  font-family: var(--cadence-font-display);
+}
+
+.app-shell button,
+.app-shell input,
+.app-shell select,
+.app-shell textarea {
+  font-family: var(--cadence-font-body);
+}
+
+.auth-screen,
+.auth-loading-screen {
+  --auth-bg: var(--cadence-ink);
+  --auth-panel: var(--cadence-surface-1);
+  --auth-border: var(--cadence-border);
+  color: var(--cadence-text-primary);
+  font-family: var(--cadence-font-body);
+}
