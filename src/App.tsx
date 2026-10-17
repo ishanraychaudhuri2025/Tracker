@@ -741,7 +741,7 @@ function App() {
     <div className={`app-shell ${dark ? 'dark-mode' : 'light-mode'}`}>
       <aside className="sidebar">
         <button className="brand-lockup" onClick={() => { setPage('Today'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} type="button" aria-label="Go to Cadence dashboard">
-          <img className="cadence-lockup-image" src="/cadence-lockup.webp" alt="Cadence" width="163" height="52" />
+          <img className="cadence-lockup-image" src="/cadence-lockup-original.svg" alt="Cadence" width="163" height="52" />
         </button>
         <div className="workspace-label">YOUR SPACE <span className="live-dot" /></div>
         <nav className="nav-list" aria-label="Main navigation">
@@ -855,7 +855,7 @@ function App() {
 
           <WeeklyTracker habits={habits} today={today} onToggle={toggleHabit} />
 
-          <footer className="analytics-footer"><span><img className="cadence-footer-lockup" src="/cadence-lockup.webp" alt="Cadence" width="146" height="46" /> <i>/</i> PERSONAL PERFORMANCE SYSTEM</span><span>YOUR PROGRESS, WITHOUT THE NOISE.</span></footer>
+          <footer className="analytics-footer"><span><img className="cadence-footer-lockup" src="/cadence-lockup-original.svg" alt="Cadence" width="146" height="46" /> <i>/</i> PERSONAL PERFORMANCE SYSTEM</span><span>YOUR PROGRESS, WITHOUT THE NOISE.</span></footer>
         </>}
   
         {page === 'Tasks' && <TasksPage tasks={tasks} today={today} onToggleTask={toggleTask} onAddTask={addPlannerTask} onDeleteTask={(taskId) => { setTasks((current) => current.filter((task) => task.id !== taskId)); setToast('Task removed.'); }} />}
@@ -1188,7 +1188,13 @@ function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habi
       <div className="detail-main">
         <div className="detail-title-row"><b>{habit.name}</b><span className={"category-tag " + categoryTone[habit.category]}>{habit.category}</span><span className="frequency-tag">{habit.frequency === 'Custom' ? 'Custom days' : habit.frequency}</span>{habit.durationMonths ? <span className="habit-duration-tag">{habit.durationMonths} mo plan</span> : null}</div>
         <p>{habit.cue ? "Cue: " + habit.cue : "Choose a consistent cue"} <span>·</span> Minimum: {habit.minimum} {habit.reminderEnabled && habit.reminderTime && <span className="habit-reminder-tag"><Bell size={11} /> Reminder {formatReminderTime(habit.reminderTime)}</span>}</p>
-        <div className="mini-week">{last7.map((key) => <span key={key} className={(habit.logs[key] ? "done " : "") + (key === today ? "current" : "")} title={key + ": " + (habit.logs[key] ? "completed" : "not logged")}>{new Date(key + "T12:00:00").toLocaleDateString("en-US", { weekday: "narrow" })}</span>)}</div>
+        <div className="mini-week" aria-label={"Last seven days for " + habit.name}>{last7.map((key) => {
+          const dayDate = new Date(key + "T12:00:00");
+          const completed = Boolean(habit.logs[key]);
+          const scheduled = key >= habit.createdAt && isDue(habit, key);
+          const dayName = dayDate.toLocaleDateString("en-US", { weekday: "short" });
+          return <span key={key} className={(completed ? "done " : "") + (key === today ? "current " : "") + (!scheduled ? "not-scheduled" : "")} title={dayName + ", " + key + ": " + (completed ? "completed" : scheduled ? "not logged" : "not scheduled")} aria-label={dayName + ", " + key + ": " + (completed ? "completed" : scheduled ? "not logged" : "not scheduled")}><b>{dayName.slice(0, 1)}</b><small>{dayDate.getDate()}</small></span>;
+        })}</div>
         <div className="habit-plan-meta">
           {habit.frequency === 'Custom' && <span><CalendarDays size={11}/>{(habit.scheduleDays ?? []).map((day) => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][day]).join(' · ') || 'No days selected'}</span>}
           {habit.durationMonths ? <span><Clock3 size={11}/>{habit.durationMonths} month{habit.durationMonths === 1 ? '' : 's'} total</span> : <span><RotateCcw size={11}/>Ongoing</span>}
@@ -1205,46 +1211,32 @@ function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habi
     {habit.timerMinutes && habit.timerMinutes > 0 ? <HabitSessionTimer key={habit.id + ":" + habit.timerMinutes} minutes={habit.timerMinutes} /> : null}
     <div className="habit-detail-activity" aria-label={"Fourteen-day activity for " + habit.name}>
       <div className="habit-activity-caption"><span>LAST 14 DAYS</span><span><b>{completed14}</b> / {due14} completed</span></div>
-      <div className="habit-activity-chart" role="img" aria-label={completed14 + " of " + due14 + " scheduled check-ins completed over the last 14 days. A line rises to 100 percent on completed check-ins and stays at zero for missed check-ins."}>
+      <div className="habit-activity-chart" role="img" aria-label={completed14 + " of " + due14 + " scheduled check-ins completed over the last 14 days. Each bar represents one scheduled day: filled bars are completed, muted bars are not logged, and blank days were not scheduled."}>
         <svg className="habit-activity-line-chart" viewBox="0 0 720 132" preserveAspectRatio="none" aria-hidden="true" focusable="false">
           <defs>
-            <linearGradient id={"cadence-habit-line-" + habit.id.replace(/[^a-zA-Z0-9_-]/g, "")} x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#9c72f4"/>
-              <stop offset="55%" stopColor="#c18aff"/>
-              <stop offset="100%" stopColor="#edc1ff"/>
-            </linearGradient>
-            <linearGradient id={"cadence-habit-area-" + habit.id.replace(/[^a-zA-Z0-9_-]/g, "")} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#b78cff" stopOpacity=".22"/>
-              <stop offset="100%" stopColor="#b78cff" stopOpacity="0"/>
+            <linearGradient id={"cadence-habit-bar-" + habit.id.replace(/[^a-zA-Z0-9_-]/g, "")} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#e0baff"/>
+              <stop offset="100%" stopColor="#9562ef"/>
             </linearGradient>
           </defs>
           {[26, 58, 90].map((y) => <line key={y} x1="36" y1={y} x2="704" y2={y} className="habit-chart-grid-line"/>)}
           <text x="0" y="29" className="habit-chart-y-label">100%</text>
           <text x="5" y="61" className="habit-chart-y-label">50%</text>
           <text x="10" y="93" className="habit-chart-y-label">0%</text>
-          {last14.map((key, index) => <text key={key} x={36 + index * (668 / 13)} y="119" textAnchor="middle" className="habit-chart-x-label">{new Date(key + "T12:00:00").getDate()}</text>)}
-          {(() => {
-            const points = last14.map((key, index) => {
-              const scheduled = key <= today && key >= habit.createdAt && isDue(habit, key);
-              const completed = scheduled && Boolean(habit.logs[key]);
-              return { key, index, scheduled, completed, x: 36 + index * (668 / 13), y: completed ? 26 : 90 };
-            }).filter((point) => point.scheduled);
-            const linePath = points.map((point, index) => {
-              const previous = points[index - 1];
-              const move = !previous || point.index !== previous.index + 1;
-              return (move ? "M " : "L ") + point.x.toFixed(2) + " " + point.y;
-            }).join(" ");
-            const areaPath = "";
-            const lineId = "cadence-habit-line-" + habit.id.replace(/[^a-zA-Z0-9_-]/g, "");
-            const areaId = "cadence-habit-area-" + habit.id.replace(/[^a-zA-Z0-9_-]/g, "");
-            return <>
-              {areaPath && <path d={areaPath} fill={"url(#" + areaId + ")"} className="habit-chart-area-path"/>}
-              {linePath && <path d={linePath} fill="none" stroke={"url(#" + lineId + ")"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="habit-chart-line-path"/>}
-              {points.map((point) => <circle key={point.key} cx={point.x} cy={point.y} r="4" className={point.completed ? "habit-chart-point is-complete" : "habit-chart-point is-missed"}>
-                <title>{point.key}: {point.completed ? "completed · 100%" : "not logged · 0%"}</title>
-              </circle>)}
-            </>;
-          })()}
+          {last14.map((key, index) => {
+            const dayDate = new Date(key + "T12:00:00");
+            const x = 48 + index * (656 / 13);
+            const scheduled = key <= today && key >= habit.createdAt && isDue(habit, key);
+            const completed = scheduled && Boolean(habit.logs[key]);
+            const chartBarClass = "habit-activity-bar " + (completed ? "is-complete" : scheduled ? "is-missed" : "is-unscheduled");
+            return <g key={key}>
+              {scheduled && <rect x={x - 10} y={completed ? 26 : 86} width="20" height={completed ? 64 : 4} rx="3" className={chartBarClass}>
+                <title>{key}: {completed ? "Completed · 100%" : "Not logged · 0%"}</title>
+              </rect>}
+              {!scheduled && <line x1={x - 7} y1="90" x2={x + 7} y2="90" className="habit-activity-unscheduled-tick"><title>{key}: Not scheduled</title></line>}
+              <text x={x} y="119" textAnchor="middle" className="habit-chart-x-label">{dayDate.getDate()}</text>
+            </g>;
+          })}
         </svg>
         {due14 === 0 && <span className="habit-chart-empty">No scheduled check-ins to plot yet</span>}
       </div>
