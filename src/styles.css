@@ -5696,3 +5696,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .app-shell .today-item-copy p { font-size: 10px; }
   .app-shell .today-side-card { padding: 17px; }
 }
+
+/* Use the icon-only asset at an intentional footer size. */
+.app-shell .analytics-footer .cadence-footer-lockup {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
