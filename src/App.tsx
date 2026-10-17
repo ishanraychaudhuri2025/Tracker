@@ -638,7 +638,6 @@ function App() {
   const todayProgress = totalTodayActions ? Math.round((completedTodayActions / totalTodayActions) * 100) : 0;
   const nextTask = todayTasks.find((task) => !task.completed);
   const nextHabit = dueHabits.find((habit) => !habit.logs[today]);
-  const completion = dueHabits.length ? Math.round((doneToday / dueHabits.length) * 100) : 0;
   const consistency = useMemo(() => {
     let possible = 0;
     let completed = 0;
