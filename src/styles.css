@@ -7235,3 +7235,31 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     transition: none !important;
   }
 }
+
+
+/* Use the very same Cadence brand mark in the Today footer, sidebar, sign-in page and browser tab. */
+#root .app-shell .cadence-footer-lockup {
+  display: block;
+  width: 36px !important;
+  height: 36px !important;
+  max-width: 36px;
+  flex: 0 0 36px;
+  object-fit: contain;
+  object-position: center;
+  border-radius: 8px;
+  filter: none;
+  box-shadow: none;
+  background: transparent;
+}
+#root .app-shell .analytics-footer > span:first-child {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+@media (prefers-reduced-motion: reduce) {
+  #root .app-shell :is(.analytics-metric-line i, .analytics-mini-bars i, .analytics-streak-steps i, .analytics-checkin-grid i, .nav-item) {
+    transition: none !important;
+  }
+  #root .app-shell .nav-item:hover { transform: none; }
+}
