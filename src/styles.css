@@ -6368,3 +6368,38 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 @media (prefers-reduced-motion: reduce) {
   .app-shell .analytics-chart-tabs button { transition: none; }
 }
+
+
+/* Phase 06 — task filters describe dated occurrences, not a task's lifetime history. */
+.app-shell .tasks-filter-context {
+  margin: 2px 0 0;
+  padding: 10px 12px;
+  color: var(--cadence-muted);
+  border: 1px solid var(--cadence-border-soft);
+  border-radius: 8px;
+  background: rgba(183, 138, 255, .035);
+  font: 400 10px/1.6 var(--cadence-font-ui);
+}
+.app-shell .tasks-occurrence-caption {
+  color: var(--cadence-violet-bright);
+  font: 600 8px/1.4 var(--cadence-font-ui);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.app-shell .tasks-list-row.is-occurrence-row .tasks-list-copy > b {
+  color: var(--cadence-text);
+}
+.app-shell .tasks-list-row.is-occurrence-row.is-completed .tasks-list-copy > b {
+  color: var(--cadence-muted);
+}
+.app-shell .tasks-list-row.is-occurrence-row .tasks-list-meta > span:nth-child(3) {
+  color: var(--cadence-violet-bright);
+}
+.app-shell .tasks-summary-card > small {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+  .app-shell .tasks-filter-context { font-size: 10px; }
+  .app-shell .tasks-occurrence-caption { font-size: 8px; }
+}
