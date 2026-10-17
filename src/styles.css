@@ -9326,3 +9326,149 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   #root .app-shell .habits-overview-strip > .habit-overview-stat { padding: 12px !important; }
   #root .app-shell .habits-overview-strip > .habit-overview-stat > b { font-size: 27px !important; }
 }
+
+
+/* Phase 20 — compact Habits stats styled like Today's top analytics cards. */
+#root .app-shell .habits-overview-cards {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0,1fr)) !important;
+  align-items: stretch !important;
+  gap: 9px !important;
+  margin: 0 0 15px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+#root .app-shell .habits-overview-cards > .analytics-metric-card {
+  min-width: 0 !important;
+  min-height: 126px !important;
+  height: 126px !important;
+  padding: 13px 14px 31px !important;
+  border: 1px solid rgba(172, 137, 193, .14) !important;
+  border-radius: 11px !important;
+  background: linear-gradient(145deg, rgba(30, 18, 37, .93), rgba(21, 12, 26, .88)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
+  transform: none !important;
+}
+#root .app-shell .habits-overview-cards > .analytics-metric-card::after {
+  right: -17px !important;
+  top: -26px !important;
+  width: 76px !important;
+  height: 76px !important;
+  border-color: rgba(203, 157, 229, .045) !important;
+  box-shadow: 0 0 0 9px rgba(203,157,229,.012), 0 0 0 18px rgba(203,157,229,.008) !important;
+}
+#root .app-shell .habits-overview-cards > .analytics-metric-card:hover {
+  transform: translateY(-1px) !important;
+  border-color: rgba(214,161,244,.24) !important;
+}
+#root .app-shell .habits-overview-cards .analytics-metric-label {
+  position: relative !important;
+  z-index: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  margin: 0 !important;
+  color: #ad96bb !important;
+  font: 500 8px/1.4 var(--cadence-font-ui) !important;
+  letter-spacing: .07em !important;
+  white-space: nowrap !important;
+}
+#root .app-shell .habits-overview-cards .analytics-metric-icon {
+  width: 24px !important;
+  height: 24px !important;
+  flex: 0 0 24px !important;
+  display: grid !important;
+  place-items: center !important;
+  border: 1px solid rgba(174,150,241,.18) !important;
+  border-radius: 6px !important;
+  background: rgba(149,111,231,.075) !important;
+}
+#root .app-shell .habits-overview-cards .analytics-metric-value {
+  position: relative !important;
+  z-index: 1 !important;
+  margin: 8px 0 0 !important;
+  color: #f7f0fb !important;
+  font: 400 clamp(25px, 2.1vw, 30px)/1.02 var(--cadence-font-display) !important;
+  letter-spacing: -1px !important;
+  font-variant-numeric: tabular-nums !important;
+  white-space: nowrap !important;
+}
+#root .app-shell .habits-overview-cards .analytics-metric-value small {
+  margin-left: 4px !important;
+  color: #b59abf !important;
+  font: 400 10px/1 var(--cadence-font-ui) !important;
+  letter-spacing: 0 !important;
+}
+#root .app-shell .habits-overview-cards .analytics-metric-bottom {
+  position: relative !important;
+  z-index: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 5px !important;
+  margin-top: 4px !important;
+  color: #a58db0 !important;
+  font: 400 8px/1.45 var(--cadence-font-ui) !important;
+  white-space: normal !important;
+}
+#root .app-shell .habits-overview-cards .analytics-metric-bottom > span {
+  min-width: 0 !important;
+}
+#root .app-shell .habits-overview-cards .analytics-trend-positive {
+  color: #c7a4d9 !important;
+  font: 500 7px/1.2 var(--cadence-font-ui) !important;
+  letter-spacing: .055em !important;
+}
+#root .app-shell .habits-overview-cards .analytics-metric-line,
+#root .app-shell .habits-overview-cards .analytics-mini-bars,
+#root .app-shell .habits-overview-cards .analytics-streak-steps {
+  position: absolute !important;
+  z-index: 1 !important;
+  right: 12px !important;
+  bottom: 8px !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: flex-end !important;
+  gap: 4px !important;
+  height: 16px !important;
+  max-width: 40% !important;
+  margin: 0 !important;
+  opacity: .72 !important;
+}
+#root .app-shell .habits-overview-cards .analytics-metric-line i,
+#root .app-shell .habits-overview-cards .analytics-mini-bars i,
+#root .app-shell .habits-overview-cards .analytics-streak-steps i {
+  display: block !important;
+  width: 5px !important;
+  min-height: 3px !important;
+  max-height: 16px !important;
+  border-radius: 2px 2px 1px 1px !important;
+  background: linear-gradient(180deg, #c4a2d7, #8e67ad) !important;
+}
+#root .app-shell .habits-overview-cards .analytics-metric-line i.is-empty,
+#root .app-shell .habits-overview-cards .analytics-mini-bars i.is-empty,
+#root .app-shell .habits-overview-cards .analytics-streak-steps i.is-empty {
+  background: rgba(171,143,189,.2) !important;
+  opacity: .55 !important;
+}
+@media (max-width: 900px) {
+  #root .app-shell .habits-overview-cards { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+  #root .app-shell .habits-overview-cards > .analytics-metric-card { min-height: 122px !important; height: 122px !important; }
+}
+@media (max-width: 520px) {
+  #root .app-shell .habits-overview-cards { gap: 7px !important; }
+  #root .app-shell .habits-overview-cards > .analytics-metric-card {
+    min-height: 116px !important;
+    height: 116px !important;
+    padding: 11px 10px 30px !important;
+  }
+  #root .app-shell .habits-overview-cards .analytics-metric-label { font-size: 7px !important; letter-spacing: .025em !important; }
+  #root .app-shell .habits-overview-cards .analytics-metric-icon { width: 21px !important; height: 21px !important; flex-basis: 21px !important; }
+  #root .app-shell .habits-overview-cards .analytics-metric-value { font-size: 25px !important; }
+  #root .app-shell .habits-overview-cards .analytics-metric-bottom { font-size: 7px !important; }
+}
