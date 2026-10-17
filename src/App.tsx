@@ -710,16 +710,12 @@ function App() {
         }
       });
       const first = fresh[0];
-      const [scheduledHour, scheduledMinute] = (first.reminderTime || '09:00').split(':').map(Number);
-      const scheduledAt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), scheduledHour, scheduledMinute);
       setActiveReminder((current) => current || {
         habitId: first.id,
         habitName: first.name,
         reminderTime: first.reminderTime || '09:00',
         reminderSoundUrl: first.reminderSoundUrl,
       });
-      // Keep the reminder's scheduled time in the alert rather than the wake-up time.
-      void scheduledAt;
     };
     const interval = window.setInterval(checkReminders, 10000);
     document.addEventListener('visibilitychange', checkReminders);
