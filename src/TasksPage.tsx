@@ -120,12 +120,23 @@ export default function TasksPage({ tasks, today, onToggleTask, onAddTask, onDel
       <button className="primary-button" type="button" onClick={() => { setDate(today); setShowCreate(true); }}><Plus size={16}/> Add task</button>
     </section>
 
-    <section className="tasks-summary-grid">
-      <article className="tasks-summary-card"><span className="tasks-summary-icon"><ListTodo size={17}/></span><small>OPEN TODAY</small><b>{stats.openToday}</b><span>Tasks ready for action</span></article>
-      <article className="tasks-summary-card"><span className="tasks-summary-icon violet"><Clock3 size={17}/></span><small>OVERDUE</small><b>{stats.overdue}</b><span>One step at a time</span></article>
-      <article className="tasks-summary-card"><span className="tasks-summary-icon cyan"><CheckCircle2 size={17}/></span><small>COMPLETED</small><b>{stats.completed}</b><span>Wins recorded so far</span></article>
-      <article className="tasks-summary-card tasks-summary-note"><Zap size={18}/><div><b>Keep it achievable.</b><p>Give tasks an estimate and a clear priority. Small, finishable actions make plans easier to follow.</p></div></article>
-    </section>
+    <section className="analytics-metric-grid today-analytics-metrics habits-overview-cards tasks-overview-cards" aria-label="Task overview">
+      <article className="analytics-metric-card">
+        <div className="analytics-metric-label">OPEN TODAY <span className="analytics-metric-icon tone-violet"><ListTodo size={12}/></span></div>
+        <div className="analytics-metric-value">{stats.openToday}</div>
+        <div className="analytics-metric-bottom"><span>Tasks ready for action</span><b className="analytics-trend-positive">TODAY</b></div>
+      </article>
+      <article className="analytics-metric-card">
+        <div className="analytics-metric-label">OVERDUE <span className="analytics-metric-icon tone-pink"><Clock3 size={12}/></span></div>
+        <div className="analytics-metric-value">{stats.overdue}</div>
+        <div className="analytics-metric-bottom"><span>One step at a time</span><b className="analytics-trend-positive">REVIEW</b></div>
+      </article>
+      <article className="analytics-metric-card">
+        <div className="analytics-metric-label">COMPLETED <span className="analytics-metric-icon tone-violet"><CheckCircle2 size={12}/></span></div>
+        <div className="analytics-metric-value">{stats.completed}</div>
+        <div className="analytics-metric-bottom"><span>Wins recorded so far</span><b className="analytics-trend-positive">ALL TIME</b></div>
+      </article>
+    </section>ion>
 
     <section className="panel tasks-board">
       <div className="panel-heading tasks-board-heading">
