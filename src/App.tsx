@@ -1002,6 +1002,99 @@ function App() {
         </header>
 
         {page === 'Today' && <>
+          <section className="today-analytics-overview" aria-label="Habit analytics overview">
+            <div className="analytics-page-header today-analytics-page-header">
+              <div>
+                <div className="analytics-kicker"><i /> YOUR ROUTINE DATA</div>
+                <h1>Habit <span>Analytics</span></h1>
+                <p>Consistency, made visible. Review your patterns and make the next action easier.</p>
+              </div>
+              <div className="analytics-header-actions">
+                <span className="analytics-saved" title={cloudError || cloudStatus}><i /> {cloudStatus.toUpperCase()}</span>
+                <button type="button" className="analytics-plain-button" onClick={() => setPage('Planner')}><CalendarDays size={13} /> Planner <ArrowUpRight size={12} /></button>
+                <button type="button" className="primary-button" onClick={openCreateHabit}><Plus size={14} /> New routine</button>
+              </div>
+            </div>
+
+            <nav className="analytics-view-tabs today-overview-tabs" aria-label="Workspace sections">
+              <button type="button" className="active" aria-current="page" onClick={() => setPage('Today')}><BarChart3 size={12} /> Overview</button>
+              <button type="button" onClick={() => setPage('Habits')}><Target size={12} /> Routines</button>
+              <button type="button" onClick={() => setPage('Planner')}><CalendarDays size={12} /> Calendar</button>
+              <button type="button" onClick={() => setPage('Focus')}><Focus size={12} /> Focus sessions</button>
+              <button type="button" onClick={() => setPage('Insights')}><Activity size={12} /> Reports</button>
+            </nav>
+
+            <div className="analytics-metric-grid today-analytics-metrics">
+              <article className="analytics-metric-card analytics-metric-primary">
+                <div className="analytics-metric-label">DAILY COMPLETION <span className="analytics-metric-icon tone-blue"><Activity size={12} /></span></div>
+                <div className="analytics-metric-value">{dueHabits.length ? Math.round((doneToday / dueHabits.length) * 100) : 0}<small>%</small></div>
+                <div className="analytics-metric-bottom"><span>{doneToday} of {dueHabits.length} routines complete</span><b className="analytics-trend-positive"><ArrowUpRight size={9} /> TODAY</b></div>
+                <div className="analytics-metric-line" aria-hidden="true">{[28, 13, 20, 35, 16, 29, 39, 22].map((height, index) => <i key={index} style={{ height: height + '%' }} />)}</div>
+              </article>
+
+              <article className="analytics-metric-card">
+                <div className="analytics-metric-label">7-DAY CONSISTENCY <span className="analytics-metric-icon tone-pink"><CalendarDays size={12} /></span></div>
+                <div className="analytics-metric-value">{consistency}<small>%</small></div>
+                <div className="analytics-metric-bottom"><span>Across the last seven days</span><b className="analytics-trend-positive">WEEKLY</b></div>
+                <div className="analytics-mini-bars" aria-hidden="true">{[6, 10, 5, 14, 7, 20, 11].map((height, index) => <i key={index} style={{ height: height + 'px' }} />)}</div>
+              </article>
+
+              <article className="analytics-metric-card">
+                <div className="analytics-metric-label">ACTIVE STREAKS <span className="analytics-metric-icon tone-violet"><Flame size={12} /></span></div>
+                <div className="analytics-metric-value">{String(activeStreaks).padStart(2, '0')}<small>routines</small></div>
+                <div className="analytics-metric-bottom"><span>Habits in motion</span><b className="analytics-trend-positive">LIVE</b></div>
+                <div className="analytics-streak-steps" aria-hidden="true">{[6, 9, 13, 7, 16, 11, 19, 14].map((height, index) => <i key={index} style={{ height: height + 'px' }} />)}</div>
+              </article>
+
+              <article className="analytics-metric-card">
+                <div className="analytics-metric-label">TOTAL CHECK-INS <span className="analytics-metric-icon tone-violet"><CheckCheck size={12} /></span></div>
+                <div className="analytics-metric-value">{totalWins}<small>total</small></div>
+                <div className="analytics-metric-bottom"><span>Every rep counts</span><b className="analytics-trend-positive">ALL TIME</b></div>
+                <div className="analytics-checkin-grid" aria-hidden="true">{Array.from({ length: 21 }, (_, index) => <i key={index} className={index < Math.min(totalWins, 21) ? 'is-filled' : ''} />)}</div>
+              </article>
+            </div>
+
+            <div className="analytics-main-grid today-analytics-main-grid">
+              <MomentumChart habits={habits} today={today} />
+              <div className="analytics-side-stack today-analytics-side-stack">
+                <section className="analytics-side-card today-analytics-progress-card">
+                  <div className="analytics-card-heading">
+                    <div><span className="analytics-section-index">01 / TODAY</span><h2>Daily progress</h2></div>
+                    <span className="analytics-live-tag"><i /> LIVE</span>
+                  </div>
+                  <div className="analytics-daily-ring" style={{ '--daily-percent': (dueHabits.length ? Math.round((doneToday / dueHabits.length) * 100) : 0) + '%' } as CSSProperties}>
+                    <div><b>{dueHabits.length ? Math.round((doneToday / dueHabits.length) * 100) : 0}<small>%</small></b><span>COMPLETE</span></div>
+                  </div>
+                  <div className="analytics-today-stats">
+                    <span>Completed <b>{doneToday}</b></span>
+                    <span>Remaining <b>{Math.max(0, dueHabits.length - doneToday)}</b></span>
+                  </div>
+                  <button type="button" className="analytics-side-link" onClick={() => setPage('Habits')}>Review today's routines <ArrowRight size={13} /></button>
+                </section>
+
+                <section className="analytics-side-card analytics-next-card today-analytics-next-card">
+                  <div className="analytics-card-heading">
+                    <div><span className="analytics-section-index">02 / NEXT ACTION</span><h2>Keep momentum</h2></div>
+                    <span className="analytics-spark-icon"><Zap size={13} /></span>
+                  </div>
+                  {nextHabit ? <>
+                    <p>{nextHabit.name}</p>
+                    <div className="analytics-next-meta">{nextHabit.category} routine{nextHabit.minimum ? ' · ' + nextHabit.minimum : ''}</div>
+                    <button type="button" className="analytics-side-link" onClick={() => setPage('Habits')}>Open this routine <ArrowRight size={13} /></button>
+                  </> : nextTask ? <>
+                    <p>{nextTask.title}</p>
+                    <div className="analytics-next-meta">{nextTask.category || 'Personal'} task · {nextTask.estimate} min</div>
+                    <button type="button" className="analytics-side-link" onClick={() => setPage('Tasks')}>Open this task <ArrowRight size={13} /></button>
+                  </> : <>
+                    <p>You're all caught up.</p>
+                    <div className="analytics-next-meta">No unfinished actions scheduled right now.</div>
+                    <button type="button" className="analytics-side-link" onClick={openCreateHabit}>Plan a small win <ArrowRight size={13} /></button>
+                  </>}
+                </section>
+              </div>
+            </div>
+          </section>
+
           <section className="today-page-header">
             <div>
               <div className="today-eyebrow"><span /> YOUR DAY · {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }).toUpperCase()}</div>
@@ -1099,7 +1192,7 @@ function App() {
               </section>
             </aside>
           </section>
-          <footer className="analytics-footer"><span><img className="cadence-footer-lockup" src="/cadence-icon.svg" alt="Cadence" width="42" height="42" /> <i>/</i> PERSONAL PERFORMANCE SYSTEM</span><span>YOUR PROGRESS, WITHOUT THE NOISE.</span></footer>
+          <footer className="analytics-footer"><span><span className="cadence-footer-mark" role="img" aria-label="Cadence"><CadenceMark /></span> <i>/</i> PERSONAL PERFORMANCE SYSTEM</span><span>YOUR PROGRESS, WITHOUT THE NOISE.</span></footer>
         </>}
   
         {page === 'Tasks' && <TasksPage tasks={tasks} today={today} onToggleTask={toggleTask} onAddTask={addPlannerTask} onDeleteTask={(taskId) => { setTasks((current) => current.filter((task) => task.id !== taskId)); setToast('Task removed.'); }} />}
