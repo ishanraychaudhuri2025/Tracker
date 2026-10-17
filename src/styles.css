@@ -6516,3 +6516,248 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .backup-preview-counts > span { padding: 9px 7px; }
   .backup-preview-counts b { font-size: 16px; }
 }
+
+
+
+/* Phase 08 — bring the favorite analytics overview back above the action-first Today page. */
+#root .app-shell .today-analytics-overview {
+  min-width: 0;
+  padding: 5px 0 25px;
+  margin: 0 0 5px;
+  border-bottom: 1px solid var(--cadence-border);
+}
+#root .app-shell .today-analytics-page-header {
+  padding: 22px 0 16px;
+  align-items: flex-end;
+}
+#root .app-shell .today-analytics-page-header h1 {
+  margin: 9px 0 6px;
+  color: #f7f0fb;
+  font: 400 clamp(31px, 3.4vw, 43px)/1.05 var(--cadence-font-display);
+  letter-spacing: -1.8px;
+}
+#root .app-shell .today-analytics-page-header h1 span {
+  color: #b99aca;
+  background: linear-gradient(95deg,#a68cb5,#d3c3dc);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+#root .app-shell .today-analytics-page-header p {
+  max-width: 620px;
+  color: #a38ead;
+  font-size: 11px;
+  line-height: 1.65;
+}
+#root .app-shell .today-overview-tabs {
+  margin-bottom: 13px;
+}
+#root .app-shell .today-analytics-metrics {
+  gap: 9px;
+  margin-bottom: 13px;
+}
+#root .app-shell .today-analytics-metrics .analytics-metric-card {
+  min-height: 145px;
+  padding: 15px 15px 12px;
+}
+#root .app-shell .today-analytics-metrics .analytics-metric-label {
+  font-size: 8px;
+  letter-spacing: .55px;
+}
+#root .app-shell .today-analytics-metrics .analytics-metric-value {
+  font-size: clamp(26px, 2.5vw, 34px);
+}
+#root .app-shell .today-analytics-metrics .analytics-metric-bottom {
+  gap: 5px;
+  font-size: 8px;
+  white-space: normal;
+}
+#root .app-shell .today-analytics-metrics .analytics-trend-positive {
+  flex: 0 0 auto;
+  font-size: 7px;
+}
+#root .app-shell .today-analytics-metrics .analytics-metric-line {
+  bottom: 8px !important;
+  height: 17px;
+  opacity: .65 !important;
+}
+#root .app-shell .today-analytics-metrics .analytics-mini-bars,
+#root .app-shell .today-analytics-metrics .analytics-streak-steps,
+#root .app-shell .today-analytics-metrics .analytics-checkin-grid {
+  bottom: 9px;
+}
+#root .app-shell .today-analytics-main-grid {
+  margin-top: 0;
+  grid-template-columns: minmax(0, 1.72fr) minmax(245px, .76fr);
+  gap: 11px;
+  align-items: stretch;
+}
+#root .app-shell .today-analytics-main-grid > .analytics-chart-panel {
+  min-height: 315px;
+}
+#root .app-shell .today-analytics-side-stack {
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 11px;
+}
+#root .app-shell .today-analytics-progress-card,
+#root .app-shell .today-analytics-next-card {
+  min-height: 0;
+}
+#root .app-shell .today-analytics-progress-card .analytics-daily-ring {
+  width: 86px;
+  height: 86px;
+  margin: 13px auto 10px;
+}
+#root .app-shell .today-analytics-progress-card .analytics-daily-ring b {
+  font-size: 23px;
+}
+#root .app-shell .today-analytics-progress-card .analytics-today-stats {
+  gap: 7px;
+}
+#root .app-shell .today-analytics-progress-card .analytics-today-stats > span {
+  padding: 8px 9px;
+  font-size: 9px;
+}
+#root .app-shell .today-analytics-progress-card .analytics-today-stats b {
+  font-size: 11px;
+}
+#root .app-shell .today-analytics-main-grid .analytics-next-card > p {
+  min-height: auto;
+  margin: 17px 0 7px;
+  color: #f5ecfa;
+  font: 400 20px/1.2 var(--cadence-font-display);
+  letter-spacing: -.6px;
+  overflow-wrap: anywhere;
+}
+#root .app-shell .today-analytics-main-grid .analytics-next-meta {
+  color: #a58bac;
+  font-size: 10px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+#root .app-shell .today-analytics-main-grid .analytics-side-link {
+  min-height: 34px;
+  margin-top: 10px;
+  padding: 0 10px;
+  border: 1px solid rgba(191, 147, 220, .17);
+  border-radius: 8px;
+  background: rgba(178, 126, 212, .06);
+  color: #d2b9e0;
+  font-size: 9px;
+}
+#root .app-shell .today-analytics-main-grid .analytics-side-link:hover {
+  border-color: rgba(205, 158, 239, .36);
+  background: rgba(178, 126, 212, .12);
+  color: #f3e5ff;
+}
+#root .app-shell .today-analytics-overview + .today-page-header {
+  padding-top: 29px;
+}
+
+/* Use the native vector mark in the footer rather than the oversized embedded-raster logo. */
+#root .app-shell .analytics-footer > span:first-child {
+  align-items: center;
+  gap: 9px;
+}
+#root .app-shell .cadence-footer-mark {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  overflow: hidden;
+  border: 1px solid rgba(192, 119, 255, .4);
+  border-radius: 10px;
+  background: radial-gradient(circle at 40% 25%, rgba(188, 101, 255, .22), transparent 72%), #170a22;
+  box-shadow: 0 0 18px rgba(152, 65, 230, .12), inset 0 1px 0 rgba(255,255,255,.05);
+}
+#root .app-shell .cadence-footer-mark .cadence-mark-svg {
+  display: block;
+  width: 27px;
+  height: 27px;
+  max-width: 27px;
+  flex: 0 0 27px;
+}
+#root .app-shell .analytics-footer > span:first-child > i {
+  margin: 0 1px;
+}
+@media (max-width: 1080px) {
+  #root .app-shell .today-analytics-main-grid {
+    grid-template-columns: minmax(0, 1.4fr) minmax(225px, .85fr);
+  }
+  #root .app-shell .today-analytics-metrics .analytics-metric-card {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  #root .app-shell .today-analytics-metrics .analytics-metric-bottom {
+    font-size: 7.5px;
+  }
+}
+@media (max-width: 900px) {
+  #root .app-shell .today-analytics-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  #root .app-shell .today-analytics-main-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  #root .app-shell .today-analytics-main-grid > .analytics-chart-panel {
+    min-height: 0;
+  }
+  #root .app-shell .today-analytics-side-stack {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto;
+  }
+}
+@media (max-width: 700px) {
+  #root .app-shell .today-analytics-page-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 13px;
+    padding-top: 18px;
+  }
+  #root .app-shell .today-analytics-page-header h1 {
+    font-size: clamp(30px, 8vw, 39px);
+  }
+  #root .app-shell .today-analytics-page-header .analytics-header-actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+  #root .app-shell .today-analytics-page-header .analytics-saved {
+    display: none;
+  }
+  #root .app-shell .today-overview-tabs {
+    width: 100%;
+    margin-bottom: 11px;
+    padding: 4px;
+  }
+  #root .app-shell .today-overview-tabs button {
+    padding: 0 10px;
+  }
+  #root .app-shell .today-analytics-side-stack {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+  }
+  #root .app-shell .today-analytics-progress-card,
+  #root .app-shell .today-analytics-next-card {
+    min-height: 230px;
+  }
+  #root .app-shell .today-analytics-metrics .analytics-metric-card {
+    min-height: 135px;
+  }
+}
+@media (max-width: 420px) {
+  #root .app-shell .today-analytics-metrics .analytics-metric-label {
+    font-size: 7px;
+  }
+  #root .app-shell .today-analytics-metrics .analytics-metric-value {
+    font-size: 25px;
+  }
+  #root .app-shell .today-analytics-metrics .analytics-metric-bottom {
+    font-size: 7px;
+  }
+  #root .app-shell .analytics-footer {
+    align-items: flex-start;
+    gap: 10px;
+    flex-direction: column;
+  }
+}
