@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="278" height="60" viewBox="0 0 278 60" fill="none" role="img" aria-labelledby="title">
+  <title id="title">CADENCE</title>
+  <g stroke="#BD8CFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M32 15 C26 8 17 7 10 12 C3 17 3 35 10 40 C17 45 26 44 32 37"/>
+    <path d="M43 42 L58 10 L73 42"/>
+    <path d="M84 10 H96 C117 10 117 42 96 42 H84 Z"/>
+    <path d="M128 11 H152 M128 26 H148 M128 42 H152"/>
+    <path d="M163 42 V10 L187 42 V10"/>
+    <path d="M227 15 C221 8 212 7 205 12 C198 17 198 35 205 40 C212 45 221 44 227 37"/>
+    <path d="M238 11 H268 M238 26 H263 M238 42 H268"/>
+  </g>
+</svg>
