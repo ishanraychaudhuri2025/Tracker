@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import {
   ArrowUpRight, CalendarDays, Check, CheckCircle2, Clock3, ListTodo,
-  Plus, Search, Trash2, X, Zap,
+  Plus, Search, Trash2, X,
 } from 'lucide-react';
 import type { Recurrence, Task, TaskCategory } from './types';
 import type { PlannerTaskDraft } from './Planner';
@@ -136,7 +136,7 @@ export default function TasksPage({ tasks, today, onToggleTask, onAddTask, onDel
         <div className="analytics-metric-value">{stats.completed}</div>
         <div className="analytics-metric-bottom"><span>Wins recorded so far</span><b className="analytics-trend-positive">ALL TIME</b></div>
       </article>
-    </section>ion>
+    </section>
 
     <section className="panel tasks-board">
       <div className="panel-heading tasks-board-heading">
