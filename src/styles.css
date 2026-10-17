@@ -7193,3 +7193,186 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     transition: none !important;
   }
 }
+
+
+/* Phase 14 — left-aligned, quiet-luxury sidebar. Keep this override isolated
+   to navigation so the already-approved dashboard content stays unchanged. */
+#root .app-shell .sidebar .nav-list {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  gap: 4px !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+#root .app-shell .sidebar .nav-list > .nav-item {
+  display: grid !important;
+  grid-template-columns: 27px minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  justify-content: stretch !important;
+  justify-items: stretch !important;
+  column-gap: 9px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 38px !important;
+  height: 38px !important;
+  padding: 4px 9px !important;
+  text-align: left !important;
+  border: 1px solid transparent !important;
+  border-radius: 5px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+  overflow: hidden !important;
+  transition: background .18s ease, color .18s ease !important;
+}
+#root .app-shell .sidebar .nav-list > .nav-item .nav-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  justify-self: start !important;
+  width: 25px !important;
+  height: 25px !important;
+  min-width: 25px !important;
+  flex: 0 0 25px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 1px solid transparent !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  color: #9f8db0 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+#root .app-shell .sidebar .nav-list > .nav-item .nav-icon svg {
+  width: 16px !important;
+  height: 16px !important;
+  stroke-width: 1.6 !important;
+}
+#root .app-shell .sidebar .nav-list > .nav-item .nav-copy {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  justify-self: stretch !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  gap: 0 !important;
+  text-align: left !important;
+  line-height: 1.2 !important;
+}
+#root .app-shell .sidebar .nav-list > .nav-item .nav-copy b {
+  display: block !important;
+  width: 100% !important;
+  margin: 0 !important;
+  text-align: left !important;
+  font-family: "Montserrat", Arial, sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  letter-spacing: .015em !important;
+  line-height: 1.25 !important;
+  color: #b9adca !important;
+  white-space: nowrap !important;
+  transition: color .18s ease, font-weight .18s ease !important;
+}
+#root .app-shell .sidebar .nav-list > .nav-item .nav-copy small {
+  display: none !important;
+}
+#root .app-shell .sidebar .nav-list > .nav-item .nav-count {
+  justify-self: end !important;
+  align-self: center !important;
+  margin: 0 0 0 auto !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  padding: 0 4px !important;
+  border: 1px solid rgba(176, 143, 202, .15) !important;
+  border-radius: 5px !important;
+  color: #a995bc !important;
+  background: rgba(145, 93, 185, .07) !important;
+  font: 500 10px/16px "Montserrat", Arial, sans-serif !important;
+}
+#root .app-shell .sidebar .nav-list > .nav-item:hover {
+  background: rgba(180, 145, 205, .045) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+#root .app-shell .sidebar .nav-list > .nav-item:hover .nav-copy b {
+  color: #e6d9ef !important;
+}
+#root .app-shell .sidebar .nav-list > .nav-item:hover .nav-icon {
+  color: #c8b0da !important;
+  background: rgba(180, 145, 205, .07) !important;
+}
+#root .app-shell .sidebar .nav-list > .nav-item.active {
+  position: relative !important;
+  color: #f2e9f8 !important;
+  border-color: transparent !important;
+  border-radius: 5px !important;
+  background: linear-gradient(90deg, rgba(183, 145, 207, .105), rgba(183, 145, 207, .035) 74%, transparent) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+#root .app-shell .sidebar .nav-list > .nav-item.active::before {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  left: 0 !important;
+  top: 9px !important;
+  width: 2px !important;
+  height: 19px !important;
+  border-radius: 2px !important;
+  background: #d1b4e5 !important;
+  box-shadow: none !important;
+}
+#root .app-shell .sidebar .nav-list > .nav-item.active::after {
+  content: none !important;
+  display: none !important;
+}
+#root .app-shell .sidebar .nav-list > .nav-item.active .nav-icon {
+  border-color: transparent !important;
+  color: #e0c5f0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+#root .app-shell .sidebar .nav-list > .nav-item.active .nav-copy b {
+  color: #f4edf8 !important;
+  font-weight: 600 !important;
+  letter-spacing: .02em !important;
+}
+#root .app-shell .sidebar .nav-list > .nav-item:focus-visible {
+  outline: 1px solid rgba(204, 174, 223, .7) !important;
+  outline-offset: 2px !important;
+}
+@media (max-width: 850px) {
+  #root .app-shell .sidebar .nav-list > .nav-item {
+    grid-template-columns: minmax(0, 1fr) !important;
+    justify-items: center !important;
+    justify-content: center !important;
+    padding: 4px 2px !important;
+  }
+  #root .app-shell .sidebar .nav-list > .nav-item .nav-icon {
+    justify-self: center !important;
+  }
+  #root .app-shell .sidebar .nav-list > .nav-item .nav-copy,
+  #root .app-shell .sidebar .nav-list > .nav-item .nav-count {
+    display: none !important;
+  }
+  #root .app-shell .sidebar .nav-list > .nav-item.active::before {
+    left: 0 !important;
+    top: 50% !important;
+    width: 2px !important;
+    height: 19px !important;
+    transform: translateY(-50%) !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #root .app-shell .sidebar .nav-list > .nav-item,
+  #root .app-shell .sidebar .nav-list > .nav-item .nav-copy b,
+  #root .app-shell .sidebar .nav-list > .nav-item .nav-icon {
+    transition: none !important;
+  }
+}
