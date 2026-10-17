@@ -1266,7 +1266,7 @@ function MonthlyActivityCalendar({
 
     {selected && <section className="monthly-day-detail">
       <div className="monthly-detail-header">
-        <div><span className="analytics-section-index">SELECTED DATE / DAILY LOG</span><h4>{selectedDateLabel}</h4><p>{selected.isFuture ? 'A look ahead. Future dates remain editable only when the day arrives.' : selected.done + ' of ' + selected.total + ' scheduled actions completed.'}</p></div>
+        <div><span className="analytics-section-index">SELECTED DATE / DAILY LOG</span><h4>{selectedDateLabel}</h4><p>{selected.isFuture ? (selected.total ? 'A look ahead. Future dates remain editable only when the day arrives.' : 'Nothing is scheduled yet for this future date.') : selected.total ? selected.done + ' of ' + selected.total + ' scheduled actions completed.' : 'No habits or tasks were scheduled on this date.'}</p></div>
         <button type="button" className="monthly-detail-collapse" onClick={() => setShowDetails((value) => !value)}>{showDetails ? 'Hide checklist' : 'Show checklist'} <span>{showDetails ? '−' : '+'}</span></button>
       </div>
       {showDetails && <div className="monthly-detail-columns">
@@ -1343,16 +1343,32 @@ function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habi
     const day = new Date(key + "T12:00:00");
     return { key, day, x: (index + 0.5) * (857 / 14), y: percent === null ? 90 : 90 - percent * 0.8, percent, scheduled, completed };
   });
+  const chartSegments: Array<typeof chartPoints> = [];
+  let currentSegment: typeof chartPoints = [];
+  chartPoints.forEach((point) => {
+    if (point.percent === null) {
+      if (currentSegment.length) chartSegments.push(currentSegment);
+      currentSegment = [];
+    } else {
+      currentSegment.push(point);
+    }
+  });
+  if (currentSegment.length) chartSegments.push(currentSegment);
   const chartedPoints = chartPoints.filter((point) => point.percent !== null);
-  const linePath = chartedPoints.reduce((path, point, index, points) => {
-    if (index === 0) return "M " + point.x + " " + point.y;
-    const previous = points[index - 1];
-    const midX = (previous.x + point.x) / 2;
-    return path + " C " + midX + " " + previous.y + ", " + midX + " " + point.y + ", " + point.x + " " + point.y;
-  }, "");
-  const firstChartPoint = chartedPoints[0];
-  const lastChartPoint = chartedPoints[chartedPoints.length - 1];
-  const areaPath = firstChartPoint && lastChartPoint ? linePath + " L " + lastChartPoint.x + " 90 L " + firstChartPoint.x + " 90 Z" : "";
+  const linePaths = chartSegments.filter((segment) => segment.length > 1).map((segment) =>
+    segment.reduce((path, point, index, points) => {
+      if (index === 0) return "M " + point.x + " " + point.y;
+      const previous = points[index - 1];
+      const midX = (previous.x + point.x) / 2;
+      return path + " C " + midX + " " + previous.y + ", " + midX + " " + point.y + ", " + point.x + " " + point.y;
+    }, "")
+  );
+  const areaPaths = chartSegments.filter((segment) => segment.length > 1).map((segment, index) => {
+    const path = linePaths[index];
+    const first = segment[0];
+    const last = segment[segment.length - 1];
+    return path + " L " + last.x + " 90 L " + first.x + " 90 Z";
+  });
   const chartId = habit.id.replace(/[^a-zA-Z0-9_-]/g, "");
   return <article className="habit-detail-card">
     <div className="habit-detail-row">
@@ -1402,8 +1418,8 @@ function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habi
                 </linearGradient>
               </defs>
               {[10, 50, 90].map((y) => <line key={y} x1="0" y1={y} x2="857" y2={y} className="habit-chart-grid-line" />)}
-              {areaPath && <path d={areaPath} fill={"url(#cadence-habit-area-" + chartId + ")"} className="habit-activity-area" />}
-              {linePath && <path d={linePath} fill="none" stroke={"url(#cadence-habit-line-" + chartId + ")"} className="habit-activity-line" />}
+              {areaPaths.map((path, index) => <path key={"area-" + index} d={path} fill={"url(#cadence-habit-area-" + chartId + ")"} className="habit-activity-area" />)}
+              {linePaths.map((path, index) => <path key={"line-" + index} d={path} fill="none" stroke={"url(#cadence-habit-line-" + chartId + ")"} className="habit-activity-line" />)}
               {chartedPoints.map((point) => (
                 <circle key={point.key} cx={point.x} cy={point.y} r={point.completed ? 3.2 : 2.8} className={"habit-activity-point " + (point.completed ? "is-complete" : "is-missed")}>
                   <title>{point.key}: {point.completed ? "Completed · 100%" : "Not logged · 0%"}</title>
