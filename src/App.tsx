@@ -741,25 +741,7 @@ function App() {
     <div className={`app-shell ${dark ? 'dark-mode' : 'light-mode'}`}>
       <aside className="sidebar">
         <button className="brand-lockup" onClick={() => { setPage('Today'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} type="button" aria-label="Go to Cadence dashboard">
-          <span className="cadence-logo-crop" aria-hidden="true"><img src="/cadence-lockup-original.webp" alt="" /></span>
-          <svg className="cadence-wordmark-svg" viewBox="0 0 278 60" role="img" aria-label="Cadence wordmark">
-            <defs>
-              <linearGradient id="cadence-wordmark-gradient" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="#d9a3ff" />
-                <stop offset="48%" stopColor="#bd72f4" />
-                <stop offset="100%" stopColor="#a956e5" />
-              </linearGradient>
-            </defs>
-            <g fill="none" stroke="url(#cadence-wordmark-gradient)" strokeWidth="5.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M34 15 C29 9 22 7 15 10 C7 13 4 21 4 30 C4 39 7 47 15 50 C22 53 29 51 34 45" />
-              <path d="M45 50 L61 10 L77 50" />
-              <path d="M89 10 H101 C124 10 124 50 101 50 H89 Z" />
-              <path d="M137 11 H160 M137 30 H155 M137 49 H160" />
-              <path d="M171 50 V10 L198 50 V10" />
-              <path d="M230 15 C225 9 218 7 211 10 C203 13 200 21 200 30 C200 39 203 47 211 50 C218 53 225 51 230 45" />
-              <path d="M244 11 H270 M244 30 H265 M244 49 H270" />
-            </g>
-          </svg>
+          <img className="cadence-lockup-image" src="/cadence-lockup-original.webp" alt="Cadence" width="210" height="60" />
         </button>
         <div className="workspace-label">YOUR SPACE <span className="live-dot" /></div>
         <nav className="nav-list" aria-label="Main navigation">
@@ -1205,15 +1187,18 @@ function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habi
     const completed = scheduled && Boolean(habit.logs[key]);
     const percent = scheduled ? (completed ? 100 : 0) : null;
     const day = new Date(key + "T12:00:00");
-    return { key, day, x: 48 + index * (656 / 13), y: percent === null ? 90 : 90 - percent * 0.64, percent, scheduled, completed };
+    return { key, day, x: (index + 0.5) * (857 / 14), y: percent === null ? 90 : 90 - percent * 0.8, percent, scheduled, completed };
   });
-  let hasChartPoint = false;
-  const linePath = chartPoints.reduce((path, point) => {
-    if (point.percent === null) return path;
-    const command = hasChartPoint ? "L" : "M";
-    hasChartPoint = true;
-    return path + " " + command + " " + point.x + " " + point.y;
+  const chartedPoints = chartPoints.filter((point) => point.percent !== null);
+  const linePath = chartedPoints.reduce((path, point, index, points) => {
+    if (index === 0) return "M " + point.x + " " + point.y;
+    const previous = points[index - 1];
+    const midX = (previous.x + point.x) / 2;
+    return path + " C " + midX + " " + previous.y + ", " + midX + " " + point.y + ", " + point.x + " " + point.y;
   }, "");
+  const firstChartPoint = chartedPoints[0];
+  const lastChartPoint = chartedPoints[chartedPoints.length - 1];
+  const areaPath = firstChartPoint && lastChartPoint ? linePath + " L " + lastChartPoint.x + " 90 L " + firstChartPoint.x + " 90 Z" : "";
   const chartId = habit.id.replace(/[^a-zA-Z0-9_-]/g, "");
   return <article className="habit-detail-card">
     <div className="habit-detail-row">
@@ -1245,35 +1230,38 @@ function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habi
     <div className="habit-detail-activity" aria-label={"Fourteen-day activity for " + habit.name}>
       <div className="habit-activity-caption"><span>LAST 14 DAYS</span><span><b>{completed14}</b> / {due14} completed</span></div>
       <div className="habit-activity-chart" role="img" aria-label={completed14 + " of " + due14 + " scheduled check-ins completed over the last 14 days. The line shows 100% for completed days and 0% for scheduled days that were missed; unscheduled days are omitted from the line."}>
-        <svg className="habit-activity-line-chart" viewBox="0 0 720 132" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-          <defs>
-            <linearGradient id={"cadence-habit-line-" + chartId} x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#9562ef" />
-              <stop offset="52%" stopColor="#c59aff" />
-              <stop offset="100%" stopColor="#a878ff" />
-            </linearGradient>
-          </defs>
-          {[26, 58, 90].map((y) => <line key={y} x1="36" y1={y} x2="704" y2={y} className="habit-chart-grid-line" />)}
-          <text x="0" y="29" className="habit-chart-y-label">100%</text>
-          <text x="5" y="61" className="habit-chart-y-label">50%</text>
-          <text x="10" y="93" className="habit-chart-y-label">0%</text>
-          {linePath && <path d={linePath} fill="none" stroke={"url(#cadence-habit-line-" + chartId + ")"} className="habit-activity-line" />}
-          {chartPoints.map((point) => (
-            <g key={point.key}>
-              {point.percent !== null ? (
-                <circle cx={point.x} cy={point.y} r={point.completed ? 4 : 3.2} className={"habit-activity-point " + (point.completed ? "is-complete" : "is-missed")}>
+        <div className="habit-chart-layout" aria-hidden="true">
+          <div className="habit-chart-y-axis">
+            <span>100%</span><span>50%</span><span>0%</span>
+          </div>
+          <div className="habit-chart-plot">
+            <svg className="habit-activity-line-chart" viewBox="0 0 857 100" preserveAspectRatio="none" focusable="false">
+              <defs>
+                <linearGradient id={"cadence-habit-line-" + chartId} x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#9562ef" />
+                  <stop offset="52%" stopColor="#c59aff" />
+                  <stop offset="100%" stopColor="#a878ff" />
+                </linearGradient>
+                <linearGradient id={"cadence-habit-area-" + chartId} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#ac70ff" stopOpacity=".23" />
+                  <stop offset="100%" stopColor="#ac70ff" stopOpacity=".015" />
+                </linearGradient>
+              </defs>
+              {[10, 50, 90].map((y) => <line key={y} x1="0" y1={y} x2="857" y2={y} className="habit-chart-grid-line" />)}
+              {areaPath && <path d={areaPath} fill={"url(#cadence-habit-area-" + chartId + ")"} className="habit-activity-area" />}
+              {linePath && <path d={linePath} fill="none" stroke={"url(#cadence-habit-line-" + chartId + ")"} className="habit-activity-line" />}
+              {chartedPoints.map((point) => (
+                <circle key={point.key} cx={point.x} cy={point.y} r={point.completed ? 3.2 : 2.8} className={"habit-activity-point " + (point.completed ? "is-complete" : "is-missed")}>
                   <title>{point.key}: {point.completed ? "Completed · 100%" : "Not logged · 0%"}</title>
                 </circle>
-              ) : (
-                <line x1={point.x - 2.5} y1="94" x2={point.x + 2.5} y2="94" className="habit-activity-unscheduled-tick">
-                  <title>{point.key}: Not scheduled or future day</title>
-                </line>
-              )}
-              <text x={point.x} y="119" textAnchor="middle" className="habit-chart-x-label">{point.day.getDate()}</text>
-            </g>
-          ))}
-        </svg>
-        {due14 === 0 && <span className="habit-chart-empty">No scheduled check-ins to plot yet</span>}
+              ))}
+            </svg>
+            <div className="habit-chart-x-axis">
+              {chartPoints.map((point) => <span key={point.key} title={point.key}>{point.day.getDate()}</span>)}
+            </div>
+          </div>
+        </div>
+        {due14 === 0 && <span className="habit-chart-empty">No scheduled check-ins to plot yet</span>
       </div>
       <div className="habit-activity-legend"><span><i className="done"/>Completed</span><span><i className="missed"/>Not logged</span><span><i className="unscheduled"/>Not scheduled</span></div>
     </div>
