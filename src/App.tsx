@@ -764,9 +764,9 @@ function App() {
   return (
     <div className={`app-shell ${dark ? 'dark-mode' : 'light-mode'}`}>
       <aside className="sidebar">
-        <button className="brand-lockup" onClick={() => { setPage('Today'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} type="button" aria-label="Go to Cadence dashboard">
-          <span className="cadence-logo-crop" aria-hidden="true"><img src="/cadence-lockup-original.webp" alt="" /></span>
-          <span className="cadence-wordmark">CADENCE</span>
+        <button className="brand-lockup cadence-brand-lockup" onClick={() => { setPage('Today'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} type="button" aria-label="Go to Cadence dashboard">
+          <span className="cadence-brand-icon" aria-hidden="true"><img src="/cadence-lockup-original.webp" alt="" /></span>
+          <span className="cadence-brand-text">CADENCE</span>
         </button>
         <div className="workspace-label">YOUR SPACE <span className="live-dot" /></div>
         <nav className="nav-list" aria-label="Main navigation">
