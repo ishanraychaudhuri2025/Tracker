@@ -5298,3 +5298,394 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   #root .app-shell .nav-item:hover,
   #root .app-shell .mini-week > span:hover { transform: none !important; }
 }
+
+
+/* Couture polish: use the original high-resolution lockup as a single image,
+   tighten the navigation, reduce weekly chips, and keep chart typography crisp. */
+#root .app-shell .brand-lockup {
+  width: 100%;
+  min-height: 66px !important;
+  height: 66px;
+  margin: 0 0 5px !important;
+  padding: 0 2px !important;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible;
+}
+#root .app-shell .brand-lockup:hover {
+  transform: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+#root .app-shell .cadence-lockup-image {
+  display: block;
+  flex: 0 0 auto;
+  width: 210px !important;
+  max-width: 100%;
+  height: auto !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  object-position: left center;
+  image-rendering: auto;
+  filter: none !important;
+}
+#root .app-shell .cadence-footer-lockup {
+  display: inline-block;
+  width: 140px;
+  height: auto;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+/* A quiet luxury-style sidebar: tighter vertical rhythm and fine sans-serif type. */
+#root .app-shell .workspace-label {
+  margin: 19px 9px 8px !important;
+  font: 500 9px/1.25 'Montserrat', sans-serif !important;
+  letter-spacing: .14em !important;
+}
+#root .app-shell .nav-list {
+  display: grid;
+  gap: 1px !important;
+  margin-top: 0 !important;
+}
+#root .app-shell .nav-item {
+  min-height: 37px !important;
+  height: 37px;
+  padding: 4px 8px !important;
+  gap: 9px;
+  border: 1px solid transparent !important;
+  border-radius: 7px !important;
+  color: #a9adbd;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none;
+  transition: color .2s ease, background .2s ease, transform .2s ease;
+}
+#root .app-shell .nav-item::before {
+  display: none !important;
+  content: none !important;
+}
+#root .app-shell .nav-item:hover {
+  color: #d5baff !important;
+  background: rgba(177, 126, 255, .045) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  transform: translateX(2px);
+}
+#root .app-shell .nav-item.active {
+  color: #c89aff !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  transform: none;
+}
+#root .app-shell .nav-icon {
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: rgba(128, 139, 170, .075);
+  color: #858da5;
+  transition: color .2s ease, background .2s ease;
+}
+#root .app-shell .nav-item:hover .nav-icon {
+  color: #c89aff;
+  background: rgba(177, 126, 255, .075);
+}
+#root .app-shell .nav-item.active .nav-icon {
+  color: #c89aff !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+#root .app-shell .nav-copy b {
+  color: inherit;
+  font: 500 11.5px/1.25 'Montserrat', sans-serif !important;
+  letter-spacing: .025em;
+  transition: color .2s ease, font-size .2s ease;
+}
+#root .app-shell .nav-copy small {
+  color: #777f97;
+  font: 400 9px/1.2 'Montserrat', sans-serif !important;
+}
+#root .app-shell .nav-item.active .nav-copy b {
+  color: #c89aff !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+}
+#root .app-shell .nav-item.active .nav-copy small {
+  color: #9d8bb9 !important;
+}
+#root .app-shell .nav-item:focus-visible {
+  outline: 1px solid rgba(196, 151, 255, .8);
+  outline-offset: 1px;
+  border-radius: 7px !important;
+}
+#root .app-shell .sidebar-section-head {
+  margin-top: 21px !important;
+  margin-bottom: 7px !important;
+  font: 500 9px/1.2 'Montserrat', sans-serif !important;
+  letter-spacing: .12em !important;
+}
+
+/* Seven-day controls are reduced by about 30% in both width and height. */
+#root .app-shell .mini-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  width: min(100%, 320px);
+  max-width: 100%;
+  gap: 5px;
+  margin-top: 9px;
+}
+#root .app-shell .mini-week > span {
+  box-sizing: border-box;
+  width: auto;
+  min-width: 0;
+  height: 30px;
+  padding: 2px 1px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid rgba(164, 174, 207, .15);
+  border-radius: 7px;
+  background: linear-gradient(160deg, rgba(34, 35, 55, .57), rgba(18, 20, 33, .72));
+  color: #bfc7dc;
+  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+}
+#root .app-shell .mini-week > span b {
+  color: inherit;
+  font: 600 9px/1 'Montserrat', sans-serif !important;
+}
+#root .app-shell .mini-week > span small {
+  color: #929db8;
+  font: 500 8px/1 'Montserrat', sans-serif !important;
+  font-variant-numeric: tabular-nums;
+}
+#root .app-shell .mini-week > span:hover {
+  transform: translateY(-1px);
+  border-color: rgba(191, 148, 255, .38);
+}
+#root .app-shell .mini-week > span.done {
+  color: #f0e4ff;
+  border-color: rgba(180, 129, 255, .42);
+  background: rgba(132, 80, 201, .22);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.045);
+}
+#root .app-shell .mini-week > span.done small { color: #cfb3f4; }
+#root .app-shell .mini-week > span.current {
+  outline: 1px solid rgba(201, 160, 255, .62);
+  outline-offset: 1px;
+  z-index: 1;
+}
+#root .app-shell .mini-week > span.current:not(.done) {
+  color: #f1e5ff;
+  border-color: rgba(201, 160, 255, .62);
+  background: rgba(142, 92, 208, .13);
+}
+#root .app-shell .mini-week > span.not-scheduled:not(.done):not(.current) {
+  opacity: .48;
+  background: rgba(18, 20, 32, .28);
+}
+
+/* Chart axes are real HTML text rather than stretched SVG text. The plot itself
+   remains a responsive SVG timeseries with a restrained violet area tint. */
+#root .app-shell .habit-detail-activity {
+  margin: 8px 0 0 58px;
+  padding: 11px 13px 8px;
+  gap: 8px;
+  border: 1px solid rgba(163, 145, 212, .12);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(22, 20, 41, .27), rgba(12, 14, 24, .10));
+}
+#root .app-shell .habit-activity-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #aeb8d0;
+  font: 500 9px/1.4 'Montserrat', sans-serif !important;
+  letter-spacing: .105em !important;
+}
+#root .app-shell .habit-activity-caption span:last-child {
+  color: #aeb8d0;
+  font: 500 10px/1.3 'Montserrat', sans-serif !important;
+  letter-spacing: 0 !important;
+  white-space: nowrap;
+}
+#root .app-shell .habit-activity-caption span:last-child b {
+  color: #e4d1ff;
+  font: 600 11px/1 'Montserrat', sans-serif !important;
+  font-variant-numeric: tabular-nums;
+}
+#root .app-shell .habit-activity-chart {
+  min-height: 0;
+  padding: 8px 8px 5px;
+  border: 1px solid rgba(164, 151, 207, .105);
+  border-radius: 10px;
+  background: rgba(16, 16, 30, .19);
+}
+#root .app-shell .habit-chart-layout {
+  display: grid;
+  grid-template-columns: 31px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  min-width: 0;
+}
+#root .app-shell .habit-chart-y-axis {
+  position: relative;
+  width: 100%;
+  height: clamp(78px, 7.4vw, 110px);
+  color: #9da6bf;
+  font: 500 9px/1 'Montserrat', sans-serif !important;
+  font-variant-numeric: tabular-nums;
+}
+#root .app-shell .habit-chart-y-axis span {
+  position: absolute;
+  left: 0;
+  transform: translateY(-50%);
+  white-space: nowrap;
+}
+#root .app-shell .habit-chart-y-axis span:nth-child(1) { top: 10%; }
+#root .app-shell .habit-chart-y-axis span:nth-child(2) { top: 50%; }
+#root .app-shell .habit-chart-y-axis span:nth-child(3) { top: 90%; }
+#root .app-shell .habit-chart-plot { min-width: 0; width: 100%; }
+#root .app-shell .habit-activity-line-chart {
+  display: block;
+  width: 100%;
+  height: clamp(78px, 7.4vw, 110px);
+  overflow: visible;
+}
+#root .app-shell .habit-chart-grid-line {
+  stroke: rgba(154, 165, 198, .12) !important;
+  stroke-dasharray: 2.5 6;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+#root .app-shell .habit-activity-line {
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 2px rgba(173, 116, 255, .18));
+}
+#root .app-shell .habit-activity-area { pointer-events: none; }
+#root .app-shell .habit-activity-point {
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+#root .app-shell .habit-activity-point.is-complete {
+  fill: #d7b7ff;
+  stroke: #9f67e8;
+  filter: drop-shadow(0 0 2px rgba(177, 116, 255, .25));
+}
+#root .app-shell .habit-activity-point.is-missed {
+  fill: #778099;
+  stroke: rgba(193, 204, 230, .42);
+}
+#root .app-shell .habit-chart-x-axis {
+  display: grid;
+  grid-template-columns: repeat(14, minmax(0, 1fr));
+  align-items: center;
+  margin-top: 5px;
+  color: #9da6bf;
+  font: 500 9px/1.2 'Montserrat', sans-serif !important;
+  font-variant-numeric: tabular-nums;
+}
+#root .app-shell .habit-chart-x-axis span {
+  min-width: 0;
+  text-align: center;
+  white-space: nowrap;
+}
+#root .app-shell .habit-activity-unscheduled-tick {
+  stroke: rgba(139, 150, 178, .25);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+#root .app-shell .habit-activity-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px 14px;
+  color: #929bb3;
+  font: 400 9px/1.4 'Montserrat', sans-serif !important;
+}
+#root .app-shell .habit-activity-legend span { display: inline-flex; align-items: center; gap: 6px; }
+#root .app-shell .habit-activity-legend i {
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  box-shadow: none;
+}
+#root .app-shell .habit-activity-legend i.done { background: #b68aff; }
+#root .app-shell .habit-activity-legend i.missed { background: #737d98; }
+#root .app-shell .habit-activity-legend i.unscheduled { background: rgba(139, 150, 178, .42); }
+#root .app-shell .habit-chart-y-label,
+#root .app-shell .habit-chart-x-label { display: none !important; }
+#root .app-shell.light-mode .habit-chart-y-axis,
+#root .app-shell.light-mode .habit-chart-x-axis { color: #606a83; }
+#root .app-shell.light-mode .habit-activity-caption { color: #58627b; }
+#root .app-shell.light-mode .habit-activity-caption span:last-child { color: #59637d; }
+#root .app-shell.light-mode .habit-activity-caption span:last-child b { color: #6336a6; }
+#root .app-shell.light-mode .habit-activity-legend { color: #59637d; }
+
+@media (max-width: 850px) and (min-width: 701px) {
+  #root .app-shell .brand-lockup {
+    width: 54px !important;
+    min-height: 56px !important;
+    height: 56px;
+    margin: 0 auto 7px !important;
+    padding: 0 !important;
+    justify-content: flex-start;
+    overflow: hidden !important;
+  }
+  #root .app-shell .cadence-lockup-image {
+    width: 195px !important;
+    max-width: none !important;
+    height: auto !important;
+  }
+}
+@media (max-width: 700px) {
+  #root .app-shell .brand-lockup {
+    width: 54px !important;
+    min-height: 56px !important;
+    height: 56px;
+    margin: 0 auto 7px !important;
+    padding: 0 !important;
+    justify-content: flex-start;
+    overflow: hidden !important;
+  }
+  #root .app-shell .cadence-lockup-image {
+    width: 195px !important;
+    max-width: none !important;
+    height: auto !important;
+  }
+  #root .app-shell .nav-item { min-height: 35px !important; height: 35px; }
+  #root .app-shell .mini-week { width: min(100%, 320px); gap: 4px; }
+  #root .app-shell .mini-week > span { height: 29px; }
+  #root .app-shell .mini-week > span b { font-size: 8px !important; }
+  #root .app-shell .mini-week > span small { font-size: 7.5px !important; }
+  #root .app-shell .habit-detail-activity { margin: 8px 0 0; padding: 9px 8px 7px; }
+  #root .app-shell .habit-activity-chart { padding: 6px 5px 4px; }
+  #root .app-shell .habit-chart-layout { grid-template-columns: 29px minmax(0, 1fr); gap: 5px; }
+  #root .app-shell .habit-chart-y-axis,
+  #root .app-shell .habit-activity-line-chart { height: 78px; }
+  #root .app-shell .habit-chart-y-axis { font-size: 8px !important; }
+  #root .app-shell .habit-chart-x-axis { font-size: 8px !important; }
+  #root .app-shell .habit-activity-legend { gap: 6px 9px; font-size: 8px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #root .app-shell .nav-item,
+  #root .app-shell .nav-icon,
+  #root .app-shell .mini-week > span { transition: none !important; }
+  #root .app-shell .nav-item:hover,
+  #root .app-shell .mini-week > span:hover { transform: none !important; }
+}
