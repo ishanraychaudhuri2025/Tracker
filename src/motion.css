@@ -1,0 +1,331 @@
+/* Cadence Motion System — subtle, tactile, and accessibility-aware. */
+:root {
+  --cadence-motion-ease: cubic-bezier(.22, 1, .36, 1);
+  --cadence-motion-fast: 160ms;
+  --cadence-motion-medium: 260ms;
+  --cadence-motion-slow: 620ms;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 24px;
+}
+
+.app-shell {
+  overflow-x: clip;
+}
+
+.app-shell .main-content {
+  position: relative;
+  isolation: isolate;
+}
+
+.app-shell .main-content::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 7%;
+  right: -150px;
+  width: min(34vw, 410px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(139, 93, 194, .105) 0%, rgba(100, 64, 142, .045) 34%, transparent 70%);
+  pointer-events: none;
+  opacity: .82;
+  animation: cadenceAmbientFloat 22s ease-in-out infinite alternate;
+}
+
+@keyframes cadenceAmbientFloat {
+  0% { transform: translate3d(0, 0, 0) scale(.94); }
+  100% { transform: translate3d(-34px, 28px, 0) scale(1.08); }
+}
+
+.page-transition-shell {
+  width: 100%;
+  min-width: 0;
+  transform-origin: top center;
+  animation: cadencePageEnter 560ms var(--cadence-motion-ease) both;
+}
+
+@keyframes cadencePageEnter {
+  from { opacity: 0; transform: translate3d(0, 13px, 0) scale(.997); filter: blur(2px); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
+}
+
+/* Elements are revealed once when they enter the viewport. New rows get their own reveal. */
+.page-transition-shell [data-motion-reveal="pending"] {
+  opacity: 0;
+  transform: translate3d(0, 16px, 0) scale(.995);
+  filter: blur(2px);
+  transition:
+    opacity 640ms var(--cadence-motion-ease),
+    transform 640ms var(--cadence-motion-ease),
+    filter 640ms var(--cadence-motion-ease);
+  transition-delay: calc(var(--motion-order, 0) * 42ms);
+  will-change: opacity, transform, filter;
+}
+
+.page-transition-shell [data-motion-reveal="visible"] {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  filter: blur(0);
+  transition:
+    opacity 640ms var(--cadence-motion-ease),
+    transform 640ms var(--cadence-motion-ease),
+    filter 640ms var(--cadence-motion-ease);
+  transition-delay: calc(var(--motion-order, 0) * 42ms);
+  will-change: auto;
+}
+
+/* Tactile hover and press feedback, without the high-contrast glow of a gaming UI. */
+.app-shell button:not(:disabled),
+.app-shell a,
+.app-shell .analytics-metric-card,
+.app-shell .panel,
+.app-shell .today-side-card,
+.app-shell .principle-card,
+.app-shell .habit-detail-row,
+.app-shell .tasks-list-row {
+  transition-timing-function: var(--cadence-motion-ease);
+}
+
+.app-shell button:not(:disabled) {
+  transition-property: color, background-color, border-color, box-shadow, opacity, transform, filter;
+  transition-duration: var(--cadence-motion-fast);
+}
+
+.app-shell button:active:not(:disabled) {
+  transform: scale(.985);
+}
+
+.app-shell .primary-button:hover:not(:disabled),
+.app-shell .secondary-button:hover:not(:disabled),
+.app-shell .analytics-plain-button:hover:not(:disabled),
+.app-shell .date-chip:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 0 9px 26px rgba(112, 69, 161, .15);
+}
+
+.app-shell .primary-button:active:not(:disabled),
+.app-shell .secondary-button:active:not(:disabled),
+.app-shell .analytics-plain-button:active:not(:disabled),
+.app-shell .date-chip:active:not(:disabled) {
+  transform: scale(.985);
+}
+
+.app-shell .icon-button:hover:not(:disabled) {
+  transform: translateY(-1px) rotate(-2deg);
+  box-shadow: 0 7px 20px rgba(112, 69, 161, .16);
+}
+
+.app-shell .nav-item {
+  transition:
+    transform var(--cadence-motion-fast) var(--cadence-motion-ease),
+    color var(--cadence-motion-fast) ease,
+    background-color var(--cadence-motion-fast) ease,
+    border-color var(--cadence-motion-fast) ease;
+}
+
+.app-shell .nav-item:hover {
+  transform: translateX(2px);
+}
+
+.app-shell .nav-item .nav-icon,
+.app-shell .nav-item .nav-icon svg,
+.app-shell .routine-mini .mini-emoji,
+.app-shell .routine-mini .mini-check,
+.app-shell .brand-lockup img {
+  transition:
+    transform 340ms var(--cadence-motion-ease),
+    background-color var(--cadence-motion-fast) ease,
+    color var(--cadence-motion-fast) ease,
+    box-shadow var(--cadence-motion-fast) ease;
+}
+
+.app-shell .nav-item:hover .nav-icon svg {
+  transform: scale(1.08) rotate(-4deg);
+}
+
+.app-shell .routine-mini:hover {
+  transform: translateX(2px);
+}
+
+.app-shell .routine-mini:hover .mini-emoji {
+  transform: scale(1.08) rotate(4deg);
+  box-shadow: 0 0 0 4px rgba(183, 138, 255, .055);
+}
+
+.app-shell .brand-lockup:hover .cadence-brand-icon {
+  transform: rotate(-7deg) scale(1.045);
+}
+
+.app-shell .analytics-metric-card {
+  transition:
+    transform 280ms var(--cadence-motion-ease),
+    border-color 280ms ease,
+    box-shadow 280ms ease,
+    background-color 280ms ease;
+}
+
+.app-shell .analytics-metric-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(194, 158, 226, .31);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .035),
+    0 14px 34px rgba(0, 0, 0, .17);
+}
+
+.app-shell .analytics-metric-icon svg {
+  transition: transform 280ms var(--cadence-motion-ease);
+}
+
+.app-shell .analytics-metric-card:hover .analytics-metric-icon svg {
+  transform: scale(1.1) rotate(4deg);
+}
+
+.app-shell .panel,
+.app-shell .today-side-card,
+.app-shell .principle-card,
+.app-shell .habit-detail-row {
+  transition:
+    transform 280ms var(--cadence-motion-ease),
+    border-color 280ms ease,
+    box-shadow 280ms ease,
+    background-color 280ms ease;
+}
+
+.app-shell .panel:hover {
+  border-color: rgba(183, 138, 255, .24);
+}
+
+.app-shell .today-side-card:hover,
+.app-shell .principle-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(183, 138, 255, .25);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .13);
+}
+
+.app-shell .habit-detail-row:hover {
+  border-color: rgba(183, 138, 255, .24);
+}
+
+.app-shell .tasks-list-row {
+  transition:
+    background-color 220ms ease,
+    border-color 220ms ease,
+    transform 220ms var(--cadence-motion-ease);
+}
+
+.app-shell .tasks-list-row:hover {
+  transform: translateX(2px);
+}
+
+/* Chart traces and micro-bars draw in after the page arrives. */
+.app-shell .analytics-trend-path,
+.app-shell .habit-activity-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: cadenceChartDraw 1350ms var(--cadence-motion-ease) 120ms forwards;
+}
+
+.app-shell .analytics-area-path,
+.app-shell .habit-activity-area {
+  opacity: 0;
+  animation: cadenceAreaArrive 1100ms var(--cadence-motion-ease) 160ms forwards;
+}
+
+@keyframes cadenceChartDraw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes cadenceAreaArrive {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.app-shell .analytics-mini-bars i,
+.app-shell .analytics-streak-steps i,
+.app-shell .analytics-metric-line i {
+  transform-origin: bottom center;
+  animation: cadenceMicroBarRise 580ms var(--cadence-motion-ease) backwards;
+}
+
+.app-shell .analytics-mini-bars i:nth-child(2),
+.app-shell .analytics-streak-steps i:nth-child(2),
+.app-shell .analytics-metric-line i:nth-child(2) { animation-delay: 40ms; }
+.app-shell .analytics-mini-bars i:nth-child(3),
+.app-shell .analytics-streak-steps i:nth-child(3),
+.app-shell .analytics-metric-line i:nth-child(3) { animation-delay: 80ms; }
+.app-shell .analytics-mini-bars i:nth-child(4),
+.app-shell .analytics-streak-steps i:nth-child(4),
+.app-shell .analytics-metric-line i:nth-child(4) { animation-delay: 120ms; }
+.app-shell .analytics-mini-bars i:nth-child(5),
+.app-shell .analytics-streak-steps i:nth-child(5),
+.app-shell .analytics-metric-line i:nth-child(5) { animation-delay: 160ms; }
+.app-shell .analytics-mini-bars i:nth-child(6),
+.app-shell .analytics-streak-steps i:nth-child(6),
+.app-shell .analytics-metric-line i:nth-child(6) { animation-delay: 200ms; }
+.app-shell .analytics-mini-bars i:nth-child(7),
+.app-shell .analytics-streak-steps i:nth-child(7),
+.app-shell .analytics-metric-line i:nth-child(7) { animation-delay: 240ms; }
+
+@keyframes cadenceMicroBarRise {
+  from { opacity: .35; transform: scaleY(.35); }
+  to { opacity: 1; transform: scaleY(1); }
+}
+
+/* Dialogs and feedback have a consistent entrance curve. */
+.app-shell .modal-backdrop,
+.app-shell .reminder-alarm-backdrop {
+  animation: cadenceBackdropEnter 220ms ease both;
+}
+
+.app-shell .habit-modal,
+.app-shell .reminder-alarm,
+.app-shell .tasks-delete-dialog {
+  transform-origin: center;
+  animation: cadenceModalEnter 360ms var(--cadence-motion-ease) both;
+}
+
+.app-shell .toast {
+  animation: cadenceToastEnter 300ms var(--cadence-motion-ease) both;
+}
+
+@keyframes cadenceBackdropEnter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes cadenceModalEnter {
+  from { opacity: 0; transform: translate3d(0, 12px, 0) scale(.985); filter: blur(2px); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
+}
+
+@keyframes cadenceToastEnter {
+  from { opacity: 0; transform: translate3d(0, 8px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+/* Keep motion useful for keyboard users and fully quiet for reduced-motion settings. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto !important; }
+  .app-shell *,
+  .app-shell *::before,
+  .app-shell *::after,
+  .page-transition-shell,
+  .page-transition-shell [data-motion-reveal="pending"],
+  .page-transition-shell [data-motion-reveal="visible"] {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+    filter: none !important;
+  }
+  .app-shell .main-content::before { animation: none !important; }
+  .page-transition-shell [data-motion-reveal="pending"] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
