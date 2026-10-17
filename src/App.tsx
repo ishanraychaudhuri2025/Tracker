@@ -214,6 +214,8 @@ function MomentumChart({ habits, today }: { habits: Habit[]; today: string }) {
           <linearGradient id="momentumLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#8e58d9"/><stop offset="55%" stopColor="#b78aff"/><stop offset="100%" stopColor="#dfc6ff"/></linearGradient>
         </defs>
         {[18,60,102,144,186].map((y) => <line key={y} x1="18" x2="644" y1={y} y2={y} className="analytics-grid-line"/>)}
+        {tickIndexes.map((index) => <line key={'day-guide-' + series[index].key} x1={points[index].x} x2={points[index].x} y1={top} y2={bottom} className="analytics-day-guide" />)}
+        {points.filter((point) => point.value === null).map((point) => <text key={'no-schedule-' + point.key} x={point.x} y={bottom + 17} textAnchor="middle" className="analytics-no-schedule-mark">—</text>)}
         {!hasScheduledData && <text x="331" y="110" textAnchor="middle">No scheduled check-ins in this range</text>}
         {areaPaths.map((path, index) => <path key={'area-' + index} d={path} fill="url(#momentumArea)" className="analytics-area-path"/>)}
         {linePaths.map((path, index) => <path key={'line-' + index} d={path} fill="none" stroke="url(#momentumLine)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="analytics-trend-path"/>)}
@@ -1092,7 +1094,7 @@ function App() {
             <div className="analytics-metric-grid today-analytics-metrics">
               <article className="analytics-metric-card analytics-metric-primary">
                 <div className="analytics-metric-label">DAILY COMPLETION <span className="analytics-metric-icon tone-blue"><Activity size={12} /></span></div>
-                <div className="analytics-metric-value">{dueHabits.length ? Math.round((doneToday / dueHabits.length) * 100) : 0}<small>%</small></div>
+                <div className="analytics-metric-value">{todayHabitCompletion === null ? '—' : todayHabitCompletion}{todayHabitCompletion !== null && <small>%</small>}</div>
                 <div className="analytics-metric-bottom"><span>{doneToday} of {dueHabits.length} routines complete</span><b className="analytics-trend-positive"><ArrowUpRight size={9} /> TODAY</b></div>
                 <div className="analytics-metric-line" role="img" aria-label="Daily habit completion for the last seven days">{lastSevenHabitStats.map((day) => <i key={day.key} className={day.percent === null ? 'is-empty' : ''} title={day.key + ': ' + (day.percent === null ? 'no habits scheduled' : day.percent + '% complete')} style={{ height: (day.percent === null ? 3 : Math.max(4, Math.round(day.percent * .22 + 3))) + 'px' }} />)}</div>
               </article>
@@ -1127,8 +1129,8 @@ function App() {
                     <div><span className="analytics-section-index">01 / TODAY</span><h2>Daily progress</h2></div>
                     <span className="analytics-live-tag"><i /> LIVE</span>
                   </div>
-                  <div className="analytics-daily-ring" style={{ '--daily-percent': (dueHabits.length ? Math.round((doneToday / dueHabits.length) * 100) : 0) + '%' } as CSSProperties}>
-                    <div><b>{dueHabits.length ? Math.round((doneToday / dueHabits.length) * 100) : 0}<small>%</small></b><span>COMPLETE</span></div>
+                  <div className="analytics-daily-ring" style={{ '--daily-percent': (todayHabitCompletion ?? 0) + '%' } as CSSProperties}>
+                    <div><b>{todayHabitCompletion === null ? '—' : todayHabitCompletion}{todayHabitCompletion !== null && <small>%</small>}</b><span>COMPLETE</span></div>
                   </div>
                   <div className="analytics-today-stats">
                     <span>Completed <b>{doneToday}</b></span>
@@ -1410,8 +1412,9 @@ function CadenceMark() {
     <path d="M2 23 C7 23 8 23 11 20 C14 17 14 10 18 10 C22 10 22 34 27 34 C31 34 32 6 36 6 C39 6 40 21 42 21" fill="none" stroke="url(#cadence-wave-stroke)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>;
 }
-function StatCard({ icon, label, value, detail, tone }: { icon: ReactNode; label: string; value: string; detail: string; tone: string }) {
-  return <div className="stat-card"><div className="stat-top"><span className={`stat-icon ${tone}`}>{icon}</span><span className="stat-indicator"><ArrowUpRight size={14} /></span></div><div className="stat-value">{value}</div><div className="stat-label">{label}</div><div className="stat-detail">{detail}</div></div>;
+function StatCard({ icon, label, value, detail, tone, sparkValues }: { icon: ReactNode; label: string; value: string; detail: string; tone: string; sparkValues?: Array<number | null> }) {
+  const maxSpark = Math.max(1, ...(sparkValues ?? []).filter((entry): entry is number => entry !== null));
+  return <div className="stat-card insights-stat-card"><div className="stat-top"><span className={`stat-icon ${tone}`}>{icon}</span><span className="stat-indicator"><ArrowUpRight size={14} /></span></div><div className="stat-label">{label}</div><div className="stat-value">{value}</div><div className="stat-detail">{detail}</div>{sparkValues && <div className="insights-stat-spark" role="img" aria-label={label + ' over the last seven days'}>{sparkValues.map((entry, index) => <i key={index} className={entry === null ? 'is-empty' : ''} style={{ height: entry === null ? '3px' : Math.max(4, Math.round((entry / maxSpark) * 25)) + 'px' }} />)}</div>}</div>;
 }
 
 function WeeklyTracker({ habits, today, onToggle }: { habits: Habit[]; today: string; onToggle: (habitId: string, dayKey: string) => void }) {
