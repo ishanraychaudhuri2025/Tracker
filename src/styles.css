@@ -5382,3 +5382,159 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     transition: none !important;
   }
 }
+
+
+/* Phase 11 — a clearer "today" marker and a quieter, more modern sidebar. */
+
+/* Make today's weekday tile the unmistakable anchor in the seven-day strip.
+   Keep completed/not-scheduled states intact while giving today its own treatment. */
+#root .app-shell .mini-week > span.current {
+  position: relative !important;
+  z-index: 2;
+  isolation: isolate;
+  transform: translateY(-3px) !important;
+  overflow: visible;
+  border: 1px solid rgba(220, 187, 255, .95) !important;
+  border-radius: 9px !important;
+  color: #fff !important;
+  background: linear-gradient(155deg, rgba(189, 139, 255, .32), rgba(112, 64, 166, .2)) !important;
+  outline: none !important;
+  box-shadow:
+    0 0 0 2px rgba(183, 128, 255, .13),
+    0 5px 16px rgba(127, 69, 196, .22),
+    inset 0 1px 0 rgba(255, 255, 255, .14) !important;
+}
+#root .app-shell .mini-week > span.current::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  width: 13px;
+  height: 3px;
+  border-radius: 99px;
+  transform: translateX(-50%);
+  background: #d9b6ff;
+  box-shadow: 0 0 9px rgba(197, 143, 255, .7);
+}
+#root .app-shell .mini-week > span.current b {
+  color: #f3e6ff !important;
+  font-weight: 800 !important;
+}
+#root .app-shell .mini-week > span.current small {
+  color: #fff !important;
+  font-weight: 800 !important;
+}
+#root .app-shell .mini-week > span.current.done {
+  border-color: rgba(226, 199, 255, .98) !important;
+  background: linear-gradient(155deg, #c9a0ff, #8f5ed0) !important;
+  box-shadow:
+    0 0 0 2px rgba(183, 128, 255, .15),
+    0 5px 16px rgba(127, 69, 196, .2),
+    inset 0 1px 0 rgba(255, 255, 255, .3) !important;
+}
+#root .app-shell .mini-week > span.current.done b,
+#root .app-shell .mini-week > span.current.done small {
+  color: #1b1025 !important;
+}
+#root .app-shell .mini-week > span.current.not-scheduled {
+  border-color: rgba(220, 187, 255, .95) !important;
+}
+
+/* Sidebar: compact, contemporary sans-serif labels; a subtle active wash with a
+   floating icon tile and a small right-side indicator instead of a boxed outline. */
+#root .app-shell .nav-list {
+  gap: 5px !important;
+}
+#root .app-shell .nav-item {
+  min-height: 43px !important;
+  height: auto !important;
+  padding: 7px 10px !important;
+  gap: 11px !important;
+  border: 1px solid transparent !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+  transition: background .2s ease, color .2s ease !important;
+}
+#root .app-shell .nav-item::before {
+  content: none !important;
+  display: none !important;
+}
+#root .app-shell .nav-copy b {
+  font-family: var(--cadence-font-ui), Inter, sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 550 !important;
+  letter-spacing: -.015em !important;
+  line-height: 1.25 !important;
+  color: #b8a8c6 !important;
+  transition: color .2s ease !important;
+}
+#root .app-shell .nav-copy small {
+  font-family: var(--cadence-font-ui), Inter, sans-serif !important;
+  font-size: 10px !important;
+  letter-spacing: .005em !important;
+}
+#root .app-shell .nav-icon {
+  width: 30px !important;
+  height: 30px !important;
+  flex: 0 0 30px !important;
+  border: 1px solid rgba(184, 143, 224, .08) !important;
+  border-radius: 9px !important;
+  background: rgba(145, 93, 185, .09) !important;
+  color: #a78dbb !important;
+  box-shadow: none !important;
+  transition: color .2s ease, background .2s ease, transform .2s ease !important;
+}
+#root .app-shell .nav-item:hover {
+  background: rgba(173, 123, 220, .055) !important;
+  color: #eee0fb !important;
+}
+#root .app-shell .nav-item:hover .nav-icon {
+  color: #ddc1ff !important;
+  background: rgba(173, 123, 220, .12) !important;
+  transform: translateY(-1px);
+}
+#root .app-shell .nav-item.active {
+  position: relative !important;
+  color: #f5eaff !important;
+  border-color: transparent !important;
+  background: linear-gradient(100deg, rgba(157, 98, 213, .16), rgba(113, 69, 150, .035) 78%, transparent) !important;
+  box-shadow: none !important;
+}
+#root .app-shell .nav-item.active::after {
+  content: "";
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  background: #d6afff;
+  box-shadow: 0 0 9px rgba(198, 146, 255, .72);
+}
+#root .app-shell .nav-item.active .nav-icon {
+  color: #f0ddff !important;
+  border-color: rgba(207, 166, 255, .24) !important;
+  border-radius: 10px !important;
+  background: linear-gradient(145deg, rgba(192, 143, 255, .27), rgba(127, 76, 181, .17)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 2px 10px rgba(112, 62, 161, .12) !important;
+}
+#root .app-shell .nav-item.active .nav-copy b {
+  color: #f4eaff !important;
+  font-weight: 650 !important;
+}
+#root .app-shell .nav-item:focus-visible {
+  outline: 2px solid rgba(207, 166, 255, .75) !important;
+  outline-offset: 2px !important;
+}
+@media (max-width: 600px) {
+  #root .app-shell .nav-item { min-height: 39px !important; padding: 5px 8px !important; }
+  #root .app-shell .nav-icon { width: 27px !important; height: 27px !important; flex-basis: 27px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #root .app-shell .nav-item,
+  #root .app-shell .nav-icon,
+  #root .app-shell .mini-week > span.current { transition: none !important; }
+}
