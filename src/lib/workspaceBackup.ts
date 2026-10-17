@@ -8,7 +8,7 @@ export interface WorkspaceBackup {
     habits: Habit[];
     tasks: Task[];
     focusSessions: number;
-    preferences: { dark: boolean };
+    preferences: { dark: boolean; focusMinutes: number; focusSoundUrl: string };
   };
 }
 
@@ -16,7 +16,7 @@ type WorkspaceSnapshot = {
   habits: Habit[];
   tasks: Task[];
   focusSessions: number;
-  preferences: { dark: boolean };
+  preferences: { dark: boolean; focusMinutes: number; focusSoundUrl: string };
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -77,7 +77,7 @@ export function createWorkspaceBackup(snapshot: WorkspaceSnapshot): WorkspaceBac
       habits: snapshot.habits,
       tasks: snapshot.tasks,
       focusSessions: snapshot.focusSessions,
-      preferences: { dark: snapshot.preferences.dark },
+      preferences: { dark: snapshot.preferences.dark, focusMinutes: snapshot.preferences.focusMinutes, focusSoundUrl: snapshot.preferences.focusSoundUrl },
     },
   };
 }
@@ -113,6 +113,14 @@ export function parseWorkspaceBackup(source: string): WorkspaceBackup {
   if (!isRecord(preferences) || typeof preferences.dark !== 'boolean') {
     throw new Error('The backup contains invalid appearance preferences.');
   }
+  const focusMinutes = preferences.focusMinutes === undefined ? 25 : preferences.focusMinutes;
+  const focusSoundUrl = preferences.focusSoundUrl === undefined ? '' : preferences.focusSoundUrl;
+  if (typeof focusMinutes !== 'number' || !Number.isInteger(focusMinutes) || focusMinutes < 1 || focusMinutes > 240) {
+    throw new Error('The backup contains an invalid focus timer duration.');
+  }
+  if (typeof focusSoundUrl !== 'string' || focusSoundUrl.length > 2048) {
+    throw new Error('The backup contains an invalid focus ringtone setting.');
+  }
   if (habits.length > 10000 || tasks.length > 50000) {
     throw new Error('This backup is larger than the supported workspace limit.');
   }
@@ -125,7 +133,7 @@ export function parseWorkspaceBackup(source: string): WorkspaceBackup {
       habits,
       tasks,
       focusSessions,
-      preferences: { dark: preferences.dark },
+      preferences: { dark: preferences.dark, focusMinutes, focusSoundUrl },
     },
   };
 }
