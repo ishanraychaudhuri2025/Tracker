@@ -6199,3 +6199,172 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .app-shell .habit-advanced-chevron,
   .app-shell .habit-activity-toggle > span { transition: none; }
 }
+
+
+/* Phase 05 — honest analytics: custom dates, selectable observations, and clear gaps. */
+.app-shell .analytics-chart-controls { align-items: center; gap: 8px; flex-wrap: wrap; }
+.app-shell .analytics-chart-tabs button {
+  min-width: 39px;
+  min-height: 30px;
+  padding: 0 9px;
+  color: var(--cadence-muted);
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  font: 600 9px/1 var(--cadence-font-mono);
+}
+.app-shell .analytics-chart-tabs button.active {
+  color: var(--cadence-violet-bright);
+  border-color: #634482;
+  background: var(--cadence-violet-soft);
+  box-shadow: none;
+}
+.app-shell .analytics-chart-tabs button:hover {
+  color: var(--cadence-text);
+  border-color: var(--cadence-border);
+  background: rgba(183, 138, 255, .09);
+}
+.app-shell .analytics-custom-range {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid var(--cadence-border);
+  border-radius: 9px;
+  background: var(--cadence-surface-raised);
+}
+.app-shell .analytics-custom-range label {
+  display: grid;
+  gap: 5px;
+  color: var(--cadence-subtle);
+  font: 600 8px/1.2 var(--cadence-font-ui);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.app-shell .analytics-custom-range input {
+  min-width: 0;
+  width: 145px;
+  min-height: 32px;
+  padding: 0 8px;
+  color: var(--cadence-text);
+  color-scheme: dark;
+  border: 1px solid var(--cadence-border);
+  border-radius: 7px;
+  background: var(--cadence-black);
+  font: 500 10px/1 var(--cadence-font-mono);
+}
+.app-shell .analytics-custom-range input:focus-visible {
+  outline: 2px solid rgba(183, 138, 255, .27);
+  border-color: var(--cadence-violet);
+  outline-offset: 1px;
+}
+.app-shell .analytics-custom-range > span {
+  padding-bottom: 9px;
+  color: var(--cadence-subtle);
+  font: 400 9px/1 var(--cadence-font-ui);
+}
+.app-shell .analytics-custom-range > small {
+  flex-basis: 100%;
+  color: var(--cadence-subtle);
+  font: 400 9px/1.4 var(--cadence-font-ui);
+}
+.app-shell .analytics-chart-legend {
+  align-items: center;
+  gap: 12px;
+}
+.app-shell .analytics-chart-no-schedule {
+  color: var(--cadence-subtle);
+  font: 400 9px/1.45 var(--cadence-font-ui);
+  letter-spacing: 0;
+}
+.app-shell .analytics-chart-legend > b {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.app-shell .analytics-chart-legend > b small {
+  display: block;
+  margin-top: 3px;
+  text-align: right;
+  letter-spacing: .06em;
+}
+.app-shell .analytics-chart-point { cursor: pointer; outline: none; }
+.app-shell .analytics-chart-point:focus-visible .analytics-chart-point-core {
+  stroke: var(--cadence-violet-bright);
+  stroke-width: 2.5;
+}
+.app-shell .analytics-chart-point-hit { fill: transparent; pointer-events: all; }
+.app-shell .analytics-chart-point:hover .analytics-chart-point-hit,
+.app-shell .analytics-chart-point:focus-visible .analytics-chart-point-hit { fill: rgba(183, 138, 255, .13); }
+.app-shell .analytics-chart-point.is-selected .analytics-chart-point-core {
+  fill: var(--cadence-violet-bright);
+  stroke: #37234d;
+  stroke-width: 2;
+}
+.app-shell .analytics-chart-panel svg > text {
+  fill: var(--cadence-subtle);
+  font: 500 11px var(--cadence-font-ui);
+}
+.app-shell .analytics-selected-day {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 13px;
+  min-height: 49px;
+  margin-top: 9px;
+  padding: 10px 12px;
+  border: 1px solid var(--cadence-border-soft);
+  border-radius: 9px;
+  background: rgba(183, 138, 255, .035);
+}
+.app-shell .analytics-selected-day > div {
+  display: grid;
+  gap: 3px;
+  margin-right: auto;
+}
+.app-shell .analytics-selected-day > div b {
+  color: var(--cadence-text);
+  font: 600 11px/1.2 var(--cadence-font-display);
+}
+.app-shell .analytics-selected-day > div small {
+  color: var(--cadence-subtle);
+  font: 500 8px/1.2 var(--cadence-font-mono);
+}
+.app-shell .analytics-selected-day > strong {
+  color: var(--cadence-violet-bright);
+  font: 600 17px/1 var(--cadence-font-display);
+  font-variant-numeric: tabular-nums;
+}
+.app-shell .analytics-selected-day > span {
+  color: var(--cadence-muted);
+  font: 400 9px/1.4 var(--cadence-font-ui);
+}
+.app-shell .analytics-selected-day > .analytics-selected-empty {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--cadence-subtle);
+}
+.app-shell .analytics-chart-footer > span:last-child {
+  color: var(--cadence-subtle);
+  font: 500 8px/1.4 var(--cadence-font-mono);
+  white-space: nowrap;
+}
+.app-shell .monthly-detail-header > div > p {
+  max-width: 58ch;
+}
+@media (max-width: 700px) {
+  .app-shell .analytics-chart-heading { flex-direction: column; gap: 12px; }
+  .app-shell .analytics-chart-controls { width: 100%; justify-content: flex-start; }
+  .app-shell .analytics-custom-range { align-items: stretch; }
+  .app-shell .analytics-custom-range label { flex: 1 1 120px; }
+  .app-shell .analytics-custom-range input { width: 100%; }
+  .app-shell .analytics-custom-range > span { align-self: end; padding-bottom: 10px; }
+  .app-shell .analytics-chart-no-schedule { flex-basis: 100%; }
+  .app-shell .analytics-selected-day { align-items: flex-start; }
+  .app-shell .analytics-chart-footer > span:last-child { white-space: normal; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-shell .analytics-chart-tabs button { transition: none; }
+}
