@@ -4480,3 +4480,162 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   .app-shell .weekly-day-label b { font-size:10px!important; }
   .app-shell .weekly-day-label small { font-size:10px!important; }
 }
+
+
+/* Cadence finishing pass: sharper branding, confident navigation, and readable habit history. */
+.app-shell .brand-lockup {
+  min-height: 82px;
+  padding: 4px 0 !important;
+  margin-bottom: 10px;
+}
+.app-shell .cadence-lockup-image {
+  display: block;
+  width: 218px !important;
+  max-width: 100%;
+  max-height: none !important;
+  height: auto !important;
+  object-fit: contain !important;
+  object-position: left center;
+  image-rendering: auto;
+  filter: none !important;
+}
+.app-shell .nav-item {
+  overflow: hidden;
+  min-height: 51px;
+  padding: 9px 11px 9px 12px;
+}
+.app-shell .nav-item.active {
+  position: relative;
+  background: linear-gradient(108deg, rgba(157, 103, 255, .24) 0%, rgba(113, 82, 184, .13) 58%, rgba(15, 17, 31, .32) 100%) !important;
+  border-color: rgba(191, 155, 255, .34) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.065), 0 8px 22px rgba(99, 58, 169, .15) !important;
+}
+.app-shell .nav-item.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 9px;
+  bottom: 9px;
+  width: 3px;
+  border-radius: 0 4px 4px 0;
+  background: linear-gradient(180deg, #edcaff, #a878ff 65%, #8c5bdf);
+  box-shadow: 0 0 14px rgba(175, 119, 255, .72);
+}
+.app-shell .nav-item.active .nav-icon {
+  color: #f0dcff !important;
+  background: linear-gradient(145deg, rgba(184, 137, 255, .29), rgba(129, 92, 201, .16)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.09), 0 0 20px rgba(164, 111, 255, .14);
+}
+.app-shell .nav-item.active .nav-copy b {
+  color: #fff !important;
+}
+.app-shell .mini-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 7px;
+  width: min(100%, 360px);
+  margin-top: 12px;
+}
+.app-shell .mini-week > span {
+  min-width: 0;
+  width: auto;
+  height: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  position: relative;
+  border: 1px solid rgba(157, 169, 204, .18);
+  border-radius: 10px;
+  background: linear-gradient(160deg, rgba(35, 37, 59, .82), rgba(19, 21, 36, .92));
+  color: #aeb7d0;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
+  transition: transform .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
+}
+.app-shell .mini-week > span b {
+  font: 700 12px/1 'Inter', system-ui, sans-serif;
+  color: inherit;
+}
+.app-shell .mini-week > span small {
+  font: 500 10px/1 'Inter', system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: #818ca8;
+}
+.app-shell .mini-week > span.done {
+  color: #f3e7ff;
+  border-color: rgba(184, 137, 255, .58);
+  background: linear-gradient(150deg, rgba(153, 91, 243, .36), rgba(76, 49, 122, .28));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.09), 0 4px 13px rgba(122, 70, 196, .12);
+}
+.app-shell .mini-week > span.done small { color: #d0b5fb; }
+.app-shell .mini-week > span.current {
+  outline: 1px solid rgba(217, 185, 255, .9);
+  outline-offset: 2px;
+  z-index: 1;
+}
+.app-shell .mini-week > span.current:not(.done) {
+  color: #f1e4ff;
+  border-color: rgba(198, 164, 255, .8);
+  background: linear-gradient(145deg, rgba(125, 83, 191, .24), rgba(32, 28, 52, .9));
+}
+.app-shell .mini-week > span.not-scheduled:not(.done):not(.current) {
+  opacity: .48;
+  background: rgba(18, 20, 32, .5);
+}
+.app-shell .habit-activity-line-chart {
+  width: 100%;
+  height: 166px;
+  overflow: visible;
+}
+.app-shell .habit-activity-chart {
+  position: relative;
+  min-height: 166px;
+  padding: 8px 4px 0;
+  border: 1px solid rgba(159, 151, 207, .13);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(21, 20, 39, .5), rgba(12, 14, 24, .2));
+}
+.app-shell .habit-chart-grid-line {
+  stroke: rgba(154, 165, 198, .2) !important;
+  stroke-dasharray: 4 5;
+  stroke-width: 1;
+}
+.app-shell .habit-chart-y-label {
+  fill: #d7def3 !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+  letter-spacing: 0 !important;
+}
+.app-shell .habit-chart-x-label {
+  fill: #c7d0e9 !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0 !important;
+}
+.app-shell .habit-activity-bar.is-complete {
+  fill: url(#cadence-habit-bar-placeholder);
+}
+.app-shell .habit-activity-bar.is-missed {
+  fill: rgba(135, 148, 179, .48);
+  stroke: rgba(183, 193, 219, .26);
+  stroke-width: 1;
+}
+.app-shell .habit-activity-unscheduled-tick {
+  stroke: rgba(139, 150, 178, .34);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+@media (max-width: 700px) {
+  .app-shell .brand-lockup { min-height: 66px; }
+  .app-shell .cadence-lockup-image { width: 185px !important; }
+  .app-shell .mini-week { gap: 4px; }
+  .app-shell .mini-week > span { height: 40px; }
+  .app-shell .habit-activity-line-chart { height: 154px; }
+  .app-shell .habit-chart-y-label { font-size: 11px !important; }
+  .app-shell .habit-chart-x-label { font-size: 11px !important; }
+}
