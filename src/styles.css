@@ -8574,3 +8574,282 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 #root .app-shell .sidebar .nav-list > .nav-item.active .nav-copy b {
   color: #f4eaf8 !important;
 }
+
+
+/* Phase 17 — premium habit summary, aligned habit glyphs, and editorial task typography. */
+
+/* HABITS SUMMARY — three discreet metric cards plus one quiet note beneath.
+   This deliberately replaces both the long single rail and the previous four-card row. */
+#root .app-shell .habits-overview-strip {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 11px !important;
+  margin: 7px 0 17px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+#root .app-shell .habits-overview-strip > div:not(.strip-quote) {
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+  min-height: 95px !important;
+  padding: 17px 19px 16px !important;
+  border: 1px solid rgba(190, 162, 207, .16) !important;
+  border-radius: 8px !important;
+  background: linear-gradient(145deg, rgba(29, 19, 34, .78), rgba(13, 9, 16, .84)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
+}
+#root .app-shell .habits-overview-strip > div:not(.strip-quote)::before {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  left: 19px !important;
+  top: 0 !important;
+  width: 23px !important;
+  height: 1px !important;
+  background: #c3a4d2 !important;
+}
+#root .app-shell .habits-overview-strip > div:not(.strip-quote):first-child { padding-left: 19px !important; }
+#root .app-shell .habits-overview-strip > div:not(.strip-quote):nth-child(3) { border-right: 1px solid rgba(190,162,207,.16) !important; }
+#root .app-shell .habits-overview-strip .strip-label {
+  color: #a99ab3 !important;
+  font: 500 9px/1.35 var(--cadence-font-ui) !important;
+  letter-spacing: .105em !important;
+}
+#root .app-shell .habits-overview-strip b {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 3px !important;
+  color: #f4edf7 !important;
+  font: 400 31px/.95 var(--cadence-font-display) !important;
+  letter-spacing: -.04em !important;
+  font-variant-numeric: tabular-nums;
+}
+#root .app-shell .habits-overview-strip b small {
+  color: #ac9bb6 !important;
+  font: 500 10px/1 var(--cadence-font-ui) !important;
+  letter-spacing: 0 !important;
+}
+#root .app-shell .habits-overview-strip > .strip-quote {
+  grid-column: 1 / -1 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 10px !important;
+  min-height: 42px !important;
+  padding: 10px 2px 0 !important;
+  border: 0 !important;
+  border-top: 1px solid rgba(190,162,207,.11) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #b6a7c0 !important;
+  font: italic 400 12px/1.5 var(--cadence-font-display) !important;
+}
+#root .app-shell .habits-overview-strip > .strip-quote::before { content: none !important; display:none !important; }
+#root .app-shell .habits-overview-strip > .strip-quote svg {
+  width: 15px !important;
+  height: 15px !important;
+  flex: 0 0 15px !important;
+  color: #bca1ce !important;
+}
+@media (max-width: 900px) {
+  #root .app-shell .habits-overview-strip { gap: 8px !important; }
+  #root .app-shell .habits-overview-strip > div:not(.strip-quote) { padding: 14px !important; min-height: 86px !important; }
+  #root .app-shell .habits-overview-strip > div:not(.strip-quote)::before { left: 14px !important; }
+  #root .app-shell .habits-overview-strip .strip-label { font-size: 8px !important; }
+  #root .app-shell .habits-overview-strip b { font-size: 27px !important; }
+}
+@media (max-width: 600px) {
+  #root .app-shell .habits-overview-strip { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+  #root .app-shell .habits-overview-strip > div:not(.strip-quote) { min-height: 76px !important; }
+  #root .app-shell .habits-overview-strip > div:not(.strip-quote):nth-child(3) { grid-column: 1 / -1 !important; }
+  #root .app-shell .habits-overview-strip > .strip-quote { grid-column: 1 / -1 !important; }
+}
+
+/* Habit rows: pin the glyph to the top line with the habit name rather than
+   vertically centering it against the taller cue, weekdays and metadata. */
+#root .app-shell .habits-library .habit-detail-row {
+  align-items: start !important;
+}
+#root .app-shell .habits-library .habit-detail-row > .detail-emoji {
+  align-self: start !important;
+  justify-self: start !important;
+  margin-top: 18px !important;
+}
+#root .app-shell .habits-library .habit-detail-row > .detail-main {
+  align-self: start !important;
+  min-width: 0 !important;
+}
+#root .app-shell .habits-library .detail-title-row {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 6px 8px !important;
+  min-height: 30px;
+}
+#root .app-shell .habits-library .detail-title-row > b {
+  align-self: center !important;
+  margin: 0 !important;
+  font: 500 15px/1.2 var(--cadence-font-display) !important;
+  letter-spacing: -.018em !important;
+}
+@media (max-width: 1100px) {
+  #root .app-shell .habits-library .habit-detail-row > .detail-emoji { margin-top: 14px !important; }
+}
+@media (max-width: 700px) {
+  #root .app-shell .habits-library .habit-detail-row { align-items: start !important; }
+  #root .app-shell .habits-library .habit-detail-row > .detail-emoji { margin-top: 14px !important; }
+}
+
+/* TASKS SUMMARY — elegant editorial figures, light dividers and a clear
+   distinction between the three numbers and the accompanying guidance. */
+#root .app-shell .tasks-summary-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(210px, 1.22fr) !important;
+  gap: 11px !important;
+  align-items: stretch !important;
+}
+#root .app-shell .tasks-summary-card {
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+  min-height: 117px !important;
+  padding: 17px 18px 15px !important;
+  border: 1px solid rgba(190, 162, 207, .16) !important;
+  border-radius: 8px !important;
+  background: linear-gradient(145deg, rgba(29, 19, 34, .78), rgba(13, 9, 16, .84)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
+  transform: none !important;
+  transition: border-color .2s ease, background .2s ease !important;
+}
+#root .app-shell .tasks-summary-card::before {
+  content: "" !important;
+  position: absolute !important;
+  left: 18px !important;
+  top: 0 !important;
+  width: 22px !important;
+  height: 1px !important;
+  background: #c3a4d2 !important;
+}
+#root .app-shell .tasks-summary-card:hover {
+  transform: none !important;
+  border-color: rgba(190,162,207,.29) !important;
+  background: linear-gradient(145deg, rgba(34, 22, 39, .85), rgba(15, 10, 18, .88)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+#root .app-shell .tasks-summary-icon {
+  position: absolute !important;
+  top: 15px !important;
+  right: 15px !important;
+  grid-row: auto !important;
+  width: 27px !important;
+  height: 27px !important;
+  display: grid !important;
+  place-items: center !important;
+  border: 1px solid rgba(190,162,207,.16) !important;
+  border-radius: 5px !important;
+  color: #c7afd7 !important;
+  background: rgba(190,162,207,.045) !important;
+}
+#root .app-shell .tasks-summary-icon.violet,
+#root .app-shell .tasks-summary-icon.cyan {
+  color: #c7afd7 !important;
+  border-color: rgba(190,162,207,.16) !important;
+  background: rgba(190,162,207,.045) !important;
+}
+#root .app-shell .tasks-summary-card > small {
+  display: block !important;
+  margin: 0 36px 2px 0 !important;
+  color: #ad9bb8 !important;
+  font: 500 9px/1.4 var(--cadence-font-ui) !important;
+  letter-spacing: .12em !important;
+}
+#root .app-shell .tasks-summary-card > b {
+  display: block !important;
+  margin: 0 !important;
+  color: #f5edf8 !important;
+  font: 400 33px/1 var(--cadence-font-display) !important;
+  letter-spacing: -.045em !important;
+  font-variant-numeric: tabular-nums;
+}
+#root .app-shell .tasks-summary-card > span:last-child {
+  display: block !important;
+  grid-column: auto !important;
+  margin: 0 !important;
+  color: #a99ab2 !important;
+  font: 400 10px/1.5 var(--cadence-font-ui) !important;
+}
+#root .app-shell .tasks-summary-note {
+  display: grid !important;
+  grid-template-columns: 22px minmax(0, 1fr) !important;
+  align-content: center !important;
+  align-items: start !important;
+  gap: 8px 11px !important;
+  padding: 18px 19px !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-left: 1px solid rgba(190,162,207,.22) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+#root .app-shell .tasks-summary-note::before { content: none !important; display: none !important; }
+#root .app-shell .tasks-summary-note:hover {
+  background: transparent !important;
+  border-color: rgba(190,162,207,.22) !important;
+  box-shadow: none !important;
+}
+#root .app-shell .tasks-summary-note > svg {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  margin-top: 3px !important;
+  color: #c3a4d2 !important;
+}
+#root .app-shell .tasks-summary-note > div {
+  grid-column: 2 !important;
+  min-width: 0 !important;
+}
+#root .app-shell .tasks-summary-note > div > b {
+  color: #eee3f4 !important;
+  font: 400 16px/1.25 var(--cadence-font-display) !important;
+  letter-spacing: -.01em !important;
+}
+#root .app-shell .tasks-summary-note > div > p {
+  margin: 7px 0 0 !important;
+  color: #a99ab2 !important;
+  font: 400 10px/1.65 var(--cadence-font-ui) !important;
+}
+@media (max-width: 1150px) {
+  #root .app-shell .tasks-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+  #root .app-shell .tasks-summary-grid .tasks-summary-note {
+    grid-column: 1 / -1 !important;
+    min-height: auto !important;
+    padding: 13px 2px !important;
+    border-left: 0 !important;
+    border-top: 1px solid rgba(190,162,207,.14) !important;
+  }
+}
+@media (max-width: 650px) {
+  #root .app-shell .tasks-summary-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    gap: 8px !important;
+  }
+  #root .app-shell .tasks-summary-card { min-height: 102px !important; padding: 13px !important; }
+  #root .app-shell .tasks-summary-icon { top: 12px !important; right: 12px !important; width: 24px !important; height: 24px !important; }
+  #root .app-shell .tasks-summary-card > small { font-size: 8px !important; letter-spacing: .08em !important; }
+  #root .app-shell .tasks-summary-card > b { font-size: 29px !important; }
+  #root .app-shell .tasks-summary-grid .tasks-summary-note { grid-column: 1 / -1 !important; }
+}
