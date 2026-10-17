@@ -137,7 +137,7 @@ function MomentumChart({ habits, today }: { habits: Habit[]; today: string }) {
         <defs><linearGradient id="momentumArea" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#b78aff" stopOpacity=".24"/><stop offset="100%" stopColor="#b78aff" stopOpacity="0"/></linearGradient><linearGradient id="momentumLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#8e58d9"/><stop offset="55%" stopColor="#b78aff"/><stop offset="100%" stopColor="#dfc6ff"/></linearGradient></defs>
         {[18,60,102,144,186].map((y)=><line key={y} x1="18" x2="644" y1={y} y2={y} className="analytics-grid-line"/> )}
         <path d={areaPath} fill="url(#momentumArea)" className="analytics-area-path"/>
-        <path d={linePath} fill="none" stroke="url(#momentumLine)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="analytics-trend-path"/>
+        <path d={linePath} fill="none" stroke="url(#momentumLine)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="analytics-trend-path" pathLength={1}/>
         {points.map((point)=><g key={point.key} className="analytics-chart-point"><circle cx={point.x} cy={point.y} r={range==='7D'?4:2.4} className="analytics-chart-point-halo"/><circle cx={point.x} cy={point.y} r={range==='7D'?2:1.2} className="analytics-chart-point-core"><title>{labelFor(point.key)}: {point.value}% · {point.done}/{point.total} complete</title></circle></g>)}
       </svg>
     </div>
@@ -248,6 +248,54 @@ function App() {
   const [cloudError, setCloudError] = useState('');
   const today = todayKey();
   const activeReminderMedia = parseReminderMedia(activeReminder?.reminderSoundUrl);
+
+  useEffect(() => {
+    const pageRoot = document.querySelector<HTMLElement>('.page-transition-shell');
+    if (!pageRoot) return;
+
+    const revealSelector = [
+      '.page-intro',
+      '.analytics-page-header',
+      '.analytics-metric-card',
+      '.analytics-chart-panel',
+      '.panel',
+      '.today-main-card',
+      '.today-side-card',
+      '.habit-detail-row',
+      '.principle-card',
+      '.tasks-list-row',
+      '.focus-timer-panel',
+      '.planner-calendar',
+      '.planner-week-grid'
+    ].join(',');
+
+    const targets = Array.from(pageRoot.querySelectorAll<HTMLElement>(revealSelector))
+      .filter((element) => !element.hasAttribute('data-motion-reveal'));
+
+    if (!targets.length) return;
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) {
+      targets.forEach((element) => { element.dataset.motionReveal = 'visible'; });
+      return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const element = entry.target as HTMLElement;
+        element.dataset.motionReveal = 'visible';
+        observer.unobserve(element);
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -28px 0px' });
+
+    targets.forEach((element, index) => {
+      element.dataset.motionReveal = 'pending';
+      element.style.setProperty('--motion-order', String(index % 4));
+      observer.observe(element);
+    });
+
+    return () => observer.disconnect();
+  }, [page, habits.length, tasks.length]);
 
   const unlockReminderAudio = () => {
     if (typeof window === 'undefined' || !window.AudioContext) return;
@@ -829,6 +877,7 @@ function App() {
           <div className="topbar-actions"><span className="local-save" title={cloudError || cloudStatus}><span className="save-dot" /> {cloudStatus}</span><IconButton label="Notifications and reminders" onClick={() => { const count = habits.filter((habit) => habit.reminderEnabled).length; setToast(count ? `${count} habit reminder${count === 1 ? '' : 's'} scheduled. Cadence must remain open for alerts.` : 'No reminders yet. Enable one when creating a habit.'); }}><Bell size={17} /></IconButton><button className="date-chip" type="button" onClick={() => setPage('Today')}><CalendarDays size={15} />{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}<ChevronDown size={13} /></button></div>
         </header>
 
+        <div key={page} className="page-transition-shell">
         {page === 'Today' && <>
           <section className="today-analytics-overview" aria-label="Habit analytics overview">
             <div className="analytics-page-header today-analytics-page-header">
@@ -1066,6 +1115,7 @@ function App() {
           <section className="page-intro"><div><div className="eyebrow"><span className="eyebrow-line" /> ONE THING AT A TIME</div><h1>Make space for <span>deep work.</span></h1><p className="welcome-sub">Pick a task, choose a block, and give it your full attention.</p></div><div className="focus-session-badge"><span className="save-dot" /> {focusSessions} sessions completed</div></section>
           <section className="focus-page-grid"><div className="panel focus-large-panel"><div className="focus-large-top"><span className="section-kicker"><span className="kicker-mark"><Timer size={13} /></span> FOCUS TIMER</span><span className="live-pill"><span /> {focusRunning ? 'IN SESSION' : 'READY WHEN YOU ARE'}</span></div><div className="focus-large-ring" style={{ '--timer-progress': `${timerProgress * 100}%` } as CSSProperties}><div className="focus-ring-inner"><span className="focus-time">{timeText}</span><span className="focus-caption">{focusRunning ? 'STAY PRESENT' : 'YOUR NEXT BLOCK'}</span></div></div><div className="timer-presets large-presets">{[15, 25, 50].map((minutes) => <button type="button" key={minutes} className={focusPreset === minutes ? 'selected' : ''} onClick={() => resetFocus(minutes)}>{minutes} min</button>)}</div><div className="focus-large-actions"><button className="primary-button" type="button" onClick={() => { if (focusSeconds === 0) resetFocus(); else setFocusRunning((running) => !running); }}>{focusRunning ? 'Pause focus' : focusSeconds === 0 ? 'Start another' : 'Start focusing'} {focusRunning ? <span className="pause-glyph">Ⅱ</span> : <ArrowRight size={16} />}</button><button className="secondary-button" type="button" onClick={() => resetFocus() }><RotateCcw size={15} /> Reset</button></div><p className="timer-reassurance"><ShieldCheck size={15} /> Missed a block? Nothing is lost. Restart with the next minute.</p></div><div className="focus-side-column"><section className="panel choose-task-panel"><div className="panel-overline">YOUR NEXT PRIORITY</div><h3>What will you work on?</h3><p>Choose one task. Everything else can wait for this block.</p>{todayTasks.filter((task) => !task.completed).map((task) => <button key={task.id} type="button" className={`focus-task-choice ${focusTaskId === task.id ? 'selected' : ''}`} onClick={() => { setFocusTaskId(task.id); setToast(`Focus target selected: ${task.title}`); }}><span className="todo-box" /><span><b>{task.title}</b><small>{task.estimate} min · {task.priority} priority</small></span><ArrowUpRight size={15} /></button>)}{todayTasks.filter((task) => !task.completed).length === 0 && <p className="quiet-empty">Your task list is clear. Enjoy the breathing room.</p>}<button className="text-button" type="button" onClick={() => setPage('Tasks')}>Manage today’s tasks <ArrowRight size={14} /></button></section><section className="panel focus-rule-panel"><span className="rule-icon"><Leaf size={17} /></span><div className="panel-overline">A GENTLER RULE</div><h3>Return your attention.</h3><p>Focus isn’t never getting distracted. It’s noticing and coming back—without making a story out of it.</p></section></div></section>
         </>}
+        </div>
       </main>
 
       {showHabitModal && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) { setShowHabitModal(false); setEditingHabitId(null); setHabitDraft({ ...emptyHabitDraft }); } }}><section className="habit-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div className="modal-top"><div><div className="panel-overline">START SMALL, STAY CONSISTENT</div><h2 id="modal-title">{editingHabitId ? 'Edit habit' : 'Create a habit'}</h2><p>{editingHabitId ? 'Update your routine without losing its history.' : 'Design the start, not just the finish line.'}</p></div><IconButton label="Close modal" onClick={() => setShowHabitModal(false)}><X size={18} /></IconButton></div><form onSubmit={addHabit}><label className="field-label">Habit name<input autoFocus value={habitDraft.name} onChange={(event) => setHabitDraft((draft) => ({ ...draft, name: event.target.value }))} placeholder="e.g. Practice coding" maxLength={70} required /></label><label className="field-label">Area of life<div className="category-select">{categories.map((category) => <button type="button" key={category} className={habitDraft.category === category ? `selected ${categoryTone[category]}` : ''} onClick={() => setHabitDraft((draft) => ({ ...draft, category }))}><CategoryGlyph category={category} size={15} />{category}</button>)}</div></label><label className="field-label">Frequency<select value={habitDraft.frequency} onChange={(event) => setHabitDraft((draft) => ({ ...draft, frequency: event.target.value as Frequency }))}>{frequencies.map((frequency) => <option key={frequency}>{frequency}</option>)}</select></label>
@@ -1433,7 +1483,7 @@ function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habi
               </defs>
               {[10, 50, 90].map((y) => <line key={y} x1="0" y1={y} x2="857" y2={y} className="habit-chart-grid-line" />)}
               {areaPath && <path d={areaPath} fill={"url(#cadence-habit-area-" + chartId + ")"} className="habit-activity-area" />}
-              {linePath && <path d={linePath} fill="none" stroke={"url(#cadence-habit-line-" + chartId + ")"} className="habit-activity-line" />}
+              {linePath && <path d={linePath} fill="none" stroke={"url(#cadence-habit-line-" + chartId + ")"} className="habit-activity-line" pathLength={1} />}
               {chartedPoints.map((point) => (
                 <circle key={point.key} cx={point.x} cy={point.y} r={point.completed ? 3.2 : 2.8} className={"habit-activity-point " + (point.completed ? "is-complete" : "is-missed")}>
                   <title>{point.key}: {point.completed ? "Completed · 100%" : "Not logged · 0%"}</title>
