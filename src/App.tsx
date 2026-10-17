@@ -799,7 +799,7 @@ function App() {
           <div className="profile-row">
             <span className="avatar">{authSession?.user.email?.slice(0, 2).toUpperCase() || 'IR'}</span><span className="profile-copy"><b>{authSession?.user.email?.split('@')[0] || 'Your workspace'}</b><small>{authSession ? 'Synced workspace' : 'Personal edition'}</small></span>{authSession && supabase ? <button type="button" className="profile-signout" aria-label="Sign out" title="Sign out" onClick={() => { void supabase?.auth.signOut(); }}><LogOut size={15}/></button> : <MoreHorizontal size={18} className="muted-icon" />}
           </div>
-          <div className="sidebar-tools"><button type="button" onClick={() => setDark((current) => !current)}><span>{dark ? <Sun size={15} /> : <Moon size={15} />}</span>{dark ? 'Light appearance' : 'Dark appearance'}</button><button type="button" onClick={() => setToast(authSession ? 'Your workspace syncs to your account.' : 'Cloud auth is not connected yet.')}><Settings2 size={15} />Preferences</button>{!supabaseConfigured && <span className="local-mode-note">LOCAL MODE · CLOUD NOT CONNECTED</span>}</div>
+          <div className="sidebar-tools"><button type="button" onClick={() => setDark((current) => !current)}><span>{dark ? <Sun size={15} /> : <Moon size={15} />}</span>{dark ? 'Soft violet appearance' : 'Midnight appearance'}</button><button type="button" onClick={() => setToast(authSession ? 'Your workspace syncs to your account.' : 'Cloud auth is not connected yet.')}><Settings2 size={15} />Preferences</button>{!supabaseConfigured && <span className="local-mode-note">LOCAL MODE · CLOUD NOT CONNECTED</span>}</div>
         </div>
       </aside>
 
