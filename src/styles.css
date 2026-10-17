@@ -9130,3 +9130,199 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   #root .app-shell .habits-library .detail-title-row { gap: 6px !important; }
   #root .app-shell .habits-library .detail-title-row > .detail-emoji { width: 28px !important; height: 28px !important; flex-basis: 28px !important; }
 }
+
+
+/* Phase 19 — one cohesive Habits rhythm panel, replacing the previous multi-card composition. */
+
+/* A single calm surface, not a feature-card beside another boxed card.
+   The consistency ring provides one focal point; supporting counts are separated
+   by hairlines and share the same continuous background. */
+#root .app-shell .habits-overview-strip {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.45fr) minmax(135px, .62fr) minmax(150px, .7fr) !important;
+  align-items: stretch !important;
+  gap: 0 !important;
+  min-width: 0 !important;
+  margin: 8px 0 19px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(190, 163, 207, .17) !important;
+  border-radius: 10px !important;
+  background:
+    radial-gradient(ellipse at 0% 0%, rgba(182, 139, 205, .075), transparent 48%),
+    linear-gradient(115deg, rgba(25, 17, 30, .96), rgba(11, 8, 14, .98)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
+}
+#root .app-shell .habits-overview-strip > .habit-overview-feature {
+  position: relative !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 19px !important;
+  min-width: 0 !important;
+  min-height: 145px !important;
+  padding: 21px 25px !important;
+  border: 0 !important;
+  border-right: 1px solid rgba(190, 163, 207, .14) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+#root .app-shell .habits-overview-strip > .habit-overview-feature::before { content: none !important; display: none !important; }
+#root .app-shell .habit-overview-ring {
+  position: relative !important;
+  display: grid !important;
+  place-items: center !important;
+  flex: 0 0 83px !important;
+  width: 83px !important;
+  height: 83px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: conic-gradient(#cfafe1 0 var(--habit-consistency), rgba(190, 163, 207, .13) var(--habit-consistency) 100%) !important;
+  box-shadow: none !important;
+}
+#root .app-shell .habit-overview-ring::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 5px !important;
+  border: 1px solid rgba(190,163,207,.07) !important;
+  border-radius: 50% !important;
+  background: #130d18 !important;
+}
+#root .app-shell .habit-overview-ring > span {
+  position: relative !important;
+  z-index: 1 !important;
+  display: flex !important;
+  align-items: baseline !important;
+  justify-content: center !important;
+  gap: 1px !important;
+  min-width: 0 !important;
+}
+#root .app-shell .habit-overview-ring > span > b {
+  color: #f6eef9 !important;
+  font: 400 26px/.95 var(--cadence-font-display) !important;
+  letter-spacing: -.045em !important;
+  font-variant-numeric: tabular-nums;
+}
+#root .app-shell .habit-overview-ring > span > small {
+  color: #c7acd7 !important;
+  font: 500 9px/1 var(--cadence-font-ui) !important;
+}
+#root .app-shell .habit-overview-copy {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: center !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  gap: 7px !important;
+}
+#root .app-shell .habits-overview-strip .strip-label {
+  color: #ad9bb8 !important;
+  font: 500 8px/1.45 var(--cadence-font-ui) !important;
+  letter-spacing: .14em !important;
+  text-transform: uppercase !important;
+}
+#root .app-shell .habit-overview-copy h2 {
+  margin: 0 !important;
+  color: #f2eaf6 !important;
+  font: 400 22px/1.12 var(--cadence-font-display) !important;
+  letter-spacing: -.025em !important;
+}
+#root .app-shell .habit-overview-copy p {
+  margin: 0 !important;
+  color: #a99ab3 !important;
+  font: 400 10px/1.55 var(--cadence-font-ui) !important;
+}
+#root .app-shell .habit-overview-progress {
+  display: block !important;
+  width: min(100%, 220px) !important;
+  height: 2px !important;
+  margin: 4px 0 0 !important;
+  overflow: hidden !important;
+  border-radius: 2px !important;
+  background: rgba(190, 163, 207, .13) !important;
+}
+#root .app-shell .habit-overview-progress > span {
+  display: block !important;
+  height: 100% !important;
+  border-radius: inherit !important;
+  background: linear-gradient(90deg, #a98abb, #d9c0e7) !important;
+  box-shadow: none !important;
+  transition: width .3s ease !important;
+}
+#root .app-shell .habits-overview-strip > .habit-overview-stat {
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  min-width: 0 !important;
+  min-height: 145px !important;
+  gap: 10px !important;
+  margin: 0 !important;
+  padding: 19px 22px !important;
+  border: 0 !important;
+  border-right: 1px solid rgba(190,163,207,.14) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+#root .app-shell .habits-overview-strip > .habit-overview-stat:last-child { border-right: 0 !important; }
+#root .app-shell .habits-overview-strip > .habit-overview-stat::before { content: none !important; display: none !important; }
+#root .app-shell .habits-overview-strip > .habit-overview-stat > b {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 3px !important;
+  margin: 0 !important;
+  color: #f4edf7 !important;
+  font: 400 32px/.96 var(--cadence-font-display) !important;
+  letter-spacing: -.045em !important;
+  font-variant-numeric: tabular-nums;
+}
+#root .app-shell .habits-overview-strip > .habit-overview-stat > b > i {
+  color: #ac9bb6 !important;
+  font: 400 12px/1 var(--cadence-font-ui) !important;
+  font-style: normal !important;
+  letter-spacing: 0 !important;
+}
+#root .app-shell .habits-overview-strip > .habit-overview-stat > small {
+  color: #877990 !important;
+  font: 400 9px/1.5 var(--cadence-font-ui) !important;
+}
+@media (max-width: 1000px) {
+  #root .app-shell .habits-overview-strip {
+    grid-template-columns: minmax(0,1fr) minmax(120px,.55fr) minmax(135px,.65fr) !important;
+  }
+  #root .app-shell .habits-overview-strip > .habit-overview-feature { gap: 13px !important; padding: 18px !important; }
+  #root .app-shell .habit-overview-ring { width: 68px !important; height: 68px !important; flex-basis: 68px !important; }
+  #root .app-shell .habit-overview-ring > span > b { font-size: 22px !important; }
+  #root .app-shell .habits-overview-strip > .habit-overview-stat { padding: 16px !important; }
+}
+@media (max-width: 760px) {
+  #root .app-shell .habits-overview-strip {
+    grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+  }
+  #root .app-shell .habits-overview-strip > .habit-overview-feature {
+    grid-column: 1 / -1 !important;
+    min-height: 123px !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid rgba(190,163,207,.14) !important;
+    padding: 17px 19px !important;
+  }
+  #root .app-shell .habits-overview-strip > .habit-overview-stat {
+    min-height: 94px !important;
+    padding: 14px 18px !important;
+  }
+  #root .app-shell .habits-overview-strip > .habit-overview-stat:nth-child(2) { border-right: 1px solid rgba(190,163,207,.14) !important; }
+  #root .app-shell .habits-overview-strip > .habit-overview-stat:last-child { border-right: 0 !important; }
+}
+@media (max-width: 420px) {
+  #root .app-shell .habit-overview-ring { width: 60px !important; height: 60px !important; flex-basis: 60px !important; }
+  #root .app-shell .habits-overview-strip > .habit-overview-feature { gap: 13px !important; padding: 14px !important; }
+  #root .app-shell .habit-overview-copy h2 { font-size: 19px !important; }
+  #root .app-shell .habits-overview-strip > .habit-overview-stat { padding: 12px !important; }
+  #root .app-shell .habits-overview-strip > .habit-overview-stat > b { font-size: 27px !important; }
+}
