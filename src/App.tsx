@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import type { Category, Frequency, Habit, Page, Task } from './types';
 import { PlannerPage, taskIsDone, taskOccursOn } from './Planner';
+// Tasks overview uses the same compact dashboard metric-card system as Today and Habits.
 import TasksPage from './TasksPage';
 import AuthScreen from './components/AuthScreen';
 import { supabase, supabaseConfigured } from './lib/supabase';
