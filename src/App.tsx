@@ -12,6 +12,7 @@ import { PlannerPage, taskIsDone, taskOccursOn } from './Planner';
 import TasksPage from './TasksPage';
 import AuthScreen from './components/AuthScreen';
 import { supabase, supabaseConfigured } from './lib/supabase';
+import BrandLockup from './components/BrandLockup';
 
 const STORAGE_KEY = 'streako-elite-v2';
 const todayKey = () => toKey(new Date());
@@ -764,10 +765,7 @@ function App() {
   return (
     <div className={`app-shell ${dark ? 'dark-mode' : 'light-mode'}`}>
       <aside className="sidebar">
-        <button className="brand-lockup cadence-brand-lockup" onClick={() => { setPage('Today'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} type="button" aria-label="Go to Cadence dashboard">
-          <span className="cadence-brand-icon" aria-hidden="true"><img src="/cadence-lockup-original.webp" alt="" /></span>
-          <span className="cadence-brand-text">CADENCE</span>
-        </button>
+        <BrandLockup variant="sidebar" onClick={() => { setPage('Today'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
         <div className="workspace-label">YOUR SPACE <span className="live-dot" /></div>
         <nav className="nav-list" aria-label="Main navigation">
           {([
