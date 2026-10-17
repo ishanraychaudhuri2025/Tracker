@@ -96,14 +96,26 @@ const formatReminderTime = (time: string) => {
 };
 
 function MomentumChart({ habits, today }: { habits: Habit[]; today: string }) {
-  const [range, setRange] = useState<'7D' | '30D'>('7D');
-  const count = range === '7D' ? 7 : 30;
+  const [range, setRange] = useState<'7D' | '30D' | 'CUSTOM'>('7D');
+  const [customStart, setCustomStart] = useState(() => shiftKey(today, -6));
+  const [customEnd, setCustomEnd] = useState(today);
+  const [selectedKey, setSelectedKey] = useState(today);
+
+  const rangeEnd = range === 'CUSTOM' ? (customEnd > today ? today : customEnd) : today;
+  const requestedStart = range === '7D' ? shiftKey(today, -6) : range === '30D' ? shiftKey(today, -29) : customStart;
+  const [startYear, startMonth, startDay] = requestedStart.split('-').map(Number);
+  const [endYear, endMonth, endDay] = rangeEnd.split('-').map(Number);
+  const requestedDays = Math.max(1, Math.round((Date.UTC(endYear, endMonth - 1, endDay) - Date.UTC(startYear, startMonth - 1, startDay)) / 86400000) + 1);
+  // Bound custom ranges to one year so chart rendering and point interaction stay responsive.
+  const count = Math.min(requestedDays, 366);
+  const firstKey = shiftKey(rangeEnd, -(count - 1));
   const series = Array.from({ length: count }, (_, index) => {
-    const key = shiftKey(today, -(count - 1 - index));
+    const key = shiftKey(firstKey, index);
     const due = habits.filter((habit) => isDue(habit, key));
     const done = due.filter((habit) => Boolean(habit.logs[key])).length;
-    return { key, value: due.length ? Math.round((done / due.length) * 100) : 0, done, total: due.length };
+    return { key, value: due.length ? Math.round((done / due.length) * 100) : null as number | null, done, total: due.length };
   });
+
   const chartW = 660;
   const left = 18;
   const right = 16;
@@ -111,37 +123,114 @@ function MomentumChart({ habits, today }: { habits: Habit[]; today: string }) {
   const bottom = 186;
   const points = series.map((day, index) => {
     const x = left + index * ((chartW - left - right) / Math.max(1, series.length - 1));
-    const y = bottom - (day.value / 100) * (bottom - top);
+    const y = day.value === null ? null : bottom - (day.value / 100) * (bottom - top);
     return { ...day, x, y };
   });
-  const linePath = points.map((point, index) => (index === 0 ? 'M ' : 'L ') + point.x.toFixed(2) + ' ' + point.y.toFixed(2)).join(' ');
-  const areaPath = linePath + ' L ' + points[points.length - 1].x + ' ' + bottom + ' L ' + points[0].x + ' ' + bottom + ' Z';
-  const ticks = range === '7D' ? [0, 1, 2, 3, 4, 5, 6] : [0, 5, 10, 15, 20, 25, 29];
+
+  // Split the line at dates with no scheduled habits: those dates are unknown/not applicable,
+  // not zero-percent days, and the line should not bridge across the gap.
+  const segments: Array<typeof points> = [];
+  let currentSegment: typeof points = [];
+  points.forEach((point) => {
+    if (point.value === null || point.y === null) {
+      if (currentSegment.length) segments.push(currentSegment);
+      currentSegment = [];
+    } else {
+      currentSegment.push(point);
+    }
+  });
+  if (currentSegment.length) segments.push(currentSegment);
+
+  const linePaths = segments.filter((segment) => segment.length > 1).map((segment) =>
+    segment.map((point, index) => (index === 0 ? 'M ' : 'L ') + point.x.toFixed(2) + ' ' + point.y!.toFixed(2)).join(' ')
+  );
+  const areaPaths = segments.filter((segment) => segment.length > 1).map((segment) => {
+    const path = segment.map((point, index) => (index === 0 ? 'M ' : 'L ') + point.x.toFixed(2) + ' ' + point.y!.toFixed(2)).join(' ');
+    return path + ' L ' + segment[segment.length - 1].x.toFixed(2) + ' ' + bottom + ' L ' + segment[0].x.toFixed(2) + ' ' + bottom + ' Z';
+  });
+  const tickIndexes = Array.from(new Set(Array.from({ length: Math.min(7, series.length) }, (_, index) =>
+    Math.round(index * (series.length - 1) / Math.max(1, Math.min(7, series.length) - 1))
+  )));
   const labelFor = (key: string) => {
     const [year, month, day] = key.split('-').map(Number);
     return new Date(year, month - 1, day, 12).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
+  const latest = series[series.length - 1];
+  const selected = series.find((day) => day.key === selectedKey) ?? latest;
+  const setPreset = (next: '7D' | '30D' | 'CUSTOM') => {
+    setRange(next);
+    if (next === 'CUSTOM') {
+      setCustomStart(shiftKey(today, -6));
+      setCustomEnd(today);
+      setSelectedKey(today);
+    } else {
+      setSelectedKey(today);
+    }
+  };
+  const updateCustomStart = (value: string) => {
+    if (!value) return;
+    const validValue = value > today ? today : value;
+    setCustomStart(validValue);
+    if (validValue > customEnd) setCustomEnd(validValue);
+    setSelectedKey(validValue);
+  };
+  const updateCustomEnd = (value: string) => {
+    if (!value) return;
+    const validValue = value > today ? today : value;
+    setCustomEnd(validValue);
+    if (validValue < customStart) setCustomStart(validValue);
+    setSelectedKey(validValue);
+  };
+
   return <section className="analytics-chart-panel">
     <div className="analytics-chart-heading">
-      <div><span className="analytics-section-index">ACTIVITY / TIMESERIES</span><h2>Consistency <span>trend</span></h2><p>Daily habit completion across your selected window.</p></div>
+      <div><span className="analytics-section-index">ACTIVITY / TIMESERIES</span><h2>Consistency <span>trend</span></h2><p>Completed check-ins divided by habits scheduled for each day.</p></div>
       <div className="analytics-chart-controls">
-        <div className="analytics-chart-tabs"><button type="button" className={range==='7D'?'active':''} onClick={() => setRange('7D')}>7D</button><button type="button" className={range==='30D'?'active':''} onClick={() => setRange('30D')}>30D</button></div>
-        <button type="button" className="analytics-chart-filter" onClick={() => setRange(range === '7D' ? '30D' : '7D')}><CalendarDays size={12}/> Range</button>
+        <div className="analytics-chart-tabs" role="group" aria-label="Chart date range">
+          <button type="button" className={range === '7D' ? 'active' : ''} aria-pressed={range === '7D'} onClick={() => setPreset('7D')}>7D</button>
+          <button type="button" className={range === '30D' ? 'active' : ''} aria-pressed={range === '30D'} onClick={() => setPreset('30D')}>30D</button>
+          <button type="button" className={range === 'CUSTOM' ? 'active' : ''} aria-pressed={range === 'CUSTOM'} onClick={() => setPreset('CUSTOM')}>Custom</button>
+        </div>
       </div>
     </div>
-    <div className="analytics-chart-legend"><span><i className="analytics-legend-line"/> COMPLETION RATE</span><span><i className="analytics-legend-point"/> DAILY CHECK-INS</span><b>{series.length ? series[series.length-1].value : 0}% <small>LAST DAY</small></b></div>
+    {range === 'CUSTOM' && <div className="analytics-custom-range">
+      <label>From <input type="date" value={customStart} max={customEnd > today ? today : customEnd} onChange={(event) => updateCustomStart(event.target.value)} aria-label="Chart start date" /></label>
+      <span aria-hidden="true">to</span>
+      <label>To <input type="date" value={customEnd > today ? today : customEnd} min={customStart} max={today} onChange={(event) => updateCustomEnd(event.target.value)} aria-label="Chart end date" /></label>
+      {requestedDays > 366 && <small>Showing the most recent 366 days in this range.</small>}
+    </div>}
+    <div className="analytics-chart-legend">
+      <span><i className="analytics-legend-line"/> COMPLETION RATE</span>
+      <span className="analytics-chart-no-schedule">Dates without scheduled habits are left blank, not counted as misses.</span>
+      <b>{latest?.value === null ? '—' : (latest?.value ?? 0) + '%'} <small>{latest ? labelFor(latest.key).toUpperCase() : 'NO DATA'}</small></b>
+    </div>
     <div className="analytics-line-chart">
       <div className="analytics-y-labels"><span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span></div>
-      <svg viewBox="0 0 660 220" preserveAspectRatio="none" role="img" aria-label={range==='7D'?'Seven day consistency chart':'Thirty day consistency chart'}>
-        <defs><linearGradient id="momentumArea" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#b78aff" stopOpacity=".24"/><stop offset="100%" stopColor="#b78aff" stopOpacity="0"/></linearGradient><linearGradient id="momentumLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#8e58d9"/><stop offset="55%" stopColor="#b78aff"/><stop offset="100%" stopColor="#dfc6ff"/></linearGradient></defs>
-        {[18,60,102,144,186].map((y)=><line key={y} x1="18" x2="644" y1={y} y2={y} className="analytics-grid-line"/> )}
-        <path d={areaPath} fill="url(#momentumArea)" className="analytics-area-path"/>
-        <path d={linePath} fill="none" stroke="url(#momentumLine)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="analytics-trend-path"/>
-        {points.map((point)=><g key={point.key} className="analytics-chart-point"><circle cx={point.x} cy={point.y} r={range==='7D'?4:2.4} className="analytics-chart-point-halo"/><circle cx={point.x} cy={point.y} r={range==='7D'?2:1.2} className="analytics-chart-point-core"><title>{labelFor(point.key)}: {point.value}% · {point.done}/{point.total} complete</title></circle></g>)}
+      <svg viewBox="0 0 660 220" preserveAspectRatio="none" role="img" aria-label={range === '7D' ? 'Seven day scheduled habit completion chart' : range === '30D' ? 'Thirty day scheduled habit completion chart' : 'Custom date range scheduled habit completion chart'}>
+        <defs>
+          <linearGradient id="momentumArea" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#b78aff" stopOpacity=".24"/><stop offset="100%" stopColor="#b78aff" stopOpacity="0"/></linearGradient>
+          <linearGradient id="momentumLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#8e58d9"/><stop offset="55%" stopColor="#b78aff"/><stop offset="100%" stopColor="#dfc6ff"/></linearGradient>
+        </defs>
+        {[18,60,102,144,186].map((y) => <line key={y} x1="18" x2="644" y1={y} y2={y} className="analytics-grid-line"/>)}
+        {areaPaths.map((path, index) => <path key={'area-' + index} d={path} fill="url(#momentumArea)" className="analytics-area-path"/>)}
+        {linePaths.map((path, index) => <path key={'line-' + index} d={path} fill="none" stroke="url(#momentumLine)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="analytics-trend-path"/>)}
+        {points.filter((point) => point.value !== null && point.y !== null).map((point) => {
+          const selectedPoint = point.key === selected?.key;
+          const accessibleLabel = labelFor(point.key) + ': ' + point.value + '% completion, ' + point.done + ' of ' + point.total + ' scheduled check-ins completed';
+          return <g key={point.key} className={'analytics-chart-point ' + (selectedPoint ? 'is-selected' : '')} role="button" tabIndex={0} aria-label={accessibleLabel} aria-pressed={selectedPoint} onClick={() => setSelectedKey(point.key)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setSelectedKey(point.key); } }}>
+            <circle cx={point.x} cy={point.y!} r={5} className="analytics-chart-point-hit"/>
+            <circle cx={point.x} cy={point.y!} r={selectedPoint ? 5 : 3.4} className="analytics-chart-point-core"/>
+            <title>{accessibleLabel}</title>
+          </g>;
+        })}
       </svg>
     </div>
-    <div className="analytics-x-labels">{ticks.map((index)=><span key={series[index].key}>{labelFor(series[index].key)}</span>)}</div>
-    <div className="analytics-chart-footer"><span><i/> Hover or tap a point for its daily result</span><button type="button" onClick={() => setRange(range==='7D'?'30D':'7D')}>Switch to {range==='7D'?'30 days':'7 days'} <ArrowRight size={12}/></button></div>
+    <div className="analytics-x-labels">{tickIndexes.map((index) => <span key={series[index].key}>{labelFor(series[index].key)}</span>)}</div>
+    {selected && <div className="analytics-selected-day" aria-live="polite">
+      <div><b>{labelFor(selected.key)}</b><small>{selected.key}</small></div>
+      {selected.total ? <><strong>{selected.value}%</strong><span>{selected.done} of {selected.total} scheduled habit check-ins completed</span></> : <span className="analytics-selected-empty"><CalendarDays size={14}/> No habits were scheduled for this date. It is excluded from the completion rate.</span>}
+    </div>}
+    <div className="analytics-chart-footer"><span><i/> Select a point to inspect that day's exact result.</span><span>{count > 365 ? 'One-year view' : count + (count === 1 ? ' day' : ' days')} · scheduled days only</span></div>
   </section>;
 }
 
