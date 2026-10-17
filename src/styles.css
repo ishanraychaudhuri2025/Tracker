@@ -51,6 +51,45 @@
 }
 
 
+/* The alternate appearance remains within Cadence's black-and-violet identity. */
+.app-shell.light-mode {
+  --cadence-black: #100b18;
+  --cadence-surface: #151020;
+  --cadence-surface-raised: #1b1528;
+  --cadence-surface-soft: #221a32;
+  --cadence-border: #3d2a51;
+  --cadence-border-soft: #31213f;
+  --cadence-text: #f5effb;
+  --cadence-muted: #d0c0e1;
+  --cadence-subtle: #ab96c4;
+  --cadence-violet: #c5a0ff;
+  --cadence-violet-bright: #e0caff;
+  --cadence-violet-deep: #8256b7;
+  --cadence-violet-soft: rgba(197, 160, 255, .17);
+  --cadence-shadow: rgba(0, 0, 0, .46);
+  --bg: var(--cadence-black);
+  --panel: var(--cadence-surface);
+  --panel-raised: var(--cadence-surface-raised);
+  --panel-soft: var(--cadence-surface-soft);
+  --border: var(--cadence-border);
+  --border-soft: var(--cadence-border-soft);
+  --text: var(--cadence-text);
+  --muted: var(--cadence-muted);
+  --subtle: var(--cadence-subtle);
+  --lime: var(--cadence-violet);
+  --lime-strong: var(--cadence-violet-bright);
+  --lime-soft: var(--cadence-violet-soft);
+  --orange: var(--cadence-violet);
+  --violet: var(--cadence-violet);
+  --blue: var(--cadence-violet);
+  --shadow: var(--cadence-shadow);
+  --streako-accent: var(--cadence-violet);
+  --streako-accent-strong: var(--cadence-violet-bright);
+  --streako-text: var(--cadence-text);
+  --streako-muted: var(--cadence-muted);
+  --streako-subtle: var(--cadence-subtle);
+}
+
 /* Canonical Cadence brand lockup: separate, purpose-built icon and wordmark assets. */
 .cadence-brand-lockup {
   box-sizing: border-box; display: flex; flex-direction: row; align-items: center;
