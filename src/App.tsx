@@ -122,7 +122,7 @@ function MomentumChart({ habits, today }: { habits: Habit[]; today: string }) {
   const top = 18;
   const bottom = 186;
   const points = series.map((day, index) => {
-    const x = left + index * ((chartW - left - right) / Math.max(1, series.length - 1));
+    const x = series.length === 1 ? chartW / 2 : left + index * ((chartW - left - right) / (series.length - 1));
     const y = day.value === null ? null : bottom - (day.value / 100) * (bottom - top);
     return { ...day, x, y };
   });
