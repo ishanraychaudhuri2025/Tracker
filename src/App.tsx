@@ -837,7 +837,7 @@ function App() {
                 <p>Consistency, made visible. Review your patterns and make the next action easier.</p>
               </div>
               <div className="analytics-header-actions">
-                <span className="analytics-saved" title={cloudError || cloudStatus}><i /> {cloudStatus.toUpperCase()}</span>
+                
                 <button type="button" className="analytics-plain-button" onClick={() => setPage('Planner')}><CalendarDays size={13} /> Planner <ArrowUpRight size={12} /></button>
                 <button type="button" className="primary-button" onClick={openCreateHabit}><Plus size={14} /> New routine</button>
               </div>
