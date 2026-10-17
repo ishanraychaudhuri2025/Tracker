@@ -19,7 +19,9 @@ The Insights page includes a navigable calendar with per-day completed-task coun
 - **Focus room:** a working 15 / 25 / 50-minute focus timer, pause/resume, reset, and completed-session count.
 - **Insights:** completion heatmap, consistency calculation, routine rankings, and a weekly behavior-design reflection.
 - **Responsive UI:** desktop sidebar, mobile layout, dark/light appearance, accessible labels, reduced-motion support.
-- **Local persistence:** habits, task state, and check-ins persist in this browser using `localStorage`.
+- **Account-backed persistence:** signed-in workspaces sync habits, recurring tasks, focus-session totals, and appearance preferences to Supabase with row-level security.
+- **Portable backups:** export the active workspace as a versioned JSON file and validate a backup before restoring it. The restore is a full replacement, not a merge.
+- **Local reminder loop:** reminders can produce in-app alarms and optional browser notifications while Cadence is open. Tab wake-up can recover reminders that are up to three minutes late; reminders are not scheduled after the browser is closed.
 
 ## Fresh-start workspaces
 
@@ -44,7 +46,7 @@ The workspace table migration is at `supabase/migrations/20261014000100_tracker_
 
 The Site URL and redirect allowlist are important for email confirmation and password-recovery links. See the [Supabase redirect URL guide](https://supabase.com/docs/guides/auth/redirect-urls).
 
-Password recovery includes a dedicated new-password form. Legacy guest-only local data is imported into a new account once and removed from the shared guest slot after successful import so later accounts do not inherit it. After signing in, workspace changes are synced to the user's row; RLS restricts reads and writes to that user.
+Password recovery includes a dedicated new-password form. After signing in, workspace changes are synced to the user's row; RLS restricts reads and writes to that user. Browser-local snapshots are best-effort caches and are not automatically imported into another account.
 
 For a separate deployment or fork, set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (or legacy `VITE_SUPABASE_ANON_KEY`) in its build environment. Never set a service-role key in a `VITE_*` variable.
 
@@ -64,7 +66,7 @@ npm run build
 npm run preview
 ```
 
-The first open seeds example routines and sample check-in history so the interface is useful immediately. Data lives in the current browser only; there is no account system, server database, cross-device sync, or scheduled notification backend yet. A future production release should add authentication, a database, backups/export, and server-side reminder scheduling before it is used as a multi-device personal tracker.
+Fresh workspaces start empty; no sample routines, tasks, or completion history are injected. Configure the Supabase URL and publishable key for a separate deployment, then apply the workspace migration in `supabase/migrations/`. For backup portability, use the workspace download/restore control in the top bar. Reminders require Cadence to remain open; true background push delivery after the browser closes would need a separate server-side scheduling and push-delivery service.
 
 ## Publish to GitHub
 
@@ -101,11 +103,10 @@ These are design hypotheses based on published behavior research, not a claim th
 
 ## Current scope / next milestones
 
-1. Verify the build in CI and add focused tests for scheduling, streak calculations, and date-boundary cases.
-2. Add account-backed persistence and a database (Postgres/Supabase or equivalent), plus row-level authorization.
-3. Add time-zone-aware reminders, export/import, and privacy-friendly backups.
-4. Add optional opt-in accountability, careful gamification, and a weekly review flow.
-5. Deploy only after the build, basic accessibility, and data-handling model are reviewed.
+1. Keep expanding focused automated tests for scheduling, streak calculations, backup validation, and date-boundary cases.
+2. Consider a service-worker/push delivery backend for reminders that must fire after the browser closes; the current reminders are intentionally foreground-only.
+3. Add optional opt-in accountability, careful gamification, and a weekly review flow.
+4. Deploy further changes only after the build, accessibility, and data-handling model are reviewed.
 
 ## License
 

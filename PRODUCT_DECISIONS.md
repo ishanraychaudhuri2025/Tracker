@@ -11,9 +11,10 @@ This file records why the first version is designed the way it is. It is a produ
 | Wood, Neal and colleagues describe habits as context-triggered repetition. | Attach the behavior to a cue that is likely to recur in the same context. | Let users change cues as their real routine changes. |
 | Implementation intentions can help initiation, but intentions alone do not guarantee follow-through. | Give the user a small action and a working focus timer—not just aspirational goal-setting fields. | Later experiments should measure real-world usefulness with consent and privacy protections. |
 
-## Not in the first version
+## Current boundaries
 
-- No accounts, cloud sync, server database, cross-device persistence, or reminder scheduling.
+- Reminders are evaluated while Cadence is open. Browser notifications are optional and browser-controlled; notifications are not scheduled after the browser closes.
+- JSON restore is an explicit full replacement after validation, not an automatic merge. Backups exclude authentication credentials.
 - No social competition by default. Shared accountability should be opt-in and private by default.
 - No claims of medical, therapeutic, or clinical benefit.
 - No machine-learned recommendations yet. The first step is to gather a useful, user-owned record and let users review it.

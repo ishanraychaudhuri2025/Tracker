@@ -1,17 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { CSSProperties, FormEvent, ReactNode } from 'react';
+import type { ChangeEvent, CSSProperties, FormEvent, ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
-  Activity, ArrowRight, ArrowUpRight, BarChart3, Bell, BookOpen, Brain, Coffee, Compass, Code2, Droplets, Dumbbell, Flower2,
+  Activity, ArrowRight, ArrowUpRight, BarChart3, Bell, BookOpen, Brain, Coffee, Compass, Code2, Download, Droplets, Dumbbell, Flower2,
   CalendarDays, Check, CheckCheck, CircleHelp, Clock3, Flame, Focus,
   Gauge, Heart, Leaf, ListTodo, LogOut, Moon, MoreHorizontal, Pencil, PenTool, Plus, RotateCcw, Settings2, ShieldCheck,
-  Sparkles, Sun, Target, Timer, Trophy, X, Zap,
+  Sparkles, Sun, Target, Timer, Trophy, Upload, X, Zap,
 } from 'lucide-react';
 import type { Category, Frequency, Habit, Page, Task } from './types';
 import { PlannerPage, taskIsDone, taskOccursOn } from './Planner';
 import TasksPage from './TasksPage';
 import AuthScreen from './components/AuthScreen';
 import { supabase, supabaseConfigured } from './lib/supabase';
+import { createWorkspaceBackup, parseWorkspaceBackup, type WorkspaceBackup } from './lib/workspaceBackup';
 
 const STORAGE_KEY = 'streako-elite-v2';
 const todayKey = () => toKey(new Date());
@@ -330,6 +331,13 @@ function App() {
   const [focusSessions, setFocusSessions] = useState(0);
   const [focusTaskId, setFocusTaskId] = useState<string | null>(null);
   const [toast, setToast] = useState('');
+  const [showBackupModal, setShowBackupModal] = useState(false);
+  const [pendingBackup, setPendingBackup] = useState<WorkspaceBackup | null>(null);
+  const [backupFileName, setBackupFileName] = useState('');
+  const [backupImportError, setBackupImportError] = useState('');
+  const backupInputRef = useRef<HTMLInputElement | null>(null);
+  const cloudSaveVersionRef = useRef(0);
+  const cloudSaveQueueRef = useRef<Promise<void>>(Promise.resolve());
   const [authSession, setAuthSession] = useState<Session | null>(null);
   const [passwordRecovery, setPasswordRecovery] = useState(false);
   const [authReady, setAuthReady] = useState(!supabaseConfigured);
@@ -386,6 +394,56 @@ function App() {
     } catch {
       setToast('The browser could not request notification permission. Check this site’s browser settings.');
     }
+  };
+
+  const downloadWorkspaceBackup = () => {
+    try {
+      const backup = createWorkspaceBackup({ habits, tasks, focusSessions, preferences: { dark } });
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = 'cadence-backup-' + toKey(new Date()) + '.json';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      setToast('Workspace backup downloaded. Keep the file somewhere private.');
+    } catch {
+      setToast('The backup could not be created. Try again after checking your browser settings.');
+    }
+  };
+
+  const handleBackupFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+    setPendingBackup(null);
+    setBackupImportError('');
+    setBackupFileName(file.name);
+    try {
+      if (file.size > 10 * 1024 * 1024) {
+        throw new Error('The file is larger than 10 MB. Choose a smaller Cadence backup.');
+      }
+      const backup = parseWorkspaceBackup(await file.text());
+      setPendingBackup(backup);
+    } catch (caught) {
+      setBackupImportError(caught instanceof Error ? caught.message : 'This backup could not be read.');
+    } finally {
+      input.value = '';
+    }
+  };
+
+  const restoreWorkspaceBackup = () => {
+    if (!pendingBackup) return;
+    setHabits(pendingBackup.data.habits);
+    setTasks(pendingBackup.data.tasks);
+    setFocusSessions(pendingBackup.data.focusSessions);
+    setDark(pendingBackup.data.preferences.dark);
+    setPendingBackup(null);
+    setBackupImportError('');
+    setShowBackupModal(false);
+    setToast('Backup restored. ' + (supabaseConfigured && authSession ? 'Your account workspace is syncing.' : 'Changes are saved in this browser.'));
   };
 
   const stopReminderAlarm = () => {
@@ -552,22 +610,39 @@ function App() {
   useEffect(() => {
     const client = supabase;
     if (!supabaseConfigured || !client) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, tasks, focusSessions, preferences: { dark } }));
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, tasks, focusSessions, preferences: { dark } }));
+        setCloudStatus('Saved locally');
+        setCloudError('');
+      } catch {
+        setCloudStatus('Storage unavailable');
+        setCloudError('This browser could not save local data. Download a JSON backup before refreshing or closing the tab.');
+      }
       return undefined;
     }
     if (!authSession || !workspaceReady) return undefined;
 
     const snapshot = { habits, tasks, focusSessions, preferences: { dark } };
-    localStorage.setItem(STORAGE_KEY + ':' + authSession.user.id, JSON.stringify(snapshot));
+    try {
+      localStorage.setItem(STORAGE_KEY + ':' + authSession.user.id, JSON.stringify(snapshot));
+    } catch {
+      // Signed-in workspaces continue to sync to Supabase if the local cache is blocked.
+    }
+    const revision = ++cloudSaveVersionRef.current;
     setCloudStatus('Syncing…');
     const timeout = window.setTimeout(() => {
-      void client.from('tracker_workspaces').upsert({
-        user_id: authSession.user.id,
-        habits,
-        tasks,
-        focus_sessions: focusSessions,
-        preferences: { dark },
-      }).then(({ error }) => {
+      cloudSaveQueueRef.current = cloudSaveQueueRef.current.catch(() => undefined).then(async () => {
+        // Serial writes prevent an older, slower network request from overwriting
+        // a newer workspace snapshot.
+        if (revision !== cloudSaveVersionRef.current) return;
+        const { error } = await client.from('tracker_workspaces').upsert({
+          user_id: authSession.user.id,
+          habits,
+          tasks,
+          focus_sessions: focusSessions,
+          preferences: { dark },
+        });
+        if (revision !== cloudSaveVersionRef.current) return;
         if (error) {
           setCloudStatus('Sync issue');
           setCloudError(error.message);
@@ -575,9 +650,16 @@ function App() {
           setCloudStatus('Cloud synced');
           setCloudError('');
         }
+      }).catch((caught: unknown) => {
+        if (revision !== cloudSaveVersionRef.current) return;
+        setCloudStatus('Sync issue');
+        setCloudError(caught instanceof Error ? caught.message : 'Unable to save the workspace right now.');
       });
     }, 450);
-    return () => window.clearTimeout(timeout);
+    return () => {
+      window.clearTimeout(timeout);
+      if (cloudSaveVersionRef.current === revision) cloudSaveVersionRef.current += 1;
+    };
   }, [habits, tasks, focusSessions, dark, authSession?.user.id, workspaceReady]);
 
   useEffect(() => {
@@ -600,18 +682,25 @@ function App() {
     if (!habits.some((habit) => habit.reminderEnabled && habit.reminderTime)) return undefined;
     const checkReminders = () => {
       const now = new Date();
-      const currentTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
       const day = toKey(now);
-      const due = habits.filter((habit) => habit.reminderEnabled && isDue(habit, day) && habit.reminderTime === currentTime && !habit.logs[day]);
-      const fresh = due.filter((habit) => !firedRemindersRef.current.has(`${habit.id}:${day}:${currentTime}`));
+      const due = habits.filter((habit) => {
+        if (!habit.reminderEnabled || !habit.reminderTime || !isDue(habit, day) || habit.logs[day]) return false;
+        const [hours, minutes] = habit.reminderTime.split(':').map(Number);
+        if (!Number.isInteger(hours) || !Number.isInteger(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return false;
+        const scheduledAt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes).getTime();
+        // Recover a reminder after tab throttling, but never ring for an old missed time.
+        const elapsed = now.getTime() - scheduledAt;
+        return elapsed >= 0 && elapsed <= 3 * 60 * 1000;
+      });
+      const fresh = due.filter((habit) => !firedRemindersRef.current.has(`${habit.id}:${day}:${habit.reminderTime}`));
       if (!fresh.length) return;
       fresh.forEach((habit) => {
-        firedRemindersRef.current.add(`${habit.id}:${day}:${currentTime}`);
+        firedRemindersRef.current.add(`${habit.id}:${day}:${habit.reminderTime}`);
         if ('Notification' in window && Notification.permission === 'granted') {
           try {
             const notification = new Notification(`Time for ${habit.name}`, {
               body: 'A small step is enough. Open Cadence to check in.',
-              tag: `streako-${habit.id}-${day}`,
+              tag: `cadence-${habit.id}-${day}-${habit.reminderTime}`,
             });
             notification.onclick = () => {
               window.focus();
@@ -620,16 +709,23 @@ function App() {
           } catch { /* The in-app alarm remains available if notification delivery is blocked. */ }
         }
       });
+      const first = fresh[0];
       setActiveReminder((current) => current || {
-        habitId: fresh[0].id,
-        habitName: fresh[0].name,
-        reminderTime: currentTime,
-        reminderSoundUrl: fresh[0].reminderSoundUrl,
+        habitId: first.id,
+        habitName: first.name,
+        reminderTime: first.reminderTime || '09:00',
+        reminderSoundUrl: first.reminderSoundUrl,
       });
     };
     const interval = window.setInterval(checkReminders, 10000);
+    document.addEventListener('visibilitychange', checkReminders);
+    window.addEventListener('focus', checkReminders);
     checkReminders();
-    return () => window.clearInterval(interval);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', checkReminders);
+      window.removeEventListener('focus', checkReminders);
+    };
   }, [habits]);
 
   useEffect(() => {
@@ -902,7 +998,7 @@ function App() {
       <main className="main-content">
         <header className="topbar">
           <div className="breadcrumbs"><span>Workspace</span><span className="crumb-slash">/</span><b>{page}</b></div>
-          <div className="topbar-actions"><span className="local-save" title={cloudError || cloudStatus}><span className="save-dot" /> {cloudStatus}</span><IconButton label="Notifications and reminders" onClick={() => { const count = habits.filter((habit) => habit.reminderEnabled).length; setToast(count ? `${count} habit reminder${count === 1 ? '' : 's'} scheduled. Cadence must remain open for alerts.` : 'No reminders yet. Enable one when creating a habit.'); }}><Bell size={17} /></IconButton><button className="date-chip" type="button" onClick={() => { setPage('Planner'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} aria-label={'Open planner for ' + new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} title="Open planner"><CalendarDays size={15} />{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}<ArrowUpRight size={12} /></button></div>
+          <div className="topbar-actions"><span className="local-save" title={cloudError || cloudStatus}><span className="save-dot" /> {cloudStatus}</span><IconButton label="Backup and restore workspace" onClick={() => { setBackupImportError(''); setPendingBackup(null); setShowBackupModal(true); }}><Download size={17} /></IconButton><IconButton label="Notifications and reminders" onClick={() => { const count = habits.filter((habit) => habit.reminderEnabled).length; setToast(count ? `${count} in-app reminder${count === 1 ? '' : 's'} enabled. Cadence must remain open for alerts.` : 'No reminders yet. Enable one when creating a habit.'); }}><Bell size={17} /></IconButton><button className="date-chip" type="button" onClick={() => { setPage('Planner'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} aria-label={'Open planner for ' + new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} title="Open planner"><CalendarDays size={15} />{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}<ArrowUpRight size={12} /></button></div>
         </header>
 
         {page === 'Today' && <>
@@ -1033,6 +1129,29 @@ function App() {
         </>}
       </main>
 
+      <input ref={backupInputRef} type="file" accept=".json,application/json" hidden onChange={(event) => { void handleBackupFile(event); }} aria-label="Choose a Cadence JSON backup" />
+      {showBackupModal && <div className="modal-backdrop backup-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowBackupModal(false); }}>
+        <section className="habit-modal workspace-backup-modal" role="dialog" aria-modal="true" aria-labelledby="workspace-backup-title">
+          <div className="modal-top">
+            <div><div className="panel-overline">PORTABLE BY DESIGN</div><h2 id="workspace-backup-title">Backup your workspace</h2><p>Keep a private copy of your routines, history and plans.</p></div>
+            <IconButton label="Close backup and restore" onClick={() => setShowBackupModal(false)}><X size={18} /></IconButton>
+          </div>
+          <div className="backup-privacy-note"><ShieldCheck size={17}/><p><b>Your data stays yours.</b><span>The JSON file includes habits, check-ins, tasks, focus-session totals and appearance. It never includes your password or auth tokens.</span></p></div>
+          <button type="button" className="primary-button backup-download-button" onClick={downloadWorkspaceBackup}><Download size={16}/> Download JSON backup <ArrowRight size={15}/></button>
+          <div className="backup-restore-row">
+            <div><b>Restore a previous backup</b><p>Choose a Cadence JSON file to validate it before replacing anything.</p></div>
+            <button type="button" className="secondary-button" onClick={() => { setBackupImportError(''); backupInputRef.current?.click(); }}><Upload size={15}/> Choose file</button>
+          </div>
+          {backupImportError && <p className="backup-import-error" role="alert">{backupImportError}</p>}
+          {pendingBackup && <div className="backup-preview">
+            <div className="backup-preview-file"><span className="backup-file-glyph"><Download size={15}/></span><span><b>{backupFileName}</b><small>Exported {pendingBackup.exportedAt}</small></span></div>
+            <div className="backup-preview-counts"><span><b>{pendingBackup.data.habits.length}</b><small>Habits</small></span><span><b>{pendingBackup.data.tasks.length}</b><small>Tasks</small></span><span><b>{pendingBackup.data.focusSessions}</b><small>Focus sessions</small></span></div>
+            <p className="backup-replace-warning">Restoring replaces the current workspace and its history. {authSession && supabaseConfigured ? 'After confirmation, the restored data will sync to your signed-in account.' : 'After confirmation, the restored data will be saved in this browser.'}</p>
+            <div className="modal-actions"><button type="button" className="secondary-button" onClick={() => { setPendingBackup(null); setBackupImportError(''); }}>Cancel</button><button type="button" className="primary-button" onClick={restoreWorkspaceBackup}>Replace workspace</button></div>
+          </div>}
+          <p className="backup-footer-note">Export regularly and store the file somewhere private. Restoring is a full replacement, not a merge.</p>
+        </section>
+      </div>}
       {showHabitModal && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) { setShowHabitModal(false); setEditingHabitId(null); setHabitDraft({ ...emptyHabitDraft }); } }}><section className="habit-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div className="modal-top"><div><div className="panel-overline">START SMALL, STAY CONSISTENT</div><h2 id="modal-title">{editingHabitId ? 'Edit habit' : 'Create a habit'}</h2><p>{editingHabitId ? 'Update your routine without losing its history.' : 'Design the start, not just the finish line.'}</p></div><IconButton label="Close modal" onClick={() => setShowHabitModal(false)}><X size={18} /></IconButton></div><form onSubmit={addHabit}><label className="field-label">Habit name<input autoFocus value={habitDraft.name} onChange={(event) => setHabitDraft((draft) => ({ ...draft, name: event.target.value }))} placeholder="e.g. Practice coding" maxLength={70} required /></label><label className="field-label">Area of life<div className="category-select">{categories.map((category) => <button type="button" key={category} className={habitDraft.category === category ? `selected ${categoryTone[category]}` : ''} aria-pressed={habitDraft.category === category} onClick={() => setHabitDraft((draft) => ({ ...draft, category }))}><CategoryGlyph category={category} size={15} />{category}</button>)}</div></label><label className="field-label">Frequency<select value={habitDraft.frequency} onChange={(event) => setHabitDraft((draft) => ({ ...draft, frequency: event.target.value as Frequency }))}>{frequencies.map((frequency) => <option key={frequency}>{frequency}</option>)}</select></label>
           {habitDraft.frequency === 'Custom' && <fieldset className="habit-schedule-days"><legend>Repeat on these days</legend><div className="habit-weekday-picker">{[{ label: 'Sun', value: 0 }, { label: 'Mon', value: 1 }, { label: 'Tue', value: 2 }, { label: 'Wed', value: 3 }, { label: 'Thu', value: 4 }, { label: 'Fri', value: 5 }, { label: 'Sat', value: 6 }].map(({ label, value }) => <button type="button" key={value} className={habitDraft.customDays.includes(value) ? 'selected' : ''} aria-pressed={habitDraft.customDays.includes(value)} onClick={() => setHabitDraft((draft) => ({ ...draft, customDays: draft.customDays.includes(value) ? draft.customDays.filter((day) => day !== value) : [...draft.customDays, value].sort((left, right) => left - right) }))}>{label}</button>)}</div><p>Choose one or more weekdays. Only selected days count toward consistency and reminders.</p></fieldset>}<label className="field-label">When will you do it? <span className="field-hint">A reliable cue</span><input value={habitDraft.cue} onChange={(event) => setHabitDraft((draft) => ({ ...draft, cue: event.target.value }))} placeholder="After I finish breakfast…" maxLength={100} /></label><label className="field-label">Your minimum version <span className="field-hint">Make it hard to say no</span><input value={habitDraft.minimum} onChange={(event) => setHabitDraft((draft) => ({ ...draft, minimum: event.target.value }))} placeholder="Read one page, write one line…" maxLength={100} /></label>
           <details className="habit-advanced-settings" open={Boolean(editingHabitId)}>
@@ -1064,7 +1183,7 @@ function App() {
                 <span className="reminder-permission-status">{notificationPermission === 'granted' ? 'Desktop notifications enabled' : notificationPermission === 'denied' ? 'Browser notifications are blocked' : notificationPermission === 'unsupported' ? 'Desktop notifications unavailable' : 'Allow desktop notifications'}</span>
                 <button type="button" className="secondary-button notification-permission-button" onClick={() => { void enableDesktopNotifications(); }}>{notificationPermission === 'granted' ? 'Enabled' : notificationPermission === 'denied' ? 'How to allow' : notificationPermission === 'unsupported' ? 'Not supported' : 'Enable'}</button>
               </div>
-              <p className="reminder-footnote">Reminders run while Cadence is open (including a minimized tab). Browser permission is needed for desktop notifications. Use Stop sound to silence the looping alarm, or Mark done to close it.</p>
+              <p className="reminder-footnote">Reminders run while Cadence is open (including a minimized tab), not after the browser is closed. If the tab sleeps, returning within three minutes of a reminder time can recover the alert. Desktop notifications require browser permission; Stop sound silences the looping alarm.</p>
             </div>}
           </section>
             </div>
