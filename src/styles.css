@@ -4618,7 +4618,9 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   letter-spacing: 0 !important;
 }
 .app-shell .habit-activity-bar.is-complete {
-  fill: url(#cadence-habit-bar-placeholder);
+  stroke: rgba(219, 190, 255, .56);
+  stroke-width: 1;
+  filter: drop-shadow(0 0 5px rgba(163, 105, 255, .24));
 }
 .app-shell .habit-activity-bar.is-missed {
   fill: rgba(135, 148, 179, .48);
@@ -4638,4 +4640,278 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   .app-shell .habit-activity-line-chart { height: 154px; }
   .app-shell .habit-chart-y-label { font-size: 11px !important; }
   .app-shell .habit-chart-x-label { font-size: 11px !important; }
+}
+
+
+/* Final polish: use the supplied lockup cleanly, strengthen the habit controls,
+   and give the activity chart a real, readable visual hierarchy. */
+.app-shell .brand-lockup {
+  width: 100%;
+  min-height: 66px !important;
+  margin: 0 0 8px;
+  padding: 0 !important;
+  justify-content: flex-start;
+  overflow: visible;
+}
+.app-shell .cadence-lockup-image {
+  display: block;
+  width: 190px !important;
+  max-width: 100%;
+  height: auto !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  object-position: left center;
+  filter: none !important;
+  image-rendering: auto;
+}
+.app-shell .cadence-footer-lockup {
+  width: 142px;
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+/* Selected navigation is a soft violet glass surface—not a hard outline box. */
+.app-shell .nav-item {
+  position: relative;
+  border-radius: 14px;
+  transition: background .22s ease, border-color .22s ease, color .22s ease, transform .22s ease, box-shadow .22s ease;
+}
+.app-shell .nav-item.active {
+  transform: translateX(2px);
+  border-color: rgba(190, 151, 255, .25) !important;
+  border-radius: 14px;
+  background:
+    radial-gradient(ellipse at 0% 50%, rgba(173, 111, 255, .20), transparent 64%),
+    linear-gradient(105deg, rgba(145, 91, 226, .16), rgba(85, 63, 125, .10) 58%, rgba(16, 19, 31, .42)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.065),
+    inset 3px 0 0 rgba(184, 137, 255, .65),
+    0 8px 24px rgba(90, 48, 153, .13) !important;
+}
+.app-shell .nav-item.active::before {
+  left: 7px;
+  top: 50%;
+  bottom: auto;
+  width: 3px;
+  height: 25px;
+  border-radius: 20px;
+  transform: translateY(-50%);
+  background: linear-gradient(180deg, #efd9ff, #b17bff 58%, #8752db);
+  box-shadow: 0 0 12px rgba(175, 119, 255, .62), 0 0 22px rgba(148, 87, 239, .24);
+}
+.app-shell .nav-item.active .nav-icon {
+  color: #f3e7ff !important;
+  border: 1px solid rgba(206, 173, 255, .22);
+  background: linear-gradient(145deg, rgba(179, 129, 255, .29), rgba(113, 77, 176, .19)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 0 17px rgba(151, 91, 235, .14);
+}
+.app-shell .nav-item.active .nav-copy b {
+  color: #fff !important;
+  font-weight: 700;
+}
+.app-shell .nav-item.active .nav-copy small {
+  color: rgba(225, 210, 250, .74);
+}
+.app-shell .nav-item:focus-visible {
+  outline: 2px solid rgba(189, 145, 255, .82);
+  outline-offset: 3px;
+}
+
+/* Seven-day history: larger day tiles, clearer date hierarchy, consistent spacing. */
+.app-shell .mini-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  width: min(100%, 510px);
+  max-width: 100%;
+  margin-top: 13px;
+}
+.app-shell .mini-week > span {
+  box-sizing: border-box;
+  min-width: 0;
+  width: auto;
+  height: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid rgba(164, 174, 207, .19);
+  border-radius: 12px;
+  background: linear-gradient(160deg, rgba(34, 35, 55, .84), rgba(18, 20, 33, .92));
+  color: #c6cde0;
+  font-family: 'Inter', system-ui, sans-serif;
+  transition: transform .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
+}
+.app-shell .mini-week > span:hover {
+  transform: translateY(-2px);
+  border-color: rgba(192, 154, 255, .42);
+}
+.app-shell .mini-week > span b {
+  color: inherit;
+  font: 750 13px/1 'Inter', system-ui, sans-serif;
+  letter-spacing: .01em;
+}
+.app-shell .mini-week > span small {
+  color: #9da8c3;
+  font: 600 11px/1 'Inter', system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+.app-shell .mini-week > span.done {
+  border-color: rgba(184, 137, 255, .60);
+  color: #f7efff;
+  background: linear-gradient(150deg, rgba(153, 91, 243, .36), rgba(76, 49, 122, .28));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 4px 14px rgba(122, 70, 196, .14);
+}
+.app-shell .mini-week > span.done small { color: #e0c9ff; }
+.app-shell .mini-week > span.current {
+  outline: 2px solid rgba(217, 185, 255, .74);
+  outline-offset: 2px;
+  z-index: 1;
+}
+.app-shell .mini-week > span.current:not(.done) {
+  border-color: rgba(202, 169, 255, .86);
+  color: #fff;
+  background: linear-gradient(145deg, rgba(126, 82, 194, .28), rgba(32, 28, 52, .94));
+}
+.app-shell .mini-week > span.not-scheduled:not(.done):not(.current) {
+  opacity: .48;
+  background: rgba(18, 20, 32, .48);
+}
+
+/* Activity graph: legible axes, stronger completed marks, and a quieter grid. */
+.app-shell .habit-detail-activity {
+  margin-top: 9px;
+  padding: 14px 15px 12px;
+  gap: 10px;
+  border: 1px solid rgba(163, 145, 212, .14);
+  border-radius: 15px;
+  background: linear-gradient(180deg, rgba(22, 20, 41, .48), rgba(12, 14, 24, .24));
+}
+.app-shell .habit-activity-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #aeb8d3;
+  font: 650 11px/1.45 'Inter', system-ui, sans-serif;
+  letter-spacing: .055em;
+}
+.app-shell .habit-activity-caption span:last-child {
+  color: #bfc8df;
+  font-size: 12px;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+.app-shell .habit-activity-caption span:last-child b {
+  color: #f2e5ff;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.app-shell .habit-activity-chart {
+  min-height: 188px;
+  padding: 10px 8px 2px;
+  border-color: rgba(164, 151, 207, .17);
+  border-radius: 13px;
+  background: linear-gradient(180deg, rgba(22, 20, 41, .47), rgba(11, 13, 23, .22));
+}
+.app-shell .habit-activity-line-chart {
+  display: block;
+  width: 100%;
+  height: 178px;
+  overflow: visible;
+}
+.app-shell .habit-chart-grid-line {
+  stroke: rgba(154, 165, 198, .17) !important;
+  stroke-dasharray: 3 6;
+  stroke-width: 1;
+}
+.app-shell .habit-chart-y-label {
+  fill: #dbe2f5 !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 750 !important;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0 !important;
+}
+.app-shell .habit-chart-x-label {
+  fill: #cbd4eb !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 650 !important;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0 !important;
+}
+.app-shell .habit-activity-bar.is-complete {
+  stroke: rgba(219, 190, 255, .56);
+  stroke-width: 1;
+  filter: drop-shadow(0 0 5px rgba(163, 105, 255, .24));
+}
+.app-shell .habit-activity-bar.is-missed {
+  fill: rgba(135, 148, 179, .34);
+  stroke: rgba(183, 193, 219, .28);
+  stroke-width: 1;
+}
+.app-shell .habit-activity-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px 17px;
+  color: #bac4dd;
+  font-size: 11px;
+  line-height: 1.4;
+}
+.app-shell .habit-activity-legend span { display: inline-flex; align-items: center; gap: 7px; }
+.app-shell .habit-activity-legend i {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+  box-shadow: 0 0 8px rgba(171, 118, 255, .12);
+}
+.app-shell .habit-activity-legend i.done { background: #b68aff; }
+.app-shell .habit-activity-legend i.missed { background: rgba(135, 148, 179, .72); }
+.app-shell .habit-activity-legend i.unscheduled { background: rgba(139, 150, 178, .30); }
+
+.app-shell.light-mode .habit-chart-y-label { fill: #535d78 !important; }
+.app-shell.light-mode .habit-chart-x-label { fill: #535d78 !important; }
+.app-shell.light-mode .habit-activity-caption { color: #58627b; }
+.app-shell.light-mode .habit-activity-caption span:last-child { color: #59637d; }
+.app-shell.light-mode .habit-activity-caption span:last-child b { color: #6336a6; }
+.app-shell.light-mode .habit-activity-legend { color: #59637d; }
+
+@media (max-width: 850px) and (min-width: 701px) {
+  .app-shell .brand-lockup {
+    width: 44px;
+    min-height: 44px !important;
+    margin: 0 auto 8px;
+    padding: 0 !important;
+    justify-content: center;
+  }
+  .app-shell .cadence-lockup-image {
+    width: 40px !important;
+    height: 40px !important;
+    max-width: none !important;
+    object-fit: cover !important;
+    object-position: left center;
+  }
+}
+@media (max-width: 700px) {
+  .app-shell .brand-lockup { width: auto; min-height: 60px !important; margin-bottom: 7px; }
+  .app-shell .cadence-lockup-image { width: 186px !important; height: auto !important; max-width: 100%; object-fit: contain !important; }
+  .app-shell .mini-week { width: min(100%, 510px); gap: 5px; }
+  .app-shell .mini-week > span { height: 48px; }
+  .app-shell .mini-week > span b { font-size: 12px; }
+  .app-shell .mini-week > span small { font-size: 10px; }
+  .app-shell .habit-activity-line-chart { height: 166px; }
+  .app-shell .habit-chart-y-label { font-size: 12px !important; }
+  .app-shell .habit-chart-x-label { font-size: 12px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-shell .nav-item,
+  .app-shell .mini-week > span { transition: none; }
+  .app-shell .nav-item.active,
+  .app-shell .mini-week > span:hover { transform: none; }
 }
