@@ -1261,7 +1261,7 @@ function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habi
             </div>
           </div>
         </div>
-        {due14 === 0 && <span className="habit-chart-empty">No scheduled check-ins to plot yet</span>
+        {due14 === 0 && <span className="habit-chart-empty">No scheduled check-ins to plot yet</span>}
       </div>
       <div className="habit-activity-legend"><span><i className="done"/>Completed</span><span><i className="missed"/>Not logged</span><span><i className="unscheduled"/>Not scheduled</span></div>
     </div>
