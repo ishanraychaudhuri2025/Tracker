@@ -6100,3 +6100,109 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   #root .app-shell .brand-lockup { width: 54px !important; min-height: 56px !important; height: 56px; overflow: hidden !important; padding: 0 !important; }
   #root .app-shell .cadence-wordmark { display: none !important; }
 }
+
+
+/* Definitive sidebar wordmark fix: the source artwork is a horizontal lockup.
+   Clip exactly the icon portion; never scale its built-in wordmark underneath text. */
+#root .app-shell .cadence-brand-lockup {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 11px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 60px !important;
+  min-height: 60px !important;
+  padding: 0 2px !important;
+  margin: 0 0 4px !important;
+  overflow: visible !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+#root .app-shell .cadence-brand-lockup:hover,
+#root .app-shell .cadence-brand-lockup:focus {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+#root .app-shell .cadence-brand-icon {
+  display: block !important;
+  position: relative !important;
+  flex: 0 0 50px !important;
+  width: 50px !important;
+  height: 50px !important;
+  min-width: 50px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-radius: 11px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  line-height: 0 !important;
+}
+#root .app-shell .cadence-brand-icon img {
+  position: absolute !important;
+  display: block !important;
+  left: 0 !important;
+  top: 50% !important;
+  width: 200px !important;
+  min-width: 200px !important;
+  max-width: none !important;
+  height: auto !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: translateY(-50%) !important;
+  object-fit: contain !important;
+  object-position: left center !important;
+  filter: none !important;
+  opacity: 1 !important;
+}
+#root .app-shell .cadence-brand-text {
+  position: static !important;
+  display: block !important;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: #c5a0ff !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 15px !important;
+  font-style: normal !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+  letter-spacing: .105em !important;
+  text-align: left !important;
+  text-indent: 0 !important;
+  text-transform: uppercase !important;
+  text-shadow: none !important;
+  filter: none !important;
+  background: none !important;
+  -webkit-text-fill-color: #c5a0ff !important;
+  white-space: nowrap !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+@media (max-width: 850px) {
+  #root .app-shell .cadence-brand-lockup {
+    width: 54px !important;
+    min-width: 54px !important;
+    height: 56px !important;
+    min-height: 56px !important;
+    margin: 0 auto 7px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    gap: 0 !important;
+  }
+  #root .app-shell .cadence-brand-icon {
+    flex-basis: 50px !important;
+    width: 50px !important;
+    min-width: 50px !important;
+  }
+  #root .app-shell .cadence-brand-text { display: none !important; }
+}
