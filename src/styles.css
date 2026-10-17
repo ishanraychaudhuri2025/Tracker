@@ -4955,8 +4955,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 #root .app-shell .cadence-logo-crop {
   position: relative;
   display: block;
-  flex: 0 0 54px;
-  width: 54px;
+  flex: 0 0 58px;
+  width: 58px;
   height: 56px;
   overflow: hidden;
   border-radius: 12px;
@@ -4966,7 +4966,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   display: block;
   left: 0;
   top: 50%;
-  width: 190px !important;
+  width: 205px !important;
   max-width: none !important;
   height: auto !important;
   transform: translateY(-50%);
@@ -5275,7 +5275,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 }
 @media (max-width: 700px) {
   #root .app-shell .brand-lockup { min-height: 62px !important; }
-  #root .app-shell .cadence-logo-crop { flex-basis: 54px; width: 54px; height: 56px; }
+  #root .app-shell .cadence-logo-crop { flex-basis: 58px; width: 58px; height: 56px; }
   #root .app-shell .cadence-wordmark-svg { width: 125px; flex-basis: 125px; height: 28px; }
   #root .app-shell .nav-item { min-height: 41px !important; }
   #root .app-shell .mini-week { width: min(100%, 455px); gap: 4px; }
