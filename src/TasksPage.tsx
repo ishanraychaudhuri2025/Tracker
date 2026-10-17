@@ -151,7 +151,7 @@ export default function TasksPage({ tasks, today, onToggleTask, onAddTask, onDel
 
     <section className="tasks-summary-grid">
       <article className="tasks-summary-card"><span className="tasks-summary-icon"><ListTodo size={17}/></span><small>OPEN TODAY</small><b>{stats.openToday}</b><span>Tasks ready for action</span></article>
-      <article className="tasks-summary-card"><span className="tasks-summary-icon violet"><Clock3 size={17}/></span><small>OVERDUE</small><b>{stats.overdue}</b><span>One step at a time</span></article>
+      <article className="tasks-summary-card"><span className="tasks-summary-icon violet"><Clock3 size={17}/></span><small>OVERDUE OCCURRENCES</small><b>{stats.overdue}</b><span>Uncompleted scheduled dates</span></article>
       <article className="tasks-summary-card"><span className="tasks-summary-icon violet"><CheckCircle2 size={17}/></span><small>COMPLETED OCCURRENCES</small><b>{stats.completed}</b><span>Each completed repeat counts once</span></article>
       <article className="tasks-summary-card tasks-summary-note"><Zap size={18}/><div><b>Keep it achievable.</b><p>Give tasks an estimate and a clear priority. Small, finishable actions make plans easier to follow.</p></div></article>
     </section>
