@@ -3,7 +3,7 @@ import type { CSSProperties, FormEvent, ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
   Activity, ArrowRight, ArrowUpRight, BarChart3, Bell, BookOpen, Brain, Coffee, Compass, Code2, Droplets, Dumbbell, Flower2,
-  CalendarDays, CalendarRange, Check, CheckCheck, ChevronDown, CircleHelp, Clock3, Flame, Focus,
+  CalendarDays, Check, CheckCheck, ChevronDown, CircleHelp, Clock3, Flame, Focus,
   Gauge, Heart, Leaf, ListTodo, LogOut, Moon, MoreHorizontal, Pencil, PenTool, Plus, RotateCcw, Settings2, ShieldCheck,
   Sparkles, Sun, Target, Timer, Trophy, X, Zap,
 } from 'lucide-react';
@@ -631,8 +631,27 @@ function App() {
 
   const dueHabits = useMemo(() => habits.filter((habit) => isDue(habit, today)), [habits, today]);
   const doneToday = dueHabits.filter((habit) => Boolean(habit.logs[today])).length;
+  const todayHabitCompletion = dueHabits.length ? Math.round((doneToday / dueHabits.length) * 100) : null;
+  const lastSevenHabitStats = useMemo(() => Array.from({ length: 7 }, (_, index) => {
+    const key = shiftKey(today, index - 6);
+    const due = habits.filter((habit) => isDue(habit, key));
+    const done = due.filter((habit) => Boolean(habit.logs[key])).length;
+    const checkIns = habits.reduce((count, habit) => count + (habit.logs[key] ? 1 : 0), 0);
+    const activeStreaks = habits.filter((habit) => getCurrentStreak(habit, key) > 0).length;
+    return { key, due: due.length, done, percent: due.length ? Math.round((done / due.length) * 100) : null as number | null, checkIns, activeStreaks };
+  }), [habits, today]);
+  const lastTwentyOneCheckins = useMemo(() => Array.from({ length: 21 }, (_, index) => {
+    const key = shiftKey(today, index - 20);
+    const count = habits.reduce((sum, habit) => sum + (habit.logs[key] ? 1 : 0), 0);
+    return { key, count };
+  }), [habits, today]);
   const todayTasks = tasks.filter((task) => taskOccursOn(task, today)).map((task) => ({ ...task, completed: taskIsDone(task, today) }));
-  const completion = dueHabits.length ? Math.round((doneToday / dueHabits.length) * 100) : 0;
+  const tasksDoneToday = todayTasks.filter((task) => task.completed).length;
+  const totalTodayActions = dueHabits.length + todayTasks.length;
+  const completedTodayActions = doneToday + tasksDoneToday;
+  const todayProgress = totalTodayActions ? Math.round((completedTodayActions / totalTodayActions) * 100) : 0;
+  const nextTask = todayTasks.find((task) => !task.completed);
+  const nextHabit = dueHabits.find((habit) => !habit.logs[today]);
   const consistency = useMemo(() => {
     let possible = 0;
     let completed = 0;
