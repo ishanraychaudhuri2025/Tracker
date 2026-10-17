@@ -327,7 +327,12 @@ function App() {
   const [dark, setDark] = useState(true);
   const [focusRunning, setFocusRunning] = useState(false);
   const [focusPreset, setFocusPreset] = useState(25);
+  const [focusCustomMinutesDraft, setFocusCustomMinutesDraft] = useState('25');
+  const [focusSoundUrl, setFocusSoundUrl] = useState('');
   const [focusSeconds, setFocusSeconds] = useState(25 * 60);
+  const [showFocusAlarm, setShowFocusAlarm] = useState(false);
+  const [focusAlarmSoundStopped, setFocusAlarmSoundStopped] = useState(false);
+  const [focusAlarmMediaReload, setFocusAlarmMediaReload] = useState(0);
   const [focusSessions, setFocusSessions] = useState(0);
   const [focusTaskId, setFocusTaskId] = useState<string | null>(null);
   const [toast, setToast] = useState('');
@@ -346,6 +351,7 @@ function App() {
   const [cloudError, setCloudError] = useState('');
   const today = todayKey();
   const activeReminderMedia = parseReminderMedia(activeReminder?.reminderSoundUrl);
+  const activeFocusMedia = parseReminderMedia(focusSoundUrl);
 
   const unlockReminderAudio = () => {
     if (typeof window === 'undefined' || !window.AudioContext) return;
@@ -398,7 +404,7 @@ function App() {
 
   const downloadWorkspaceBackup = () => {
     try {
-      const backup = createWorkspaceBackup({ habits, tasks, focusSessions, preferences: { dark } });
+      const backup = createWorkspaceBackup({ habits, tasks, focusSessions, preferences: { dark, focusMinutes: focusPreset, focusSoundUrl } });
       const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
       const objectUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -440,6 +446,11 @@ function App() {
     setTasks(pendingBackup.data.tasks);
     setFocusSessions(pendingBackup.data.focusSessions);
     setDark(pendingBackup.data.preferences.dark);
+    const restoredMinutes = pendingBackup.data.preferences.focusMinutes ?? 25;
+    setFocusPreset(restoredMinutes);
+    setFocusCustomMinutesDraft(String(restoredMinutes));
+    setFocusSeconds(restoredMinutes * 60);
+    setFocusSoundUrl(pendingBackup.data.preferences.focusSoundUrl ?? '');
     setPendingBackup(null);
     setBackupImportError('');
     setShowBackupModal(false);
@@ -524,7 +535,7 @@ function App() {
               habits: [],
               tasks: [],
               focus_sessions: 0,
-              preferences: { dark: true },
+              preferences: { dark: true, focusMinutes: 25, focusSoundUrl: '' },
             })
             .select('habits, tasks, focus_sessions, preferences')
             .single();
@@ -536,8 +547,15 @@ function App() {
         setHabits(Array.isArray(workspace.habits) ? workspace.habits as Habit[] : []);
         setTasks(Array.isArray(workspace.tasks) ? workspace.tasks as Task[] : []);
         setFocusSessions(typeof workspace.focus_sessions === 'number' ? workspace.focus_sessions : 0);
-        const preferences = workspace.preferences as { dark?: unknown } | null;
+        const preferences = workspace.preferences as { dark?: unknown; focusMinutes?: unknown; focusSoundUrl?: unknown } | null;
         if (typeof preferences?.dark === 'boolean') setDark(preferences.dark);
+        const savedFocusMinutes = typeof preferences?.focusMinutes === 'number' && Number.isInteger(preferences.focusMinutes) && preferences.focusMinutes >= 1 && preferences.focusMinutes <= 240 ? preferences.focusMinutes : 25;
+        setFocusPreset(savedFocusMinutes);
+        setFocusCustomMinutesDraft(String(savedFocusMinutes));
+        setFocusSeconds(savedFocusMinutes * 60);
+        setFocusSoundUrl(typeof preferences?.focusSoundUrl === 'string' ? preferences.focusSoundUrl.slice(0, 2048) : '');
+        setFocusRunning(false);
+        setShowFocusAlarm(false);
         setAuthSession(session);
         setWorkspaceReady(true);
         setAuthReady(true);
@@ -611,7 +629,7 @@ function App() {
     const client = supabase;
     if (!supabaseConfigured || !client) {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, tasks, focusSessions, preferences: { dark } }));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ habits, tasks, focusSessions, preferences: { dark, focusMinutes: focusPreset, focusSoundUrl } }));
         setCloudStatus('Saved locally');
         setCloudError('');
       } catch {
@@ -622,7 +640,7 @@ function App() {
     }
     if (!authSession || !workspaceReady) return undefined;
 
-    const snapshot = { habits, tasks, focusSessions, preferences: { dark } };
+    const snapshot = { habits, tasks, focusSessions, preferences: { dark, focusMinutes: focusPreset, focusSoundUrl } };
     try {
       localStorage.setItem(STORAGE_KEY + ':' + authSession.user.id, JSON.stringify(snapshot));
     } catch {
@@ -660,7 +678,7 @@ function App() {
       window.clearTimeout(timeout);
       if (cloudSaveVersionRef.current === revision) cloudSaveVersionRef.current += 1;
     };
-  }, [habits, tasks, focusSessions, dark, authSession?.user.id, workspaceReady]);
+  }, [habits, tasks, focusSessions, dark, focusPreset, focusSoundUrl, authSession?.user.id, workspaceReady]);
 
   useEffect(() => {
     if (!focusRunning) return undefined;
@@ -674,9 +692,19 @@ function App() {
     if (focusRunning && focusSeconds === 0) {
       setFocusRunning(false);
       setFocusSessions((count) => count + 1);
+      setShowFocusAlarm(true);
+      setFocusAlarmSoundStopped(false);
+      setFocusAlarmMediaReload(0);
       setToast('Focus session complete. Take a small reset.');
     }
   }, [focusRunning, focusSeconds]);
+
+  useEffect(() => {
+    if (!showFocusAlarm || focusAlarmSoundStopped) return undefined;
+    playReminderMelody();
+    const interval = window.setInterval(playReminderMelody, 2800);
+    return () => window.clearInterval(interval);
+  }, [showFocusAlarm, focusAlarmSoundStopped]);
 
   useEffect(() => {
     if (!habits.some((habit) => habit.reminderEnabled && habit.reminderTime)) return undefined;
@@ -818,6 +846,20 @@ function App() {
 
   const dueHabits = useMemo(() => habits.filter((habit) => isDue(habit, today)), [habits, today]);
   const doneToday = dueHabits.filter((habit) => Boolean(habit.logs[today])).length;
+  const todayHabitCompletion = dueHabits.length ? Math.round((doneToday / dueHabits.length) * 100) : null;
+  const lastSevenHabitStats = useMemo(() => Array.from({ length: 7 }, (_, index) => {
+    const key = shiftKey(today, index - 6);
+    const due = habits.filter((habit) => isDue(habit, key));
+    const done = due.filter((habit) => Boolean(habit.logs[key])).length;
+    const checkIns = habits.reduce((count, habit) => count + (habit.logs[key] ? 1 : 0), 0);
+    const activeStreaks = habits.filter((habit) => getCurrentStreak(habit, key) > 0).length;
+    return { key, due: due.length, done, percent: due.length ? Math.round((done / due.length) * 100) : null as number | null, checkIns, activeStreaks };
+  }), [habits, today]);
+  const lastTwentyOneCheckins = useMemo(() => Array.from({ length: 21 }, (_, index) => {
+    const key = shiftKey(today, index - 20);
+    const count = habits.reduce((sum, habit) => sum + (habit.logs[key] ? 1 : 0), 0);
+    return { key, count };
+  }), [habits, today]);
   const todayTasks = tasks.filter((task) => taskOccursOn(task, today)).map((task) => ({ ...task, completed: taskIsDone(task, today) }));
   const tasksDoneToday = todayTasks.filter((task) => task.completed).length;
   const totalTodayActions = dueHabits.length + todayTasks.length;
@@ -940,7 +982,30 @@ function App() {
     setTasks((current) => [...current, { ...draft, id: `t-${crypto.randomUUID()}`, completed: false, completedDates: [] }]);
     setToast('Added to your calendar');
   };
-  const resetFocus = (minutes = focusPreset) => { setFocusRunning(false); setFocusPreset(minutes); setFocusSeconds(minutes * 60); };
+  const resetFocus = (minutes = focusPreset) => {
+    const safeMinutes = Math.min(240, Math.max(1, Math.round(Number(minutes) || 25)));
+    setFocusRunning(false);
+    setFocusPreset(safeMinutes);
+    setFocusCustomMinutesDraft(String(safeMinutes));
+    setFocusSeconds(safeMinutes * 60);
+    setShowFocusAlarm(false);
+    setFocusAlarmSoundStopped(false);
+    setFocusAlarmMediaReload(0);
+  };
+  const applyCustomFocus = () => {
+    const requested = Number(focusCustomMinutesDraft);
+    if (!Number.isInteger(requested) || requested < 1 || requested > 240) {
+      setToast('Choose a custom focus duration from 1 to 240 minutes.');
+      return;
+    }
+    resetFocus(requested);
+    setToast(`Custom focus block set to ${requested} minutes.`);
+  };
+  const dismissFocusAlarm = () => {
+    setShowFocusAlarm(false);
+    setFocusAlarmSoundStopped(false);
+    setFocusAlarmMediaReload(0);
+  };
   const timeText = `${String(Math.floor(focusSeconds / 60)).padStart(2, '0')}:${String(focusSeconds % 60).padStart(2, '0')}`;
   const timerProgress = 1 - focusSeconds / (focusPreset * 60 || 1);
 
@@ -1029,28 +1094,28 @@ function App() {
                 <div className="analytics-metric-label">DAILY COMPLETION <span className="analytics-metric-icon tone-blue"><Activity size={12} /></span></div>
                 <div className="analytics-metric-value">{dueHabits.length ? Math.round((doneToday / dueHabits.length) * 100) : 0}<small>%</small></div>
                 <div className="analytics-metric-bottom"><span>{doneToday} of {dueHabits.length} routines complete</span><b className="analytics-trend-positive"><ArrowUpRight size={9} /> TODAY</b></div>
-                <div className="analytics-metric-line" aria-hidden="true">{[28, 13, 20, 35, 16, 29, 39, 22].map((height, index) => <i key={index} style={{ height: height + '%' }} />)}</div>
+                <div className="analytics-metric-line" role="img" aria-label="Daily habit completion for the last seven days">{lastSevenHabitStats.map((day) => <i key={day.key} className={day.percent === null ? 'is-empty' : ''} title={day.key + ': ' + (day.percent === null ? 'no habits scheduled' : day.percent + '% complete')} style={{ height: (day.percent === null ? 3 : Math.max(4, Math.round(day.percent * .22 + 3))) + 'px' }} />)}</div>
               </article>
 
               <article className="analytics-metric-card">
                 <div className="analytics-metric-label">7-DAY CONSISTENCY <span className="analytics-metric-icon tone-pink"><CalendarDays size={12} /></span></div>
                 <div className="analytics-metric-value">{consistency}<small>%</small></div>
                 <div className="analytics-metric-bottom"><span>Across the last seven days</span><b className="analytics-trend-positive">WEEKLY</b></div>
-                <div className="analytics-mini-bars" aria-hidden="true">{[6, 10, 5, 14, 7, 20, 11].map((height, index) => <i key={index} style={{ height: height + 'px' }} />)}</div>
+                <div className="analytics-mini-bars" role="img" aria-label="Daily completion contributing to seven-day consistency">{lastSevenHabitStats.map((day) => <i key={day.key} className={day.percent === null ? 'is-empty' : ''} title={day.key + ': ' + (day.percent === null ? 'no habits scheduled' : day.percent + '% complete')} style={{ height: (day.percent === null ? 3 : Math.max(4, Math.round(day.percent * .23 + 3))) + 'px' }} />)}</div>
               </article>
 
               <article className="analytics-metric-card">
                 <div className="analytics-metric-label">ACTIVE STREAKS <span className="analytics-metric-icon tone-violet"><Flame size={12} /></span></div>
                 <div className="analytics-metric-value">{String(activeStreaks).padStart(2, '0')}<small>routines</small></div>
                 <div className="analytics-metric-bottom"><span>Habits in motion</span><b className="analytics-trend-positive">LIVE</b></div>
-                <div className="analytics-streak-steps" aria-hidden="true">{[6, 9, 13, 7, 16, 11, 19, 14].map((height, index) => <i key={index} style={{ height: height + 'px' }} />)}</div>
+                <div className="analytics-streak-steps" role="img" aria-label="Active streaks over the last seven days">{lastSevenHabitStats.map((day) => <i key={day.key} className={!habits.length ? 'is-empty' : ''} title={day.key + ': ' + day.activeStreaks + ' active streaks'} style={{ height: (habits.length ? Math.max(4, Math.round((day.activeStreaks / Math.max(1, ...lastSevenHabitStats.map((item) => item.activeStreaks))) * 21)) : 3) + 'px' }} />)}</div>
               </article>
 
               <article className="analytics-metric-card">
                 <div className="analytics-metric-label">TOTAL CHECK-INS <span className="analytics-metric-icon tone-violet"><CheckCheck size={12} /></span></div>
                 <div className="analytics-metric-value">{totalWins}<small>total</small></div>
                 <div className="analytics-metric-bottom"><span>Every rep counts</span><b className="analytics-trend-positive">ALL TIME</b></div>
-                <div className="analytics-checkin-grid" aria-hidden="true">{Array.from({ length: 21 }, (_, index) => <i key={index} className={index < Math.min(totalWins, 21) ? 'is-filled' : ''} />)}</div>
+                <div className="analytics-checkin-grid" role="img" aria-label="Habit check-ins by day for the last 21 days">{lastTwentyOneCheckins.map((day) => <i key={day.key} className={day.count ? 'is-filled' : ''} style={{ opacity: day.count ? .35 + .65 * Math.min(1, day.count / Math.max(1, habits.length)) : .24 }} title={day.key + ': ' + day.count + ' check-ins'} />)}</div>
               </article>
             </div>
 
@@ -1192,7 +1257,7 @@ function App() {
               </section>
             </aside>
           </section>
-          <footer className="analytics-footer"><span><span className="cadence-footer-mark" role="img" aria-label="Cadence"><CadenceMark /></span> <i>/</i> PERSONAL PERFORMANCE SYSTEM</span><span>YOUR PROGRESS, WITHOUT THE NOISE.</span></footer>
+          <footer className="analytics-footer"><span><img className="cadence-footer-lockup" src="/cadence-icon.svg" alt="Cadence" width="36" height="36" /> <i>/</i> PERSONAL PERFORMANCE SYSTEM</span><span>YOUR PROGRESS, WITHOUT THE NOISE.</span></footer>
         </>}
   
         {page === 'Tasks' && <TasksPage tasks={tasks} today={today} onToggleTask={toggleTask} onAddTask={addPlannerTask} onDeleteTask={(taskId) => { setTasks((current) => current.filter((task) => task.id !== taskId)); setToast('Task removed.'); }} />}
@@ -1209,7 +1274,7 @@ function App() {
 
         {page === 'Insights' && <>
           <section className="page-intro"><div><div className="eyebrow"><span className="eyebrow-line" /> THE PATTERNS BEHIND PROGRESS</div><h1>Notice what <span>works.</span></h1><p className="welcome-sub">Use the evidence you create to make tomorrow easier.</p></div><div className="review-date-chip"><CalendarDays size={15} /> Last 7 days</div></section>
-          <section className="insights-stat-grid"><StatCard icon={<Activity size={17} />} label="Consistency" value={habits.length ? `${consistency}%` : '—'} detail={habits.length ? "Of scheduled habit check-ins" : "Add a routine to establish a baseline"} tone="lime" /><StatCard icon={<CheckCheck size={17} />} label="Logged actions" value={String(totalWins)} detail="Across your habit history" tone="violet" /><StatCard icon={<Flame size={17} />} label="Active routines" value={String(activeStreaks)} detail="With a current streak" tone="orange" /></section>
+          <section className="insights-stat-grid"><StatCard icon={<Activity size={17} />} label="Consistency" value={habits.length ? `${consistency}%` : '—'} detail={habits.length ? "Of scheduled habit check-ins" : "Add a routine to establish a baseline"} tone="lime" sparkValues={lastSevenHabitStats.map((day) => day.percent)} /><StatCard icon={<CheckCheck size={17} />} label="Logged actions" value={String(totalWins)} detail="Across your habit history" tone="violet" sparkValues={lastSevenHabitStats.map((day) => day.checkIns)} /><StatCard icon={<Flame size={17} />} label="Active routines" value={String(activeStreaks)} detail="With a current streak" tone="orange" sparkValues={lastSevenHabitStats.map((day) => day.activeStreaks)} /></section>
           <div className="today-insights-trend"><MomentumChart habits={habits} today={today} /></div>
           <div className="insight-activity"><MonthlyActivityCalendar habits={habits} tasks={tasks} today={today} onToggleHabit={toggleHabit} onToggleTask={toggleTask} /></div>
           <div className="content-grid insight-bottom"><section className="panel"><div className="panel-heading"><div><div className="panel-overline">WHAT THE DATA SAYS</div><h3>Your strongest routines</h3></div><Trophy size={18} className="muted-icon" /></div><div className="ranking-list">{[...habits].sort((a, b) => getBestStreak(b, today) - getBestStreak(a, today)).slice(0, 4).map((habit, index) => <div className="ranking-row" key={habit.id}><span className="rank-number">0{index + 1}</span><span className="rank-emoji tone-violet"><HabitGlyph habit={habit} size={16} /></span><span className="rank-name"><b>{habit.name}</b><small>{habit.category} · {habit.frequency.toLowerCase()}</small></span><span className="rank-streak"><Flame size={13} /> {getCurrentStreak(habit, today)} days</span><div className="rank-bar"><span style={{ width: `${Math.min(100, getBestStreak(habit, today) / Math.max(1, bestStreak) * 100)}%` }} /></div></div>)}{habits.length === 0 && <p className="quiet-empty">Add routines to start seeing patterns.</p>}</div></section><section className="panel reflection-panel"><div className="panel-heading"><div><div className="panel-overline">YOUR NEXT EXPERIMENT</div><h3>Make it easier</h3></div><Sparkles size={17} className="accent-icon" /></div><div className="reflection-quote">“Success is often a better-designed starting point.”</div><div className="experiment-row"><span className="experiment-number">01</span><div><b>Pick one habit to protect</b><p>Which routine would make the rest of your day feel better?</p></div></div><div className="experiment-row"><span className="experiment-number">02</span><div><b>Make a specific if–then plan</b><p>“After <em>your cue</em>, I’ll do <em>the smallest version</em>.”</p></div></div><div className="experiment-row"><span className="experiment-number">03</span><div><b>Review, don’t judge</b><p>At week’s end, adjust the cue, effort, or timing that got in the way.</p></div></div><button className="secondary-button full-button" type="button" onClick={() => setPage('Habits')}>Tune my habits <ArrowRight size={15} /></button></section></div>
@@ -1218,7 +1283,7 @@ function App() {
 
         {page === 'Focus' && <>
           <section className="page-intro"><div><div className="eyebrow"><span className="eyebrow-line" /> ONE THING AT A TIME</div><h1>Make space for <span>deep work.</span></h1><p className="welcome-sub">Pick a task, choose a block, and give it your full attention.</p></div><div className="focus-session-badge"><span className="save-dot" /> {focusSessions} sessions completed</div></section>
-          <section className="focus-page-grid"><div className="panel focus-large-panel"><div className="focus-large-top"><span className="section-kicker"><span className="kicker-mark"><Timer size={13} /></span> FOCUS TIMER</span><span className="live-pill"><span /> {focusRunning ? 'IN SESSION' : 'READY WHEN YOU ARE'}</span></div><div className="focus-large-ring" style={{ '--timer-progress': `${timerProgress * 100}%` } as CSSProperties}><div className="focus-ring-inner"><span className="focus-time">{timeText}</span><span className="focus-caption">{focusRunning ? 'STAY PRESENT' : 'YOUR NEXT BLOCK'}</span></div></div><div className="timer-presets large-presets">{[15, 25, 50].map((minutes) => <button type="button" key={minutes} className={focusPreset === minutes ? 'selected' : ''} onClick={() => resetFocus(minutes)}>{minutes} min</button>)}</div><div className="focus-large-actions"><button className="primary-button" type="button" onClick={() => { if (focusSeconds === 0) resetFocus(); else setFocusRunning((running) => !running); }}>{focusRunning ? 'Pause focus' : focusSeconds === 0 ? 'Start another' : 'Start focusing'} {focusRunning ? <span className="pause-glyph">Ⅱ</span> : <ArrowRight size={16} />}</button><button className="secondary-button" type="button" onClick={() => resetFocus() }><RotateCcw size={15} /> Reset</button></div><p className="timer-reassurance"><ShieldCheck size={15} /> Missed a block? Nothing is lost. Restart with the next minute.</p></div><div className="focus-side-column"><section className="panel choose-task-panel"><div className="panel-overline">YOUR NEXT PRIORITY</div><h3>What will you work on?</h3><p>Choose one task. Everything else can wait for this block.</p>{todayTasks.filter((task) => !task.completed).map((task) => <button key={task.id} type="button" className={`focus-task-choice ${focusTaskId === task.id ? 'selected' : ''}`} onClick={() => { setFocusTaskId(task.id); setToast(`Focus target selected: ${task.title}`); }}><span className="todo-box" /><span><b>{task.title}</b><small>{task.estimate} min · {task.priority} priority</small></span><ArrowUpRight size={15} /></button>)}{todayTasks.filter((task) => !task.completed).length === 0 && <p className="quiet-empty">Your task list is clear. Enjoy the breathing room.</p>}<button className="text-button" type="button" onClick={() => setPage('Tasks')}>Manage today’s tasks <ArrowRight size={14} /></button></section><section className="panel focus-rule-panel"><span className="rule-icon"><Leaf size={17} /></span><div className="panel-overline">A GENTLER RULE</div><h3>Return your attention.</h3><p>Focus isn’t never getting distracted. It’s noticing and coming back—without making a story out of it.</p></section></div></section>
+          <section className="focus-page-grid"><div className="panel focus-large-panel"><div className="focus-large-top"><span className="section-kicker"><span className="kicker-mark"><Timer size={13} /></span> FOCUS TIMER</span><span className="live-pill"><span /> {focusRunning ? 'IN SESSION' : 'READY WHEN YOU ARE'}</span></div><div className="focus-large-ring" style={{ '--timer-progress': `${timerProgress * 100}%` } as CSSProperties}><div className="focus-ring-inner"><span className="focus-time">{timeText}</span><span className="focus-caption">{focusRunning ? 'STAY PRESENT' : 'YOUR NEXT BLOCK'}</span></div></div><div className="timer-presets large-presets">{[15, 25, 50].map((minutes) => <button type="button" key={minutes} className={focusPreset === minutes ? 'selected' : ''} onClick={() => resetFocus(minutes)} disabled={focusRunning}>{minutes} min</button>)}</div><div className="focus-custom-controls"><label htmlFor="focus-custom-minutes">CUSTOM DURATION <span>1–240 minutes</span></label><div><input id="focus-custom-minutes" type="number" min="1" max="240" step="1" value={focusCustomMinutesDraft} disabled={focusRunning} onChange={(event) => setFocusCustomMinutesDraft(event.target.value)} aria-label="Custom focus duration in minutes" /><button type="button" className="secondary-button" disabled={focusRunning} onClick={applyCustomFocus}>Set timer</button></div></div><div className="focus-ringtone-setting"><label htmlFor="focus-ringtone-url">CUSTOM RINGTONE <span>Optional · YouTube or Spotify</span></label><input id="focus-ringtone-url" type="url" value={focusSoundUrl} onChange={(event) => setFocusSoundUrl(event.target.value.slice(0, 2048))} placeholder="Paste a YouTube or Spotify track link" disabled={focusRunning} /><small>{focusSoundUrl.trim() && !activeFocusMedia ? 'That link is not supported yet. Use a YouTube or Spotify track URL.' : activeFocusMedia ? activeFocusMedia.provider + ' will open when your focus block finishes.' : 'Your chosen track will be offered at the end of each focus block. A built-in chime is always available.'}</small></div><div className="focus-large-actions"><button className="primary-button" type="button" onClick={() => { if (focusSeconds === 0) resetFocus(); else { if (!focusRunning) unlockReminderAudio(); setFocusRunning((running) => !running); } }}>{focusRunning ? 'Pause focus' : focusSeconds === 0 ? 'Start another' : 'Start focusing'} {focusRunning ? <span className="pause-glyph">Ⅱ</span> : <ArrowRight size={16} />}</button><button className="secondary-button" type="button" onClick={() => resetFocus() }><RotateCcw size={15} /> Reset</button></div><p className="timer-reassurance"><ShieldCheck size={15} /> Missed a block? Nothing is lost. Restart with the next minute.</p></div><div className="focus-side-column"><section className="panel choose-task-panel"><div className="panel-overline">YOUR NEXT PRIORITY</div><h3>What will you work on?</h3><p>Choose one task. Everything else can wait for this block.</p>{todayTasks.filter((task) => !task.completed).map((task) => <button key={task.id} type="button" className={`focus-task-choice ${focusTaskId === task.id ? 'selected' : ''}`} onClick={() => { setFocusTaskId(task.id); setToast(`Focus target selected: ${task.title}`); }}><span className="todo-box" /><span><b>{task.title}</b><small>{task.estimate} min · {task.priority} priority</small></span><ArrowUpRight size={15} /></button>)}{todayTasks.filter((task) => !task.completed).length === 0 && <p className="quiet-empty">Your task list is clear. Enjoy the breathing room.</p>}<button className="text-button" type="button" onClick={() => setPage('Tasks')}>Manage today’s tasks <ArrowRight size={14} /></button></section><section className="panel focus-rule-panel"><span className="rule-icon"><Leaf size={17} /></span><div className="panel-overline">A GENTLER RULE</div><h3>Return your attention.</h3><p>Focus isn’t never getting distracted. It’s noticing and coming back—without making a story out of it.</p></section></div></section>
         </>}
       </main>
 
@@ -1282,6 +1347,24 @@ function App() {
             </div>
           </details>
           <div className="if-then-preview"><span><Sparkles size={15} /></span><p><b>Your if–then plan</b><br />If {habitDraft.cue.trim() || 'my cue happens'}, then I’ll {habitDraft.minimum.trim() || 'do the smallest version'}.</p></div><div className="modal-actions"><button className="secondary-button" type="button" onClick={() => { setShowHabitModal(false); setEditingHabitId(null); setHabitDraft({ ...emptyHabitDraft }); }}>Cancel</button><button className="primary-button" type="submit">{editingHabitId ? <><Check size={15} /> Save changes</> : <><Plus size={15} /> Create habit</>}</button></div></form></section></div>}
+      {showFocusAlarm && <div className="reminder-alarm-backdrop focus-completion-backdrop" role="presentation">
+        <section className="reminder-alarm focus-completion-alarm" role="alertdialog" aria-modal="true" aria-labelledby="focus-completion-title">
+          <span className="reminder-alarm-icon"><CheckCheck size={22} /></span>
+          <span className="reminder-alarm-kicker">FOCUS BLOCK COMPLETE · {focusPreset} MINUTES</span>
+          <h2 id="focus-completion-title">Well done. You showed up.</h2>
+          <p>Take a breath, reset your attention, and choose your next small step.</p>
+          {activeFocusMedia && !focusAlarmSoundStopped && <section className="reminder-media-player focus-completion-media" aria-label="Custom focus completion ringtone">
+            <div className="reminder-media-heading"><span className="reminder-media-wave"><CadenceMark /></span><div><b>Your focus ringtone</b><small>{activeFocusMedia.provider} player</small></div></div>
+            <iframe key={focusAlarmMediaReload} src={activeFocusMedia.embedUrl} title={'Cadence focus completion ringtone from ' + activeFocusMedia.provider} allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" referrerPolicy="strict-origin-when-cross-origin" loading="eager" className="reminder-media-iframe" />
+            <a className="reminder-media-open" href={activeFocusMedia.originalUrl} target="_blank" rel="noreferrer">Open in {activeFocusMedia.provider} <ArrowUpRight size={13}/></a>
+          </section>}
+          <div className="reminder-alarm-actions focus-completion-actions">
+            <button type="button" className="secondary-button" onClick={() => setFocusAlarmSoundStopped(true)}><X size={14} /> Stop sound</button>
+            <button type="button" className="primary-button" onClick={dismissFocusAlarm}><Check size={15} /> Done</button>
+          </div>
+          {activeFocusMedia && <div className="reminder-sound-controls"><button type="button" className="reminder-replay-button" onClick={() => { setFocusAlarmSoundStopped(false); setFocusAlarmMediaReload((value) => value + 1); }}>Play ringtone again</button></div>}
+        </section>
+      </div>}
       {activeReminder && <div className="reminder-alarm-backdrop" role="presentation">
         <section className="reminder-alarm" role="alertdialog" aria-modal="true" aria-labelledby="reminder-alarm-title">
           <span className="reminder-alarm-icon"><Bell size={22} /></span>
