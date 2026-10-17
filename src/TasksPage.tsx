@@ -158,7 +158,7 @@ export default function TasksPage({ tasks, today, onToggleTask, onAddTask, onDel
 
     <section className="panel tasks-board">
       <div className="panel-heading tasks-board-heading">
-        <div><div className="panel-overline">YOUR ACTION LIST</div><h3>{filter === 'Completed' ? 'Completed occurrences' : filter === 'Overdue' ? 'Past-due occurrences' : filter === 'Upcoming' ? 'Upcoming occurrences' : filter === 'Today' ? 'Today's tasks' : 'All tasks'} <span className="heading-count">{filter === 'All' ? tasks.length : shownTasks.length}</span></h3></div>
+        <div><div className="panel-overline">YOUR ACTION LIST</div><h3>{filter === 'Completed' ? 'Completed occurrences' : filter === 'Overdue' ? 'Past-due occurrences' : filter === 'Upcoming' ? 'Upcoming occurrences' : filter === 'Today' ? "Today's tasks" : 'All tasks'} <span className="heading-count">{filter === 'All' ? tasks.length : shownTasks.length}</span></h3></div>
         <span className="tasks-board-count">{shownTasks.length} shown</span>
       </div>
       <div className="tasks-toolbar">
