@@ -741,7 +741,7 @@ function App() {
     <div className={`app-shell ${dark ? 'dark-mode' : 'light-mode'}`}>
       <aside className="sidebar">
         <button className="brand-lockup" onClick={() => { setPage('Today'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} type="button" aria-label="Go to Cadence dashboard">
-          <img className="cadence-lockup-image" src="/cadence-lockup-original.svg" alt="Cadence" width="163" height="52" />
+          <img className="cadence-lockup-image" src="/cadence-lockup-original.webp" alt="Cadence" width="163" height="52" />
         </button>
         <div className="workspace-label">YOUR SPACE <span className="live-dot" /></div>
         <nav className="nav-list" aria-label="Main navigation">
@@ -753,7 +753,7 @@ function App() {
             { label: 'Insights' as Page, icon: BarChart3, sub: 'Patterns & progress' },
             { label: 'Focus' as Page, icon: Focus, sub: 'Make room for deep work' },
           ]).map(({ label, icon: Icon, sub }) => (
-            <button key={label} className={`nav-item ${page === label ? 'active' : ''}`} onClick={() => { setPage(label); window.scrollTo({ top: 0, behavior: 'smooth' }); }} type="button">
+            <button key={label} className={`nav-item ${page === label ? 'active' : ''}`} onClick={() => { setPage(label); window.scrollTo({ top: 0, behavior: 'smooth' }); }} type="button" aria-current={page === label ? 'page' : undefined}>
               <span className="nav-icon"><Icon size={17} /></span><span className="nav-copy"><b>{label}</b><small>{sub}</small></span>
               {label === 'Today' && <span className="nav-count">{Math.max(0, dueHabits.length - doneToday)}</span>}
               {label === 'Tasks' && <span className="nav-count">{tasks.filter((task) => taskOccursOn(task, today) && !taskIsDone(task, today)).length}</span>}
@@ -855,7 +855,7 @@ function App() {
 
           <WeeklyTracker habits={habits} today={today} onToggle={toggleHabit} />
 
-          <footer className="analytics-footer"><span><img className="cadence-footer-lockup" src="/cadence-lockup-original.svg" alt="Cadence" width="146" height="46" /> <i>/</i> PERSONAL PERFORMANCE SYSTEM</span><span>YOUR PROGRESS, WITHOUT THE NOISE.</span></footer>
+          <footer className="analytics-footer"><span><img className="cadence-footer-lockup" src="/cadence-lockup-original.webp" alt="Cadence" width="146" height="46" /> <i>/</i> PERSONAL PERFORMANCE SYSTEM</span><span>YOUR PROGRESS, WITHOUT THE NOISE.</span></footer>
         </>}
   
         {page === 'Tasks' && <TasksPage tasks={tasks} today={today} onToggleTask={toggleTask} onAddTask={addPlannerTask} onDeleteTask={(taskId) => { setTasks((current) => current.filter((task) => task.id !== taskId)); setToast('Task removed.'); }} />}
@@ -1230,7 +1230,7 @@ function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habi
             const completed = scheduled && Boolean(habit.logs[key]);
             const chartBarClass = "habit-activity-bar " + (completed ? "is-complete" : scheduled ? "is-missed" : "is-unscheduled");
             return <g key={key}>
-              {scheduled && <rect x={x - 10} y={completed ? 26 : 86} width="20" height={completed ? 64 : 4} rx="3" className={chartBarClass}>
+              {scheduled && <rect x={x - 10} y={completed ? 26 : 86} width="20" height={completed ? 64 : 4} rx="3" className={chartBarClass} fill={completed ? "url(#cadence-habit-bar-" + habit.id.replace(/[^a-zA-Z0-9_-]/g, "") + ")" : undefined}>
                 <title>{key}: {completed ? "Completed · 100%" : "Not logged · 0%"}</title>
               </rect>}
               {!scheduled && <line x1={x - 7} y1="90" x2={x + 7} y2="90" className="habit-activity-unscheduled-tick"><title>{key}: Not scheduled</title></line>}
