@@ -1028,28 +1028,25 @@ function App() {
 
         {page === 'Habits' && <>
           <section className="page-intro"><div><div className="eyebrow"><span className="eyebrow-line" /> BUILD YOUR BASELINE</div><h1>Habits, <span>by design.</span></h1><p className="welcome-sub">Make good actions easier to start and easier to repeat.</p></div><button className="primary-button" type="button" onClick={openCreateHabit}><Plus size={16} /> Create habit</button></section>
-          <section className="habits-overview-strip" aria-label="Routine overview">
-            <div className="habit-overview-feature">
-              <div className="habit-overview-ring" style={{ '--habit-consistency': consistency + '%' } as CSSProperties} role="img" aria-label={consistency + '% weekly consistency'}>
-                <span><b>{consistency}</b><small>%</small></span>
-              </div>
-              <div className="habit-overview-copy">
-                <span className="strip-label">YOUR WEEKLY RHYTHM</span>
-                <h2>Consistency</h2>
-                <p>Scheduled habit check-ins completed this week.</p>
-                <div className="habit-overview-progress" aria-hidden="true"><span style={{ width: consistency + '%' }} /></div>
-              </div>
-            </div>
-            <div className="habit-overview-stat">
-              <span className="strip-label">ACTIVE ROUTINES</span>
-              <b>{habits.length.toString().padStart(2, '0')}</b>
-              <small>In your personal system</small>
-            </div>
-            <div className="habit-overview-stat">
-              <span className="strip-label">CHECKED IN TODAY</span>
-              <b>{doneToday}<i> / {dueHabits.length}</i></b>
-              <small>Completed check-ins</small>
-            </div>
+          <section className="analytics-metric-grid today-analytics-metrics habits-overview-cards" aria-label="Routine overview">
+            <article className="analytics-metric-card">
+              <div className="analytics-metric-label">ACTIVE ROUTINES <span className="analytics-metric-icon tone-violet"><Target size={12} /></span></div>
+              <div className="analytics-metric-value">{String(habits.length).padStart(2, '0')}</div>
+              <div className="analytics-metric-bottom"><span>In your personal system</span><b className="analytics-trend-positive">{habits.length ? 'ACTIVE' : 'READY'}</b></div>
+              <div className="analytics-streak-steps" role="img" aria-label={habits.length + ' active routines'}>{lastSevenHabitStats.map((day) => <i key={day.key} className={!habits.length ? 'is-empty' : ''} style={{ height: (habits.length ? Math.max(4, Math.round((day.activeStreaks / Math.max(1, ...lastSevenHabitStats.map((item) => item.activeStreaks))) * 19)) : 3) + 'px' }} />)}</div>
+            </article>
+            <article className="analytics-metric-card">
+              <div className="analytics-metric-label">CHECKED IN TODAY <span className="analytics-metric-icon tone-pink"><CheckCheck size={12} /></span></div>
+              <div className="analytics-metric-value">{doneToday}<small>/ {dueHabits.length}</small></div>
+              <div className="analytics-metric-bottom"><span>Scheduled check-ins completed</span><b className="analytics-trend-positive">TODAY</b></div>
+              <div className="analytics-metric-line" role="img" aria-label={doneToday + ' of ' + dueHabits.length + ' habits checked in today'}>{lastSevenHabitStats.map((day) => <i key={day.key} className={day.percent === null ? 'is-empty' : ''} title={day.key + ': ' + (day.percent === null ? 'no habits scheduled' : day.percent + '% complete')} style={{ height: (day.percent === null ? 3 : Math.max(4, Math.round(day.percent * .22 + 3))) + 'px' }} />)}</div>
+            </article>
+            <article className="analytics-metric-card analytics-metric-primary">
+              <div className="analytics-metric-label">WEEKLY CONSISTENCY <span className="analytics-metric-icon tone-violet"><CalendarDays size={12} /></span></div>
+              <div className="analytics-metric-value">{consistency}<small>%</small></div>
+              <div className="analytics-metric-bottom"><span>Across scheduled routines</span><b className="analytics-trend-positive">WEEKLY</b></div>
+              <div className="analytics-mini-bars" role="img" aria-label="Daily completion contributing to weekly consistency">{lastSevenHabitStats.map((day) => <i key={day.key} className={day.percent === null ? 'is-empty' : ''} title={day.key + ': ' + (day.percent === null ? 'no habits scheduled' : day.percent + '% complete')} style={{ height: (day.percent === null ? 3 : Math.max(4, Math.round(day.percent * .23 + 3))) + 'px' }} />)}</div>
+            </article>
           </section>
           <section className="panel habits-library"><div className="panel-heading"><div><div className="panel-overline">YOUR PERSONAL SYSTEM</div><h3>All routines <span className="heading-count">{habits.length}</span></h3></div><div className="filter-pills"><button type="button" className={filter === 'All' ? 'selected' : ''} onClick={() => setFilter('All')}>All</button>{categories.map((cat) => <button type="button" key={cat} className={filter === cat ? 'selected' : ''} onClick={() => setFilter(cat)}>{cat}</button>)}</div></div><div className="library-list">{filteredHabits.map((habit) => <HabitDetail key={habit.id} habit={habit} today={today} onToggle={() => toggleHabit(habit.id)} onEdit={() => openEditHabit(habit)} onDelete={() => { setHabits((current) => current.filter((item) => item.id !== habit.id)); setToast('Habit removed'); }} />)}{filteredHabits.length === 0 && <EmptyState title="Nothing in this category yet" body="A good system starts small. Add a routine when you’re ready." action="Add habit" onAction={openCreateHabit} />}</div></section>
           <WeeklyTracker habits={habits} today={today} onToggle={toggleHabit} />
