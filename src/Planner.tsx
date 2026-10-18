@@ -1,10 +1,28 @@
 import { useMemo, useState } from 'react';
 import type { FormEvent, CSSProperties } from 'react';
 import {
-  CalendarDays, CalendarRange, Check, ChevronLeft, ChevronRight, Clock3,
-  LayoutGrid, ListFilter, Plus, Repeat2, X, Zap,
+  Activity, BookOpen, Brain, CalendarDays, CalendarRange, Check, ChevronLeft, ChevronRight, Clock3, Code2, Compass, Coffee, Droplets, Dumbbell, Flower2, Heart,
+  LayoutGrid, ListFilter, PenTool, Plus, Repeat2, X, Zap,
 } from 'lucide-react';
 import type { Habit, Recurrence, Task, TaskCategory } from './types';
+
+function PlannerHabitGlyph({ habit }: { habit: Habit }) {
+  const name = habit.name.toLowerCase();
+  const props = { size: 14, strokeWidth: 1.8, 'aria-hidden': true as const };
+  if (/(work.?out|gym|exercise|fitness|training|strength|lift)/.test(name)) return <Dumbbell {...props} />;
+  if (/(relax|meditat|breath|mindful|calm|reflection|gratitude)/.test(name)) return <Flower2 {...props} />;
+  if (/(read|book|study|learn|language|course|lecture)/.test(name)) return <BookOpen {...props} />;
+  if (/(code|program|develop|software|coding|algorithm)/.test(name)) return <Code2 {...props} />;
+  if (/(write|journal|draw|design|craft|create|sketch)/.test(name)) return <PenTool {...props} />;
+  if (/(water|hydrate|drink)/.test(name)) return <Droplets {...props} />;
+  if (/(coffee|morning|routine)/.test(name)) return <Coffee {...props} />;
+  if (/(walk|run|steps|outdoor|nature|stretch)/.test(name)) return <Activity {...props} />;
+  if (/(family|friend|connect|care|health)/.test(name)) return <Heart {...props} />;
+  if (habit.category === 'Mind') return <Brain {...props} />;
+  if (habit.category === 'Body') return <Dumbbell {...props} />;
+  if (habit.category === 'Craft') return <PenTool {...props} />;
+  return <Compass {...props} />;
+}
 
 export type PlannerTaskDraft = {
   title: string;
@@ -280,7 +298,7 @@ export function PlannerPage({ habits, tasks, today, onToggleHabit, onToggleTask,
               const checked = Boolean(habit.logs[selectedDate]);
               return <div className={'planner-habit-row ' + (checked ? 'is-complete' : '')} key={habit.id}>
                 <button type="button" className={'planner-check ' + (checked ? 'checked' : '')} disabled={isFuture} onClick={() => onToggleHabit(habit.id, selectedDate)} aria-label={(checked ? 'Undo' : 'Complete') + ' ' + habit.name}><span>{checked ? <Check size={13} strokeWidth={3}/> : null}</span></button>
-                <span className={'planner-habit-symbol tone-' + habit.color}>{habit.emoji}</span>
+                <span className={'planner-habit-symbol tone-' + habit.color} aria-hidden="true"><PlannerHabitGlyph habit={habit} /></span>
                 <div className="planner-activity-copy"><b>{habit.name}</b><small>{habit.cue || habit.minimum}</small></div>
                 <span className="planner-activity-tag">{habit.category}</span>
               </div>;
