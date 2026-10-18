@@ -1505,7 +1505,7 @@ function App() {
   };
   const toggleFocusTimer = () => {
     unlockReminderAudio();
-    primeFocusAlarmAudio();
+    if (!focusRunning && focusSeconds > 0) primeFocusAlarmAudio();
     if (focusSeconds === 0) {
       resetFocus();
       return;
@@ -1978,7 +1978,7 @@ function App() {
                   {backgroundPushBusy ? 'Please wait…' : backgroundPushEnabled ? 'Disable' : 'Enable'}
                 </button>
               </div>
-              <p className="focus-sound-note">Push notifications use your device’s notification sound. A browser cannot force itself to open or autoplay a custom music track while closed; click the alert to open Cadence, then use Play alert sound if needed.</p>
+              <p className="focus-sound-note">Cadence keeps the alarm repeating until you choose Stop alarm. Uploaded audio loops directly in the browser. Spotify and YouTube attempt autoplay in the completion alert, but their players or Chrome may block it; Cadence repeats its own audible alarm as a fallback. Keep Cadence open in a browser tab and allow sound for the most reliable result.</p>
             </section>
             <div className="focus-large-actions"><button className="primary-button" type="button" onClick={toggleFocusTimer}>{focusRunning ? 'Pause focus' : focusSeconds === 0 ? 'Start another' : 'Start focusing'} {focusRunning ? <span className="pause-glyph">Ⅱ</span> : <ArrowRight size={16} />}</button><button className="secondary-button" type="button" onClick={() => resetFocus() }><RotateCcw size={15} /> Reset</button></div><p className="timer-reassurance"><ShieldCheck size={15} /> Missed a block? Nothing is lost. Restart with the next minute.</p></div><div className="focus-side-column"><section className="panel choose-task-panel"><div className="panel-overline">YOUR NEXT PRIORITY</div><h3>What will you work on?</h3><p>Choose one task. Everything else can wait for this block.</p>{todayTasks.filter((task) => !task.completed).map((task) => <button key={task.id} type="button" className={`focus-task-choice ${focusTaskId === task.id ? 'selected' : ''}`} onClick={() => { setFocusTaskId(task.id); setToast(`Focus target selected: ${task.title}`); }}><span className="todo-box" /><span><b>{task.title}</b><small>{task.estimate} min · {task.priority} priority</small></span><ArrowUpRight size={15} /></button>)}{todayTasks.filter((task) => !task.completed).length === 0 && <p className="quiet-empty">Your task list is clear. Enjoy the breathing room.</p>}<button className="text-button" type="button" onClick={() => setPage('Tasks')}>Manage today’s tasks <ArrowRight size={14} /></button></section><section className="panel focus-rule-panel"><span className="rule-icon"><Leaf size={17} /></span><div className="panel-overline">A GENTLER RULE</div><h3>Return your attention.</h3><p>Focus isn’t never getting distracted. It’s noticing and coming back—without making a story out of it.</p></section></div></section>
         </>}
@@ -2083,7 +2083,7 @@ function App() {
               setPushArrival(null);
             }}>Open {pushArrival.kind === 'focus' ? 'Focus' : 'Tasks'}</button>
           </div>
-          <p className="reminder-footnote">Your browser controls whether custom audio can start automatically. This button plays the selected sound after your interaction.</p>
+          <p className="reminder-footnote">The alarm repeats until you press Stop alarm. Uploaded audio loops in Cadence; streaming players may block autoplay, so a repeating Cadence alarm tone is used as a fallback.</p>
           <button type="button" className="reminder-stop-button" onClick={() => setPushArrival(null)}>Stop alarm</button>
         </section>
       </div>}
