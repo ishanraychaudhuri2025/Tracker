@@ -10103,3 +10103,40 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   border-radius: 2px 2px 3px 3px !important;
   clip-path: none !important;
 }
+
+
+/* Final planner polish: tighten weekday/date spacing by another 5% and contain COMPLETE inside its ring. */
+#root .app-shell .habits-library .mini-week > span {
+  gap: 3.1px !important; /* 5% tighter than the previous 3.3px */
+}
+#root .app-shell .planner-summary-progress {
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+#root .app-shell .planner-summary-progress > div {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  padding: 0 5px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 2px !important;
+}
+#root .app-shell .planner-summary-progress > div > b {
+  max-width: 100% !important;
+  font-size: clamp(12px, 1.2vw, 18px) !important;
+  line-height: 1.05 !important;
+  white-space: nowrap !important;
+  letter-spacing: -.4px !important;
+}
+#root .app-shell .planner-summary-progress > div > small {
+  display: block !important;
+  max-width: 100% !important;
+  font-size: 6px !important;
+  line-height: 1.1 !important;
+  letter-spacing: .25px !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+}
