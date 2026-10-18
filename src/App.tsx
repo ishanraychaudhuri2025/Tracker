@@ -1796,64 +1796,45 @@ function App() {
                   </select>
                 </div>
               </div>
-              {focusRingtoneKind === 'custom' && <div className="focus-custom-audio-row">
-                <label className="focus-upload-label">Choose audio file
-                  <input type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a" onChange={(event) => {
-                    const input = event.currentTarget;
-                    const file = input.files?.[0];
-                    if (!file) return;
-                    if (!file.type.startsWith('audio/') && !/\.(mp3|wav|ogg|m4a|aac|webm)$/i.test(file.name)) {
-                      setToast('Choose an audio file such as MP3, WAV, OGG, or M4A.');
-                      input.value = '';
-                      return;
-                    }
-                    if (file.size > 1.5 * 1024 * 1024) {
-                      setToast('Choose a short ringtone under 1.5 MB so it can be saved on this device.');
-                      input.value = '';
-                      return;
-                    }
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                      if (typeof reader.result !== 'string') {
-                        setToast('Could not read that audio file. Try another clip.');
-                        return;
-                      }
-                      try {
-                        window.localStorage.setItem('cadence-focus-ringtone-data', reader.result);
-                        window.localStorage.setItem('cadence-focus-ringtone-name', file.name);
-                        window.localStorage.setItem('cadence-focus-ringtone-kind', 'custom');
-                        setFocusRingtoneData(reader.result);
-                        setFocusRingtoneName(file.name);
-                        setFocusRingtoneKind('custom');
-                        setToast('Custom focus ringtone saved on this device.');
-                      } catch {
-                        setToast('Could not save that ringtone. Choose a shorter audio clip and try again.');
-                      }
-                    };
-                    reader.onerror = () => setToast('Could not read that audio file. Try another clip.');
-                    reader.readAsDataURL(file);
-                    input.value = '';
-                  }} />
-                </label>
-                <span className="focus-custom-audio-name">{focusRingtoneName || 'No audio selected yet'}</span>
+              {focusRingtoneKind === 'custom' && <div className="focus-music-link-row">
+                <label className="focus-upload-label" htmlFor="focus-music-link">Spotify or YouTube link</label>
+                <div className="focus-music-link-control">
+                  <input
+                    id="focus-music-link"
+                    type="url"
+                    inputMode="url"
+                    autoComplete="url"
+                    placeholder="https://open.spotify.com/track/… or youtu.be/…"
+                    value={focusRingtoneDraft}
+                    onChange={(event) => setFocusRingtoneDraft(event.target.value)}
+                    aria-describedby="focus-music-link-help"
+                  />
+                  <button type="button" className="secondary-button" onClick={saveFocusMusicLink}>Save link</button>
+                </div>
+                <p id="focus-music-link-help" className="focus-sound-note">Paste a Spotify track, album, or playlist link, or a YouTube video link. The player opens here in Cadence. Spotify and YouTube may require you to press Play.</p>
+                {focusRingtoneData && parseReminderMedia(focusRingtoneData) && <div className="focus-music-saved">
+                  <span className="focus-music-provider">{focusRingtoneName || parseReminderMedia(focusRingtoneData)?.provider} soundtrack saved</span>
+                  <button type="button" className="text-button" onClick={removeFocusMusicLink}>Remove link</button>
+                </div>}
+                {focusMusicPreviewOpen && parseReminderMedia(focusRingtoneData) && <div className="focus-music-embed" aria-label="Focus soundtrack preview">
+                  <iframe
+                    src={parseReminderMedia(focusRingtoneData)?.embedUrl}
+                    title={'Focus soundtrack from ' + (parseReminderMedia(focusRingtoneData)?.provider || 'music service')}
+                    allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allowFullScreen
+                  />
+                  <a href={parseReminderMedia(focusRingtoneData)?.originalUrl} target="_blank" rel="noreferrer">
+                    Open in {parseReminderMedia(focusRingtoneData)?.provider} <ArrowUpRight size={13} />
+                  </a>
+                </div>}
               </div>}
               <div className="focus-sound-actions">
-                <button type="button" className="secondary-button" onClick={previewFocusRingtone}>Preview sound</button>
-                {focusRingtoneData && <button type="button" className="text-button" onClick={() => {
-                  try {
-                    window.localStorage.removeItem('cadence-focus-ringtone-data');
-                    window.localStorage.removeItem('cadence-focus-ringtone-name');
-                  } catch { /* Storage may be unavailable. */ }
-                  setFocusRingtoneData('');
-                  setFocusRingtoneName('');
-                  if (focusRingtoneKind === 'custom') {
-                    setFocusRingtoneKind('chime');
-                    try { window.localStorage.setItem('cadence-focus-ringtone-kind', 'chime'); } catch { /* Storage may be unavailable. */ }
-                  }
-                  setToast('Custom ringtone removed from this device.');
-                }}>Remove custom ringtone</button>}
+                <button type="button" className="secondary-button" onClick={previewFocusRingtone}>{focusRingtoneKind === 'custom' ? 'Preview soundtrack' : 'Preview sound'}</button>
               </div>
-              <p className="focus-sound-note">Your uploaded ringtone stays in this browser on this device. Use Preview sound to check your selection.</p>
+              {focusRingtoneKind === 'custom'
+                ? <p className="focus-sound-note">When the timer ends, Cadence shows your selected player in the completion alert. To avoid surprise autoplay, start playback with the player’s Play button.</p>
+                : <p className="focus-sound-note">Built-in sounds can play immediately when browser audio is permitted. External music services control their own playback.</p>}
               <div className="focus-background-push-row">
                 <div>
                   <b>Background alerts</b>
