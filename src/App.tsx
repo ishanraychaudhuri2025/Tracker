@@ -231,12 +231,28 @@ function App() {
   const [reminderSoundStopped, setReminderSoundStopped] = useState(false);
   const [reminderMediaReload, setReminderMediaReload] = useState(0);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const focusCompletionAudioRef = useRef<HTMLAudioElement | null>(null);
   const firedRemindersRef = useRef<Set<string>>(new Set());
   const snoozeTimeoutRef = useRef<number | null>(null);
   const [dark, setDark] = useState(true);
   const [focusRunning, setFocusRunning] = useState(false);
   const [focusPreset, setFocusPreset] = useState(25);
   const [focusSeconds, setFocusSeconds] = useState(25 * 60);
+  const [focusCustomMinutes, setFocusCustomMinutes] = useState('40');
+  const [focusRingtoneKind, setFocusRingtoneKind] = useState<'chime' | 'bell' | 'pulse' | 'custom'>(() => {
+    try {
+      const saved = typeof window !== 'undefined' ? window.localStorage.getItem('cadence-focus-ringtone-kind') : null;
+      return saved === 'bell' || saved === 'pulse' || saved === 'custom' ? saved : 'chime';
+    } catch { return 'chime'; }
+  });
+  const [focusRingtoneData, setFocusRingtoneData] = useState(() => {
+    try { return typeof window !== 'undefined' ? window.localStorage.getItem('cadence-focus-ringtone-data') ?? '' : ''; }
+    catch { return ''; }
+  });
+  const [focusRingtoneName, setFocusRingtoneName] = useState(() => {
+    try { return typeof window !== 'undefined' ? window.localStorage.getItem('cadence-focus-ringtone-name') ?? '' : ''; }
+    catch { return ''; }
+  });
   const [focusSessions, setFocusSessions] = useState(0);
   const [focusTaskId, setFocusTaskId] = useState<string | null>(null);
   const [toast, setToast] = useState('');
@@ -247,6 +263,16 @@ function App() {
   const [cloudStatus, setCloudStatus] = useState(supabaseConfigured ? 'Connecting…' : 'Saved locally');
   const [cloudError, setCloudError] = useState('');
   const today = todayKey();
+  const dueTodayHabits = habits.filter((habit) => today >= habit.createdAt && isDue(habit, today));
+  const pendingTodayHabits = dueTodayHabits.filter((habit) => !habit.logs[today]);
+  const experimentHabit = pendingTodayHabits[0] ?? habits[0] ?? null;
+  const experimentMode = pendingTodayHabits.length > 0 ? 'pending' : dueTodayHabits.length > 0 ? 'complete' : 'setup';
+  const rawExperimentCue = experimentHabit?.cue?.trim() ?? '';
+  const experimentCue = rawExperimentCue && !/choose a consistent|choose your cue|add a cue/i.test(rawExperimentCue)
+    ? rawExperimentCue
+    : 'your next regular cue';
+  const rawExperimentAction = experimentHabit?.minimum?.trim() || 'do the smallest version for two minutes';
+  const experimentAction = rawExperimentAction.charAt(0).toLowerCase() + rawExperimentAction.slice(1);
   const activeReminderMedia = parseReminderMedia(activeReminder?.reminderSoundUrl);
 
   useEffect(() => {
@@ -322,6 +348,54 @@ function App() {
       oscillator.start(startAt);
       oscillator.stop(startAt + 0.21);
     });
+  };
+
+  const playFocusCompletionSound = () => {
+    if (focusRingtoneKind === 'custom') {
+      if (!focusRingtoneData) {
+        setToast('Choose a short audio file in Focus settings to use your own ringtone.');
+        return;
+      }
+      const audio = new Audio(focusRingtoneData);
+      audio.volume = 0.88;
+      focusCompletionAudioRef.current = audio;
+      void audio.play().catch(() => setToast('The browser blocked the ringtone. Use Preview sound once, then try again.'));
+      return;
+    }
+
+    unlockReminderAudio();
+    const context = audioContextRef.current;
+    if (!context) return;
+    if (focusRingtoneKind === 'chime') {
+      playReminderMelody();
+      return;
+    }
+    const notes = focusRingtoneKind === 'bell'
+      ? [1046, 1318, 1046, 784]
+      : [523, 659, 784, 659, 523];
+    notes.forEach((frequency, index) => {
+      const startAt = context.currentTime + index * (focusRingtoneKind === 'bell' ? 0.28 : 0.16);
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = focusRingtoneKind === 'bell' ? 'sine' : 'triangle';
+      oscillator.frequency.setValueAtTime(frequency, startAt);
+      gain.gain.setValueAtTime(0.0001, startAt);
+      gain.gain.exponentialRampToValueAtTime(focusRingtoneKind === 'bell' ? 0.18 : 0.11, startAt + 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startAt + (focusRingtoneKind === 'bell' ? 0.24 : 0.13));
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start(startAt);
+      oscillator.stop(startAt + (focusRingtoneKind === 'bell' ? 0.26 : 0.15));
+    });
+  };
+
+  const previewFocusRingtone = () => {
+    if (focusRingtoneKind === 'custom' && !focusRingtoneData) {
+      setToast('Choose an audio file first, or select one of the built-in sounds.');
+      return;
+    }
+    unlockReminderAudio();
+    playFocusCompletionSound();
   };
 
   const enableDesktopNotifications = async () => {
@@ -551,8 +625,16 @@ function App() {
       setFocusRunning(false);
       setFocusSessions((count) => count + 1);
       setToast('Focus session complete. Take a small reset.');
+      playFocusCompletionSound();
+      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+        try {
+          new Notification('Focus block complete', {
+            body: 'You made the time. Take a short reset before choosing your next step.',
+          });
+        } catch { /* Notifications may be unavailable in some browser contexts. */ }
+      }
     }
-  }, [focusRunning, focusSeconds]);
+  }, [focusRunning, focusSeconds, focusRingtoneKind, focusRingtoneData]);
 
   useEffect(() => {
     if (!habits.some((habit) => habit.reminderEnabled && habit.reminderTime)) return undefined;
@@ -817,6 +899,15 @@ function App() {
     setToast('Added to your calendar');
   };
   const resetFocus = (minutes = focusPreset) => { setFocusRunning(false); setFocusPreset(minutes); setFocusSeconds(minutes * 60); };
+  const applyCustomFocusDuration = () => {
+    const minutes = Number(focusCustomMinutes);
+    if (!Number.isInteger(minutes) || minutes < 1 || minutes > 180) {
+      setToast('Choose a whole number between 1 and 180 minutes.');
+      return;
+    }
+    resetFocus(minutes);
+    setToast(`Your ${minutes}-minute focus block is ready.`);
+  };
   const timeText = `${String(Math.floor(focusSeconds / 60)).padStart(2, '0')}:${String(focusSeconds % 60).padStart(2, '0')}`;
   const timerProgress = 1 - focusSeconds / (focusPreset * 60 || 1);
 
@@ -1107,13 +1198,144 @@ function App() {
           <section className="page-intro"><div><div className="eyebrow"><span className="eyebrow-line" /> THE PATTERNS BEHIND PROGRESS</div><h1>Notice what <span>works.</span></h1><p className="welcome-sub">Use the evidence you create to make tomorrow easier.</p></div><div className="review-date-chip"><CalendarDays size={15} /> Last 7 days</div></section>
           <section className="insights-stat-grid"><StatCard icon={<Activity size={17} />} label="Consistency" value={habits.length ? `${consistency}%` : '—'} detail={habits.length ? "Of scheduled habit check-ins" : "Add a routine to establish a baseline"} tone="lime" /><StatCard icon={<CheckCheck size={17} />} label="Logged actions" value={String(totalWins)} detail="Across your habit history" tone="violet" /><StatCard icon={<Flame size={17} />} label="Active routines" value={String(activeStreaks)} detail="With a current streak" tone="orange" /></section>
           <div className="insight-activity"><MonthlyActivityCalendar habits={habits} tasks={tasks} today={today} onToggleHabit={toggleHabit} onToggleTask={toggleTask} /></div>
-          <div className="content-grid insight-bottom"><section className="panel"><div className="panel-heading"><div><div className="panel-overline">WHAT THE DATA SAYS</div><h3>Your strongest routines</h3></div><Trophy size={18} className="muted-icon" /></div><div className="ranking-list">{[...habits].sort((a, b) => getBestStreak(b, today) - getBestStreak(a, today)).slice(0, 4).map((habit, index) => <div className="ranking-row" key={habit.id}><span className="rank-number">0{index + 1}</span><span className="rank-emoji tone-violet"><HabitGlyph habit={habit} size={16} /></span><span className="rank-name"><b>{habit.name}</b><small>{habit.category} · {habit.frequency.toLowerCase()}</small></span><span className="rank-streak"><Flame size={13} /> {getCurrentStreak(habit, today)} days</span><div className="rank-bar"><span style={{ width: `${Math.min(100, getBestStreak(habit, today) / Math.max(1, bestStreak) * 100)}%` }} /></div></div>)}{habits.length === 0 && <p className="quiet-empty">Add routines to start seeing patterns.</p>}</div></section><section className="panel reflection-panel"><div className="panel-heading"><div><div className="panel-overline">YOUR NEXT EXPERIMENT</div><h3>Make it easier</h3></div><Sparkles size={17} className="accent-icon" /></div><div className="reflection-quote">“Success is often a better-designed starting point.”</div><div className="experiment-row"><span className="experiment-number">01</span><div><b>Pick one habit to protect</b><p>Which routine would make the rest of your day feel better?</p></div></div><div className="experiment-row"><span className="experiment-number">02</span><div><b>Make a specific if–then plan</b><p>“After <em>your cue</em>, I’ll do <em>the smallest version</em>.”</p></div></div><div className="experiment-row"><span className="experiment-number">03</span><div><b>Review, don’t judge</b><p>At week’s end, adjust the cue, effort, or timing that got in the way.</p></div></div><button className="secondary-button full-button" type="button" onClick={() => setPage('Habits')}>Tune my habits <ArrowRight size={15} /></button></section></div>
+          <div className="content-grid insight-bottom"><section className="panel"><div className="panel-heading"><div><div className="panel-overline">WHAT THE DATA SAYS</div><h3>Your strongest routines</h3></div><Trophy size={18} className="muted-icon" /></div><div className="ranking-list">{[...habits].sort((a, b) => getBestStreak(b, today) - getBestStreak(a, today)).slice(0, 4).map((habit, index) => <div className="ranking-row" key={habit.id}><span className="rank-number">0{index + 1}</span><span className="rank-emoji tone-violet"><HabitGlyph habit={habit} size={16} /></span><span className="rank-name"><b>{habit.name}</b><small>{habit.category} · {habit.frequency.toLowerCase()}</small></span><span className="rank-streak"><Flame size={13} /> {getCurrentStreak(habit, today)} days</span><div className="rank-bar"><span style={{ width: `${Math.min(100, getBestStreak(habit, today) / Math.max(1, bestStreak) * 100)}%` }} /></div></div>)}{habits.length === 0 && <p className="quiet-empty">Add routines to start seeing patterns.</p>}</div></section><section className="panel reflection-panel">
+            <div className="panel-heading">
+              <div>
+                <div className="panel-overline">YOUR NEXT EXPERIMENT</div>
+                <h3>{experimentMode === 'pending' && experimentHabit ? `Make ${experimentHabit.name} easier to start` : experimentMode === 'complete' ? 'You showed up. Keep it gentle.' : experimentHabit ? 'Set tomorrow’s cue now' : 'Start with one small routine'}</h3>
+              </div>
+              <Sparkles size={17} className="accent-icon" />
+            </div>
+            <div className="reflection-quote">
+              {experimentMode === 'pending' && experimentHabit ? <>
+                <span className="reflection-quote-label">A SMALL IF–THEN PLAN FOR YOU</span>
+                <span>“After {experimentCue}, I’ll {experimentAction}.”</span>
+              </> : experimentMode === 'complete' ? <>
+                <span>“Missing one opportunity to perform the behaviour did not materially affect the habit formation process.”</span>
+                <small>— Lally et al. (2010)</small>
+              </> : <>
+                <span className="reflection-quote-label">TRY THIS FORMAT</span>
+                <span>“After [a cue that already happens], I’ll [one small action].”</span>
+              </>}
+            </div>
+            <div className="experiment-row">
+              <span className="experiment-number">01</span>
+              <div>
+                <b>{experimentMode === 'pending' ? 'Attach it to a real cue' : experimentMode === 'complete' ? 'Keep tomorrow familiar' : 'Choose a moment that already exists'}</b>
+                <p>{experimentMode === 'pending' ? `Try ${experimentHabit?.name ?? 'your routine'} after ${experimentCue}. A specific moment means you don’t have to decide from scratch each time.` : experimentMode === 'complete' ? 'Use roughly the same cue tomorrow. In real-world habit research, repeating a behaviour in a consistent context was associated with increasing automaticity over time.' : 'Choose an everyday anchor—after breakfast, after class, or when you close your laptop—and pair one tiny action with it.'}</p>
+              </div>
+            </div>
+            <div className="experiment-row">
+              <span className="experiment-number">02</span>
+              <div>
+                <b>{experimentMode === 'complete' ? 'A missed day is not a reset' : 'Make the first rep easy'}</b>
+                <p>{experimentMode === 'pending' ? `Start with ${experimentAction}. You can do more if you feel like it; the small version is enough to get started.` : experimentMode === 'complete' ? 'If a day slips, return at the next normal cue rather than trying to “make up” for it. One missed opportunity is not proof you have failed.' : experimentHabit ? `Start with ${experimentAction}; keep the first version easy enough to repeat on a busy day.` : 'Add one routine and give it a cue plus a two-minute minimum. You can refine it once the start feels natural.'}</p>
+              </div>
+            </div>
+            <div className="experiment-row">
+              <span className="experiment-number">03</span>
+              <div>
+                <b>{experimentMode === 'complete' ? 'Protect the setup, not a perfect streak' : 'Use the data, not guilt'}</b>
+                <p>{experimentMode === 'complete' ? 'Notice what made today easier—time, place, or preparation—and keep that part for tomorrow.' : 'If it slips, treat that as information. Make the cue easier to notice or shrink the first step; you don’t need a perfect run to continue.'}</p>
+              </div>
+            </div>
+            <div className="research-source-links" aria-label="Research sources for this advice">
+              <span>Evidence, not a guarantee</span>
+              <a href="https://doi.org/10.1002/ejsp.674" target="_blank" rel="noreferrer">Lally et al. · 2010</a>
+              <a href="https://doi.org/10.1016/S0065-2601(06)38002-1" target="_blank" rel="noreferrer">Gollwitzer &amp; Sheeran · 2006</a>
+            </div>
+            <button className="secondary-button full-button" type="button" onClick={() => setPage('Habits')}>Tune my habits <ArrowRight size={15} /></button>
+          </section></div>
           <section className="research-note"><div className="research-icon"><BookOpen size={17} /></div><div><b>Grounded in behavior research</b><p>Progress monitoring, context cues, and specific if–then plans are established approaches—not guarantees. This tracker turns them into repeatable prompts.</p></div><button type="button" onClick={() => setToast('Research references are included in the project README.')}><CircleHelp size={16} /> About the method</button></section>
         </>}
 
         {page === 'Focus' && <>
           <section className="page-intro"><div><div className="eyebrow"><span className="eyebrow-line" /> ONE THING AT A TIME</div><h1>Make space for <span>deep work.</span></h1><p className="welcome-sub">Pick a task, choose a block, and give it your full attention.</p></div><div className="focus-session-badge"><span className="save-dot" /> {focusSessions} sessions completed</div></section>
-          <section className="focus-page-grid"><div className="panel focus-large-panel"><div className="focus-large-top"><span className="section-kicker"><span className="kicker-mark"><Timer size={13} /></span> FOCUS TIMER</span><span className="live-pill"><span /> {focusRunning ? 'IN SESSION' : 'READY WHEN YOU ARE'}</span></div><div className="focus-large-ring" style={{ '--timer-progress': `${timerProgress * 100}%` } as CSSProperties}><div className="focus-ring-inner"><span className="focus-time">{timeText}</span><span className="focus-caption">{focusRunning ? 'STAY PRESENT' : 'YOUR NEXT BLOCK'}</span></div></div><div className="timer-presets large-presets">{[15, 25, 50].map((minutes) => <button type="button" key={minutes} className={focusPreset === minutes ? 'selected' : ''} onClick={() => resetFocus(minutes)}>{minutes} min</button>)}</div><div className="focus-large-actions"><button className="primary-button" type="button" onClick={() => { if (focusSeconds === 0) resetFocus(); else setFocusRunning((running) => !running); }}>{focusRunning ? 'Pause focus' : focusSeconds === 0 ? 'Start another' : 'Start focusing'} {focusRunning ? <span className="pause-glyph">Ⅱ</span> : <ArrowRight size={16} />}</button><button className="secondary-button" type="button" onClick={() => resetFocus() }><RotateCcw size={15} /> Reset</button></div><p className="timer-reassurance"><ShieldCheck size={15} /> Missed a block? Nothing is lost. Restart with the next minute.</p></div><div className="focus-side-column"><section className="panel choose-task-panel"><div className="panel-overline">YOUR NEXT PRIORITY</div><h3>What will you work on?</h3><p>Choose one task. Everything else can wait for this block.</p>{todayTasks.filter((task) => !task.completed).map((task) => <button key={task.id} type="button" className={`focus-task-choice ${focusTaskId === task.id ? 'selected' : ''}`} onClick={() => { setFocusTaskId(task.id); setToast(`Focus target selected: ${task.title}`); }}><span className="todo-box" /><span><b>{task.title}</b><small>{task.estimate} min · {task.priority} priority</small></span><ArrowUpRight size={15} /></button>)}{todayTasks.filter((task) => !task.completed).length === 0 && <p className="quiet-empty">Your task list is clear. Enjoy the breathing room.</p>}<button className="text-button" type="button" onClick={() => setPage('Tasks')}>Manage today’s tasks <ArrowRight size={14} /></button></section><section className="panel focus-rule-panel"><span className="rule-icon"><Leaf size={17} /></span><div className="panel-overline">A GENTLER RULE</div><h3>Return your attention.</h3><p>Focus isn’t never getting distracted. It’s noticing and coming back—without making a story out of it.</p></section></div></section>
+          <section className="focus-page-grid"><div className="panel focus-large-panel"><div className="focus-large-top"><span className="section-kicker"><span className="kicker-mark"><Timer size={13} /></span> FOCUS TIMER</span><span className="live-pill"><span /> {focusRunning ? 'IN SESSION' : 'READY WHEN YOU ARE'}</span></div><div className="focus-large-ring" style={{ '--timer-progress': `${timerProgress * 100}%` } as CSSProperties}><div className="focus-ring-inner"><span className="focus-time">{timeText}</span><span className="focus-caption">{focusRunning ? 'STAY PRESENT' : 'YOUR NEXT BLOCK'}</span></div></div><div className="timer-presets large-presets">{[15, 25, 50].map((minutes) => <button type="button" key={minutes} className={focusPreset === minutes ? 'selected' : ''} onClick={() => resetFocus(minutes)}>{minutes} min</button>)}</div>
+            <section className="focus-timer-settings" aria-label="Custom focus timer and completion sound">
+              <div className="focus-settings-heading"><div><span className="panel-overline">MAKE IT YOURS</span><b>Timer &amp; completion sound</b></div><span className="focus-settings-note">1–180 minutes</span></div>
+              <div className="focus-settings-grid">
+                <div className="focus-setting-block">
+                  <label className="focus-control-label" htmlFor="focus-custom-minutes">Custom session</label>
+                  <div className="focus-custom-duration-row">
+                    <input id="focus-custom-minutes" type="number" inputMode="numeric" min="1" max="180" step="1" value={focusCustomMinutes} disabled={focusRunning} onChange={(event) => setFocusCustomMinutes(event.target.value)} aria-label="Custom focus duration in minutes" />
+                    <button type="button" className="secondary-button" disabled={focusRunning} onClick={applyCustomFocusDuration}>Set</button>
+                  </div>
+                </div>
+                <div className="focus-setting-block">
+                  <label className="focus-control-label" htmlFor="focus-ringtone-kind">When the timer ends</label>
+                  <select id="focus-ringtone-kind" value={focusRingtoneKind} onChange={(event) => {
+                    const kind = event.target.value as 'chime' | 'bell' | 'pulse' | 'custom';
+                    setFocusRingtoneKind(kind);
+                    try { window.localStorage.setItem('cadence-focus-ringtone-kind', kind); } catch { /* Storage may be unavailable. */ }
+                  }}>
+                    <option value="chime">Cadence chime</option>
+                    <option value="bell">Double bell</option>
+                    <option value="pulse">Soft digital pulse</option>
+                    <option value="custom">My custom ringtone</option>
+                  </select>
+                </div>
+              </div>
+              {focusRingtoneKind === 'custom' && <div className="focus-custom-audio-row">
+                <label className="focus-upload-label">Choose audio file
+                  <input type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a" onChange={(event) => {
+                    const input = event.currentTarget;
+                    const file = input.files?.[0];
+                    if (!file) return;
+                    if (!file.type.startsWith('audio/') && !/\.(mp3|wav|ogg|m4a|aac|webm)$/i.test(file.name)) {
+                      setToast('Choose an audio file such as MP3, WAV, OGG, or M4A.');
+                      input.value = '';
+                      return;
+                    }
+                    if (file.size > 1.5 * 1024 * 1024) {
+                      setToast('Choose a short ringtone under 1.5 MB so it can be saved on this device.');
+                      input.value = '';
+                      return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      if (typeof reader.result !== 'string') {
+                        setToast('Could not read that audio file. Try another clip.');
+                        return;
+                      }
+                      try {
+                        window.localStorage.setItem('cadence-focus-ringtone-data', reader.result);
+                        window.localStorage.setItem('cadence-focus-ringtone-name', file.name);
+                        window.localStorage.setItem('cadence-focus-ringtone-kind', 'custom');
+                        setFocusRingtoneData(reader.result);
+                        setFocusRingtoneName(file.name);
+                        setFocusRingtoneKind('custom');
+                        setToast('Custom focus ringtone saved on this device.');
+                      } catch {
+                        setToast('Could not save that ringtone. Choose a shorter audio clip and try again.');
+                      }
+                    };
+                    reader.onerror = () => setToast('Could not read that audio file. Try another clip.');
+                    reader.readAsDataURL(file);
+                    input.value = '';
+                  }} />
+                </label>
+                <span className="focus-custom-audio-name">{focusRingtoneName || 'No audio selected yet'}</span>
+              </div>}
+              <div className="focus-sound-actions">
+                <button type="button" className="secondary-button" onClick={previewFocusRingtone}>Preview sound</button>
+                {focusRingtoneData && <button type="button" className="text-button" onClick={() => {
+                  try {
+                    window.localStorage.removeItem('cadence-focus-ringtone-data');
+                    window.localStorage.removeItem('cadence-focus-ringtone-name');
+                  } catch { /* Storage may be unavailable. */ }
+                  setFocusRingtoneData('');
+                  setFocusRingtoneName('');
+                  if (focusRingtoneKind === 'custom') {
+                    setFocusRingtoneKind('chime');
+                    try { window.localStorage.setItem('cadence-focus-ringtone-kind', 'chime'); } catch { /* Storage may be unavailable. */ }
+                  }
+                  setToast('Custom ringtone removed from this device.');
+                }}>Remove custom ringtone</button>}
+              </div>
+              <p className="focus-sound-note">Your uploaded ringtone stays in this browser on this device. Use Preview sound to check your selection.</p>
+            </section>
+            <div className="focus-large-actions"><button className="primary-button" type="button" onClick={() => { unlockReminderAudio(); if (focusSeconds === 0) resetFocus(); else setFocusRunning((running) => !running); }}>{focusRunning ? 'Pause focus' : focusSeconds === 0 ? 'Start another' : 'Start focusing'} {focusRunning ? <span className="pause-glyph">Ⅱ</span> : <ArrowRight size={16} />}</button><button className="secondary-button" type="button" onClick={() => resetFocus() }><RotateCcw size={15} /> Reset</button></div><p className="timer-reassurance"><ShieldCheck size={15} /> Missed a block? Nothing is lost. Restart with the next minute.</p></div><div className="focus-side-column"><section className="panel choose-task-panel"><div className="panel-overline">YOUR NEXT PRIORITY</div><h3>What will you work on?</h3><p>Choose one task. Everything else can wait for this block.</p>{todayTasks.filter((task) => !task.completed).map((task) => <button key={task.id} type="button" className={`focus-task-choice ${focusTaskId === task.id ? 'selected' : ''}`} onClick={() => { setFocusTaskId(task.id); setToast(`Focus target selected: ${task.title}`); }}><span className="todo-box" /><span><b>{task.title}</b><small>{task.estimate} min · {task.priority} priority</small></span><ArrowUpRight size={15} /></button>)}{todayTasks.filter((task) => !task.completed).length === 0 && <p className="quiet-empty">Your task list is clear. Enjoy the breathing room.</p>}<button className="text-button" type="button" onClick={() => setPage('Tasks')}>Manage today’s tasks <ArrowRight size={14} /></button></section><section className="panel focus-rule-panel"><span className="rule-icon"><Leaf size={17} /></span><div className="panel-overline">A GENTLER RULE</div><h3>Return your attention.</h3><p>Focus isn’t never getting distracted. It’s noticing and coming back—without making a story out of it.</p></section></div></section>
         </>}
         </div>
       </main>
