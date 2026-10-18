@@ -324,7 +324,7 @@ function App() {
   };
 
   const saveProfile = async () => {
-    const displayName = profileNameDraft.trim().replace(/\\s+/g, ' ').slice(0, 32);
+    const displayName = profileNameDraft.trim().replace(/\s+/g, ' ').slice(0, 32);
     if (!displayName) {
       setToast('Enter a username before saving.');
       return;
