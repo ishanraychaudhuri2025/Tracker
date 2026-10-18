@@ -6,6 +6,7 @@ import './motion.css';
 import './calendar-readability.css';
 import './insights-habit-focus.css';
 import './planner-notifications.css';
+import './global-readability.css';
 
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
