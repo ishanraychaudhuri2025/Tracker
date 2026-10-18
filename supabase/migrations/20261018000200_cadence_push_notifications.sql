@@ -1,3 +1,6 @@
+create extension if not exists pg_cron;
+create extension if not exists pg_net;
+
 -- Cadence push notifications and server-side reminder scheduling.
 -- Subscriptions and configuration are only accessed by the trusted Edge Function.
 
