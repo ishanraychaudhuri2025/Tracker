@@ -1412,28 +1412,28 @@ function App() {
               <article className="analytics-metric-card analytics-metric-primary">
                 <div className="analytics-metric-label">DAILY COMPLETION <span className="analytics-metric-icon tone-blue"><Activity size={12} /></span></div>
                 <div className="analytics-metric-value">{todayHabitCompletion === null ? '—' : todayHabitCompletion}{todayHabitCompletion !== null && <small>%</small>}</div>
-                <div className="analytics-metric-bottom"><span>{doneToday} of {dueHabits.length} routines complete</span><b className="analytics-trend-positive"><ArrowUpRight size={9} /> TODAY</b></div>
+                <div className="analytics-metric-bottom"><span>{doneToday} of {dueHabits.length} routines complete</span></div>
                 <div className="analytics-metric-line" role="img" aria-label="Daily habit completion for the last seven days">{lastSevenHabitStats.map((day) => <i key={day.key} className={day.percent === null ? 'is-empty' : ''} title={day.key + ': ' + (day.percent === null ? 'no habits scheduled' : day.percent + '% complete')} style={{ height: (day.percent === null ? 3 : Math.max(4, Math.round(day.percent * .22 + 3))) + 'px' }} />)}</div>
               </article>
 
               <article className="analytics-metric-card">
                 <div className="analytics-metric-label">7-DAY CONSISTENCY <span className="analytics-metric-icon tone-pink"><CalendarDays size={12} /></span></div>
                 <div className="analytics-metric-value">{consistency}<small>%</small></div>
-                <div className="analytics-metric-bottom"><span>Across the last seven days</span><b className="analytics-trend-positive">WEEKLY</b></div>
+                <div className="analytics-metric-bottom"><span>Across the last seven days</span></div>
                 <div className="analytics-mini-bars" role="img" aria-label="Daily completion contributing to seven-day consistency">{lastSevenHabitStats.map((day) => <i key={day.key} className={day.percent === null ? 'is-empty' : ''} title={day.key + ': ' + (day.percent === null ? 'no habits scheduled' : day.percent + '% complete')} style={{ height: (day.percent === null ? 3 : Math.max(4, Math.round(day.percent * .23 + 3))) + 'px' }} />)}</div>
               </article>
 
               <article className="analytics-metric-card">
                 <div className="analytics-metric-label">ACTIVE STREAKS <span className="analytics-metric-icon tone-violet"><Flame size={12} /></span></div>
                 <div className="analytics-metric-value">{String(activeStreaks).padStart(2, '0')}<small>routines</small></div>
-                <div className="analytics-metric-bottom"><span>Habits in motion</span><b className="analytics-trend-positive">LIVE</b></div>
+                <div className="analytics-metric-bottom"><span>Habits in motion</span></div>
                 <div className="analytics-streak-steps" role="img" aria-label="Active streaks over the last seven days">{lastSevenHabitStats.map((day) => <i key={day.key} className={!habits.length ? 'is-empty' : ''} title={day.key + ': ' + day.activeStreaks + ' active streaks'} style={{ height: (habits.length ? Math.max(4, Math.round((day.activeStreaks / Math.max(1, ...lastSevenHabitStats.map((item) => item.activeStreaks))) * 21)) : 3) + 'px' }} />)}</div>
               </article>
 
               <article className="analytics-metric-card">
                 <div className="analytics-metric-label">TOTAL CHECK-INS <span className="analytics-metric-icon tone-violet"><CheckCheck size={12} /></span></div>
                 <div className="analytics-metric-value">{totalWins}<small>total</small></div>
-                <div className="analytics-metric-bottom"><span>Every rep counts</span><b className="analytics-trend-positive">ALL TIME</b></div>
+                <div className="analytics-metric-bottom"><span>Every rep counts</span></div>
                 <div className="analytics-checkin-grid" role="img" aria-label="Habit check-ins by day for the last 21 days">{lastTwentyOneCheckins.map((day) => <i key={day.key} className={day.count ? 'is-filled' : ''} style={{ opacity: day.count ? .35 + .65 * Math.min(1, day.count / Math.max(1, habits.length)) : .24 }} title={day.key + ': ' + day.count + ' check-ins'} />)}</div>
               </article>
             </div>
