@@ -35,7 +35,23 @@ self.addEventListener("push", (event) => {
     },
     actions: [{ action: "open", title: "Open Cadence" }]
   };
-  event.waitUntil(self.registration.showNotification(payload.title || "Cadence reminder", options));
+  event.waitUntil((async () => {
+    await self.registration.showNotification(payload.title || "Cadence reminder", options);
+    const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (const client of windows) {
+      if (!client.url.startsWith(self.location.origin)) continue;
+      client.postMessage({
+        type: "CADENCE_PUSH_REMINDER",
+        payload: {
+          kind: options.data.kind,
+          id: options.data.id,
+          title: payload.title || "Cadence reminder",
+          body: options.body,
+          soundUrl: options.data.soundUrl
+        }
+      });
+    }
+  })());
 });
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
