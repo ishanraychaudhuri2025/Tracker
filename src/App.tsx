@@ -3,8 +3,8 @@ import type { CSSProperties, FormEvent, ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
   Activity, ArrowRight, ArrowUpRight, BarChart3, Bell, BookOpen, Brain, Coffee, Compass, Code2, Droplets, Dumbbell, Flower2,
-  CalendarDays, Check, CheckCheck, ChevronDown, CircleHelp, Clock3, Flame, Focus,
-  Gauge, Heart, Leaf, ListTodo, LogOut, Moon, Pencil, PenTool, Plus, RotateCcw, Settings2, ShieldCheck,
+  CalendarDays, Check, CheckCheck, ChevronDown, CircleHelp, Clock3, Flame, Focus, Upload,
+  Gauge, Heart, Leaf, ListTodo, LogOut, Moon, Pencil, PenTool, Plus, RotateCcw, ShieldCheck,
   Sparkles, Sun, Target, Timer, Trophy, X, Zap,
 } from 'lucide-react';
 import type { Category, Frequency, Habit, Page, Task } from './types';
@@ -54,7 +54,7 @@ function HabitGlyph({ habit, size = 17 }: { habit: Habit; size?: number }) {
 type ActiveReminder = { habitId: string; habitName: string; reminderTime: string; reminderSoundUrl?: string };
 
 type ProfileLogoKey = 'initials' | 'wave' | 'zap' | 'sparkles' | 'target' | 'flame' | 'leaf' | 'code' | 'heart' | 'brain' | 'compass';
-type LocalProfile = { name: string; logo: ProfileLogoKey };
+type LocalProfile = { name: string; logo: ProfileLogoKey; avatarData?: string };
 const PROFILE_LOGO_KEYS: ProfileLogoKey[] = ['initials', 'wave', 'zap', 'sparkles', 'target', 'flame', 'leaf', 'code', 'heart', 'brain', 'compass'];
 const PROFILE_LOGO_CHOICES: { key: ProfileLogoKey; label: string }[] = [
   { key: 'initials', label: 'Initials' }, { key: 'wave', label: 'Wave' }, { key: 'zap', label: 'Lightning' },
@@ -308,9 +308,10 @@ function App() {
       return {
         name: typeof saved.name === 'string' ? saved.name : '',
         logo: PROFILE_LOGO_KEYS.includes(saved.logo as ProfileLogoKey) ? saved.logo as ProfileLogoKey : 'initials',
+        avatarData: typeof saved.avatarData === 'string' ? saved.avatarData : '',
       };
     } catch {
-      return { name: '', logo: 'initials' };
+      return { name: '', logo: 'initials', avatarData: '' };
     }
   });
   const metadataDisplayName = typeof authSession?.user.user_metadata?.display_name === 'string'
@@ -322,11 +323,53 @@ function App() {
   const profileLogo: ProfileLogoKey = authSession
     ? (metadataLogo && PROFILE_LOGO_KEYS.includes(metadataLogo) ? metadataLogo : 'initials')
     : localProfile.logo;
+  const metadataAvatarData = typeof authSession?.user.user_metadata?.avatar_data === 'string' ? authSession.user.user_metadata.avatar_data : '';
+  const profilePhoto = metadataAvatarData || localProfile.avatarData || '';
+  const [profilePhotoDraft, setProfilePhotoDraft] = useState('');
 
   const openProfileSettings = () => {
     setProfileNameDraft(profileDisplayName === 'Your workspace' ? '' : profileDisplayName);
     setProfileLogoDraft(profileLogo);
+    setProfilePhotoDraft(profilePhoto);
     setShowProfileModal(true);
+  };
+
+  const handleProfilePhotoFile = async (file?: File) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setToast('Choose an image file for your profile photo.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setToast('Choose an image smaller than 10 MB.');
+      return;
+    }
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      const image = new Image();
+      image.src = objectUrl;
+      await image.decode();
+      const side = 112;
+      const canvas = document.createElement('canvas');
+      canvas.width = side;
+      canvas.height = side;
+      const context = canvas.getContext('2d');
+      if (!context) throw new Error('Your browser could not process this image.');
+      const scale = Math.max(side / image.naturalWidth, side / image.naturalHeight);
+      const width = image.naturalWidth * scale;
+      const height = image.naturalHeight * scale;
+      context.drawImage(image, (side - width) / 2, (side - height) / 2, width, height);
+      let photo = canvas.toDataURL('image/webp', 0.68);
+      if (!photo.startsWith('data:image/webp')) photo = canvas.toDataURL('image/jpeg', 0.68);
+      if (photo.length > 40_000) photo = canvas.toDataURL('image/jpeg', 0.5);
+      if (photo.length > 40_000) throw new Error('This image could not be compressed enough. Try a simpler photo.');
+      setProfilePhotoDraft(photo);
+      setToast('Photo ready. Save your profile to apply it.');
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : 'Could not read this image. Try another file.');
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
   };
 
   const saveProfile = async () => {
@@ -339,18 +382,18 @@ function App() {
     try {
       if (authSession && supabase) {
         const { error } = await supabase.auth.updateUser({
-          data: { display_name: displayName, avatar_key: profileLogoDraft },
+          data: { display_name: displayName, avatar_key: profileLogoDraft, avatar_data: profilePhotoDraft },
         });
         if (error) throw error;
         setAuthSession((current) => current ? {
           ...current,
           user: {
             ...current.user,
-            user_metadata: { ...current.user.user_metadata, display_name: displayName, avatar_key: profileLogoDraft },
+            user_metadata: { ...current.user.user_metadata, display_name: displayName, avatar_key: profileLogoDraft, avatar_data: profilePhotoDraft },
           },
         } : current);
       } else {
-        const nextProfile = { name: displayName, logo: profileLogoDraft };
+        const nextProfile = { name: displayName, logo: profileLogoDraft, avatarData: profilePhotoDraft };
         window.localStorage.setItem('cadence-profile-local', JSON.stringify(nextProfile));
         setLocalProfile(nextProfile);
       }
@@ -1381,14 +1424,14 @@ function App() {
         <div className="sidebar-bottom">
           <div className="profile-row">
             <button type="button" className="profile-identity" onClick={openProfileSettings} aria-label="Customize username and profile logo" title="Customize profile">
-              <span className={`avatar profile-avatar ${profileLogo === 'initials' ? 'profile-avatar-initials-mode' : 'profile-avatar-symbol-mode'}`}><ProfileGlyph logo={profileLogo} name={profileDisplayName} size={17} /></span>
+              <span className={`avatar profile-avatar ${profilePhoto ? 'profile-avatar-photo-mode' : profileLogo === 'initials' ? 'profile-avatar-initials-mode' : 'profile-avatar-symbol-mode'}`}>{profilePhoto ? <img className="profile-avatar-photo" src={profilePhoto} alt="" /> : <ProfileGlyph logo={profileLogo} name={profileDisplayName} size={17} />}</span>
               <span className="profile-copy"><b>{profileDisplayName}</b><small>{authSession ? 'Synced workspace' : 'Personal edition'}</small></span>
             </button>
             {authSession && supabase
               ? <button type="button" className="profile-signout" aria-label="Sign out" title="Sign out" onClick={() => { void supabase?.auth.signOut(); }}><LogOut size={15}/></button>
               : <button type="button" className="profile-edit-trigger" aria-label="Customize profile" title="Customize profile" onClick={openProfileSettings}><Pencil size={15} /></button>}
           </div>
-          <div className="sidebar-tools"><button type="button" onClick={() => setDark((current) => !current)}><span>{dark ? <Sun size={15} /> : <Moon size={15} />}</span>{dark ? 'Soft violet appearance' : 'Midnight appearance'}</button><button type="button" onClick={() => setToast(authSession ? 'Your workspace syncs to your account.' : 'Cloud auth is not connected yet.')}><Settings2 size={15} />Preferences</button>{!supabaseConfigured && <span className="local-mode-note">LOCAL MODE · CLOUD NOT CONNECTED</span>}</div>
+          <div className="sidebar-tools"><button type="button" onClick={() => setDark((current) => !current)}><span>{dark ? <Sun size={15} /> : <Moon size={15} />}</span>{dark ? 'Soft violet appearance' : 'Midnight appearance'}</button>{!supabaseConfigured && <span className="local-mode-note">LOCAL MODE · CLOUD NOT CONNECTED</span>}</div>
         </div>
       </aside>
 
@@ -1881,8 +1924,20 @@ function App() {
               <input value={profileNameDraft} onChange={(event) => setProfileNameDraft(event.target.value)} maxLength={32} autoComplete="nickname" placeholder="What should we call you?" required autoFocus />
               <small>Up to 32 characters. This is the name shown in your sidebar.</small>
             </label>
+            <div className="profile-photo-editor">
+              <div className="profile-photo-preview">{profilePhotoDraft ? <img src={profilePhotoDraft} alt="Profile photo preview" /> : <ProfileGlyph logo={profileLogoDraft} name={profileNameDraft.trim() || 'Your workspace'} size={27} />}</div>
+              <div className="profile-photo-controls">
+                <b>Profile photo</b>
+                <small>Upload a photo or keep a symbol. Images are cropped and compressed to fit.</small>
+                <div className="profile-photo-actions">
+                  <label className="secondary-button profile-photo-upload" htmlFor="profile-photo-input"><Upload size={14} /> Upload photo</label>
+                  <input id="profile-photo-input" className="profile-photo-file-input" type="file" accept="image/*" onChange={(event) => { const file = event.currentTarget.files?.[0]; void handleProfilePhotoFile(file); event.currentTarget.value = ''; }} />
+                  {profilePhotoDraft && <button className="text-button profile-photo-remove" type="button" onClick={() => setProfilePhotoDraft('')}>Remove photo</button>}
+                </div>
+              </div>
+            </div>
             <div className="profile-logo-section">
-              <div className="profile-logo-section-heading"><b>Profile logo</b><span>Select a symbol</span></div>
+              <div className="profile-logo-section-heading"><b>Profile logo</b><span>Choose a symbol instead</span></div>
               <div className="profile-logo-grid">
                 {PROFILE_LOGO_CHOICES.map((choice) => <button key={choice.key} type="button" className={`profile-logo-choice ${profileLogoDraft === choice.key ? 'is-selected' : ''}`} aria-pressed={profileLogoDraft === choice.key} onClick={() => setProfileLogoDraft(choice.key)}>
                   <span className="profile-logo-choice-icon"><ProfileGlyph logo={choice.key} name={profileNameDraft.trim() || 'Your workspace'} size={18} /></span>
@@ -1890,7 +1945,7 @@ function App() {
                 </button>)}
               </div>
             </div>
-            <p className="profile-settings-note">{authSession ? 'Your name and logo are saved to your account.' : 'You are in local mode; your profile is saved in this browser.'}</p>
+            <p className="profile-settings-note">{authSession ? 'Your username, logo, and compressed photo are saved to your account.' : 'Your username, logo, and photo are saved in this browser.'}</p>
             <div className="profile-settings-actions">
               <button type="button" className="secondary-button" onClick={() => setShowProfileModal(false)} disabled={profileSaveBusy}>Cancel</button>
               <button type="submit" className="primary-button" disabled={profileSaveBusy}>{profileSaveBusy ? 'Saving…' : <><Check size={15} /> Save profile</>}</button>
