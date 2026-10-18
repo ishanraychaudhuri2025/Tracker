@@ -286,12 +286,25 @@ function App() {
     } catch { return 'chime'; }
   });
   const [focusRingtoneData, setFocusRingtoneData] = useState(() => {
-    try { return typeof window !== 'undefined' ? window.localStorage.getItem('cadence-focus-ringtone-data') ?? '' : ''; }
+    try {
+      if (typeof window === 'undefined') return '';
+      const savedLink = window.localStorage.getItem('cadence-focus-music-url') ?? '';
+      if (parseReminderMedia(savedLink)) return savedLink;
+      const legacyValue = window.localStorage.getItem('cadence-focus-ringtone-data') ?? '';
+      return /^https?:\/\//i.test(legacyValue) && parseReminderMedia(legacyValue) ? legacyValue : '';
+    } catch { return ''; }
+  });
+  const [focusRingtoneDraft, setFocusRingtoneDraft] = useState(() => {
+    try { return typeof window !== 'undefined' ? window.localStorage.getItem('cadence-focus-music-url') ?? '' : ''; }
     catch { return ''; }
   });
+  const [focusMusicPreviewOpen, setFocusMusicPreviewOpen] = useState(false);
   const [focusRingtoneName, setFocusRingtoneName] = useState(() => {
-    try { return typeof window !== 'undefined' ? window.localStorage.getItem('cadence-focus-ringtone-name') ?? '' : ''; }
-    catch { return ''; }
+    try {
+      if (typeof window === 'undefined') return '';
+      const storedProvider = window.localStorage.getItem('cadence-focus-ringtone-name') ?? '';
+      return storedProvider === 'YouTube' || storedProvider === 'Spotify' ? storedProvider : '';
+    } catch { return ''; }
   });
   const [focusSessions, setFocusSessions] = useState(0);
   const [focusTaskId, setFocusTaskId] = useState<string | null>(null);
@@ -642,23 +655,15 @@ function App() {
 
   const playFocusCompletionSound = (loop = false) => {
     if (focusRingtoneKind === 'custom') {
-      if (!focusRingtoneData) {
-        if (!loop) setToast('Choose a short audio file in Focus settings to use your own ringtone.');
+      const media = parseReminderMedia(focusRingtoneData);
+      if (!media) {
+        if (!loop) setToast('Add a valid Spotify or YouTube link in Focus settings first.');
         return;
       }
-      let audio = focusCompletionAudioRef.current;
-      if (!audio || audio.src !== focusRingtoneData) {
-        audio?.pause();
-        audio = new Audio(focusRingtoneData);
-        focusCompletionAudioRef.current = audio;
+      if (!loop) {
+        setFocusMusicPreviewOpen(true);
+        setToast('Your soundtrack is ready. Press Play in the embedded player to start it.');
       }
-      audio.loop = loop;
-      audio.volume = 0.88;
-      if (loop && !audio.paused && !audio.ended) return;
-      audio.currentTime = 0;
-      void audio.play().catch(() => {
-        if (!loop) setToast('The browser blocked the ringtone. Use Preview sound once, then try again.');
-      });
       return;
     }
 
@@ -688,9 +693,51 @@ function App() {
     });
   };
 
+  const saveFocusMusicLink = () => {
+    const media = parseReminderMedia(focusRingtoneDraft);
+    if (!media) {
+      setToast('Paste a valid Spotify or YouTube link (track/video, album, or playlist).');
+      return;
+    }
+    try {
+      window.localStorage.setItem('cadence-focus-music-url', media.originalUrl);
+      window.localStorage.setItem('cadence-focus-ringtone-name', media.provider);
+      window.localStorage.setItem('cadence-focus-ringtone-kind', 'custom');
+      setFocusRingtoneData(media.originalUrl);
+      setFocusRingtoneName(media.provider);
+      setFocusRingtoneKind('custom');
+      setFocusMusicPreviewOpen(true);
+      setToast(media.provider + ' link saved. Press Play in the embedded player to preview.');
+    } catch {
+      setToast('Could not save this link in your browser. Check local storage settings and try again.');
+    }
+  };
+
+  const removeFocusMusicLink = () => {
+    try {
+      window.localStorage.removeItem('cadence-focus-music-url');
+      window.localStorage.removeItem('cadence-focus-ringtone-data');
+      window.localStorage.removeItem('cadence-focus-ringtone-name');
+    } catch { /* Storage may be unavailable. */ }
+    setFocusRingtoneData('');
+    setFocusRingtoneDraft('');
+    setFocusRingtoneName('');
+    setFocusMusicPreviewOpen(false);
+    if (focusRingtoneKind === 'custom') {
+      setFocusRingtoneKind('chime');
+      try { window.localStorage.setItem('cadence-focus-ringtone-kind', 'chime'); } catch { /* Storage may be unavailable. */ }
+    }
+    setToast('Custom soundtrack link removed.');
+  };
+
   const previewFocusRingtone = () => {
-    if (focusRingtoneKind === 'custom' && !focusRingtoneData) {
-      setToast('Choose an audio file first, or select one of the built-in sounds.');
+    if (focusRingtoneKind === 'custom') {
+      if (!parseReminderMedia(focusRingtoneData)) {
+        setToast('Save a valid Spotify or YouTube link first.');
+        return;
+      }
+      setFocusMusicPreviewOpen(true);
+      setToast('Use the player controls to start your soundtrack.');
       return;
     }
     unlockReminderAudio();
@@ -1745,7 +1792,7 @@ function App() {
                     <option value="chime">Cadence chime</option>
                     <option value="bell">Double bell</option>
                     <option value="pulse">Soft digital pulse</option>
-                    <option value="custom">My custom ringtone</option>
+                    <option value="custom">Spotify / YouTube link</option>
                   </select>
                 </div>
               </div>
