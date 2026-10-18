@@ -11092,7 +11092,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   flex: 0 0 96px !important;
   object-fit: contain !important;
   opacity: 1 !important;
-  clip-path: inset(0 100% 0 0) !important;
+  clip-path: inset(0 100% 0 0);
   filter: drop-shadow(0 0 2px rgba(190, 111, 255, .18)) !important;
   animation: cadence-exact-logo-reveal 1.55s cubic-bezier(.62, 0, .25, 1) .08s forwards !important;
 }
