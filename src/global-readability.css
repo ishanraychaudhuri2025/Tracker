@@ -119,13 +119,11 @@ input::placeholder, textarea::placeholder {
   #root .app-shell .main-content { padding-inline: 24px; }
   #root .app-shell :is(.analytics-metric-grid, .tasks-summary-grid) { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
   #root .app-shell :is(.planner-summary-grid, .insight-bottom) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  #root .app-shell :is(.monthly-activity .monthly-calendar-grid, .monthly-activity .monthly-weekday-row) { min-width: 760px; }
-  #root .app-shell .monthly-activity .monthly-calendar-shell { overflow-x: auto !important; }
   #root .app-shell :is(.planner-calendar-panel, .weekly-tracker-panel, .weekly-tracker-shell, .heatmap-panel) { overflow-x: auto; }
   .planner-summary-progress b:not(#cadence-readability-specificity-guard),
   .monthly-nav-arrow:not(#cadence-readability-specificity-guard),
   .monthly-day-task-count > strong:not(#cadence-readability-specificity-guard),
-  #root .app-shell .monthly-activity .monthly-day-task-count > strong:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
+  #root .app-shell .monthly-activity .monthly-day-task-count > strong:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
 }
 @media (max-width: 980px) {
   #root .app-shell .main-content { padding-inline: 18px; }
@@ -141,587 +139,615 @@ input::placeholder, textarea::placeholder {
   #root .app-shell :is(.monthly-activity .monthly-calendar-grid, .monthly-activity .monthly-weekday-row) { min-width: 760px; }
   #root .app-shell .monthly-activity .monthly-calendar-shell { overflow-x: auto !important; }
 }
-#root .app-shell .background-push-option .notification-permission-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .background-push-option .reminder-permission-status:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .detail-main > p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .focus-background-push-row > button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .focus-background-push-row > div > b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .focus-background-push-row > div > p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .focus-control-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .focus-custom-audio-name:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .focus-custom-controls > label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .focus-custom-controls > label span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .focus-custom-controls input:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .focus-custom-duration-row input:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .focus-ringtone-setting > label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .focus-ringtone-setting > label span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .focus-ringtone-setting > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .focus-ringtone-setting input:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .focus-setting-block select:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .focus-settings-heading > div > b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .focus-settings-note:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .focus-sound-actions .text-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .focus-sound-note:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .focus-upload-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .focus-upload-label input[type="file"]:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .habit-activity-caption:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .habit-activity-caption span:last-child:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .habit-activity-caption span:last-child b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .habit-activity-legend:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .habit-chart-x-axis:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .habit-chart-x-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .habit-chart-y-axis:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .habit-chart-y-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .habit-modal .habit-weekday-picker button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .habit-overview-copy p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .habit-overview-ring > span > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .habit-row-copy p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .habits-overview-cards .analytics-metric-bottom:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .habits-overview-cards .analytics-metric-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .habits-overview-cards .analytics-metric-value small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .habits-overview-cards .analytics-trend-positive:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .habits-overview-strip .habit-overview-stat > b i:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .habits-overview-strip .habit-overview-stat > b small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .habits-overview-strip .habit-overview-stat > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .habits-overview-strip .strip-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .habits-overview-strip > .habit-overview-feature > p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .habits-overview-strip > .habit-overview-secondary > .strip-quote:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .habits-overview-strip > .habit-overview-stat > b > i:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .habits-overview-strip > .habit-overview-stat > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .habits-overview-strip > .strip-quote:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .habits-overview-strip b small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .insights-stat-card .stat-detail:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .insights-stat-card .stat-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .insights-stat-grid .stat-detail:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .insights-stat-grid .stat-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .mini-week > span b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .mini-week > span small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-activity .monthly-calendar-legend:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-activity .monthly-day-habit-count:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-activity .monthly-day-habit-count > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-activity .monthly-day-no-activity:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-activity .monthly-day-status:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-activity .monthly-day-task-count > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-activity .monthly-day-top > b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-activity .monthly-day-top > i:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-activity .monthly-stats-row .monthly-stat small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-activity .monthly-week-note:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-activity .monthly-weekday-row > span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-calendar-legend:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-current-month b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-day-habit-count:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-day-habit-count > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-day-no-activity:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-day-status:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-day-task-count > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-day-task-count > strong:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-day-top > b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-day-top > i:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-detail-header p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-detail-item-copy small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-stat b i:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-stat small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-title-block p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .monthly-weekday-row > span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .nav-copy b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .nav-copy small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .nav-item.active .nav-copy b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .nav-list > .nav-item .nav-copy b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .nav-list > .nav-item .nav-count:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .planner-activity-copy > b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .planner-activity-copy > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .planner-activity-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .planner-calendar-panel .planner-legend:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .planner-day-summary .planner-summary-main > p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .planner-filter-chips > button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .planner-focus-note .planner-focus-kicker:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .planner-focus-note > p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .planner-group-heading > div > b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .planner-group-heading > div > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .planner-groupby:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .planner-groupby select:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .planner-page .page-footer:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .planner-principle .panel-overline:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .planner-principle p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .planner-quick-add .panel-overline:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .planner-quick-add .secondary-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .planner-quick-add p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .planner-repeat-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .rank-name small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .reflection-panel .experiment-number:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .reflection-panel .experiment-row b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .reflection-panel .experiment-row p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .reflection-panel .reflection-quote:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .reflection-panel .reflection-quote > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .reflection-panel .reflection-quote-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .reflection-panel .research-source-links:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .reminder-footnote:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .routine-mini:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .routine-mini > span:nth-child(2):not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .sidebar .nav-list > .nav-item .nav-copy b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .sidebar .nav-list > .nav-item .nav-count:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .sidebar .nav-list > .nav-item.active .nav-copy b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .sidebar .routine-mini > span:nth-child(2):not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .sidebar .sidebar-section-head:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .sidebar .workspace-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .sidebar-section-head:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .tasks-summary-card > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .tasks-summary-card > span:last-child:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .tasks-summary-note > div > p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .today-analytics-main-grid .analytics-next-meta:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .today-analytics-main-grid .analytics-side-link:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .today-analytics-metrics .analytics-metric-bottom:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .today-analytics-metrics .analytics-metric-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .today-analytics-metrics .analytics-trend-positive:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .today-analytics-page-header p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .today-analytics-progress-card .analytics-today-stats > span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .today-analytics-progress-card .analytics-today-stats b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .app-shell .workspace-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .auth-brand-copy .auth-eyebrow:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .auth-brand-copy > p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .auth-footnote:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .auth-forgot:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .auth-form > label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .auth-form-column .auth-forgot:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .auth-form-column .auth-input-wrap input:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .auth-form-kicker:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .auth-form-subtitle:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .auth-input-wrap input:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .auth-message:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .auth-secure-note:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .auth-submit:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .auth-switch:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .auth-switch button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .auth-value-list b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-#root .auth-value-list small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.add-inline:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-area-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-chart-filter:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-chart-footer:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-chart-footer button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-chart-heading p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-chart-legend:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-chart-legend>b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-chart-legend>b small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-chart-tabs button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-consistency-cell>span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-create-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-daily-ring b small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-daily-ring>div>span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-footer:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-kicker:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-live-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-metric-bottom:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-metric-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-metric-value small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-micro-note:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-next-meta:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-no-habits:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-no-habits button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-page-header p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-plain-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-routine-name b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-routine-name small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-routine-rank:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-saved:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-section-index:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-side-link:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-streak-value:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-streak-value small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-table-footer:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-table-footer>button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-table-head:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-table-header h2 span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-table-header p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-table-header>.analytics-plain-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-today-stats b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-today-stats>span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-trend-positive:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-view-tabs button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-x-labels:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.analytics-y-labels:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .analytics-metric-bottom:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .habit-activity-caption:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .habit-activity-caption span:last-child:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .habit-activity-legend:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .habit-chart-x-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .habit-chart-y-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .habit-schedule-days legend:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .habit-schedule-days>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .habit-weekday-picker button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .mini-week > span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .mini-week > span b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .mini-week > span small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-card-heading h2 > span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-card-heading p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-detail-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-empty-action:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-empty-state > div b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-empty-state > div p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-eyebrow:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-header-actions button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-item-copy p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-item-minimum:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-item-title > b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-item-title > span:not(.today-priority-tag):not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-next-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-next-meta:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-page-header p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-priority-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-progress-breakdown > span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-progress-breakdown b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-progress-breakdown small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-progress-copy p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-progress-number > span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-progress-stat > span:last-child:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-progress-stat small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-quiet-link:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-rhythm-quote > b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-section-kicker:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-side-card p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .today-text-link:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .weekly-chart-top b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .weekly-chart-top small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .weekly-day-label b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .weekly-day-label small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .weekly-footer:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .weekly-habit-name:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .weekly-matrix-day b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .weekly-matrix-day small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell .weekly-matrix-label>small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell :is(.analytics-chart-legend, .analytics-y-labels, .analytics-x-labels, .analytics-chart-footer, .analytics-table-footer, .analytics-footer, .analytics-table-head):not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell :is(.habit-row-copy small, .analytics-routine-name small, .planner-activity-tag, .analytics-area-tag, .analytics-streak-value small):not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell :is(.habit-title-line b, .task-copy > b, .habit-row-copy b, .planner-activity-copy b, .analytics-routine-name b):not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell :is(.nav-copy small, .routine-mini, .sidebar-tip p, .profile-copy small):not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell :is(.nav-copy small, .sidebar-empty, .sidebar-tip p, .profile-copy small, .routine-mini, .stat-detail, .analytics-metric-bottom, .analytics-chart-heading p, .analytics-table-header p, .analytics-page-header p, .analytics-next-meta, .analytics-routine-name small):not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell :is(.panel-overline, .eyebrow, .analytics-kicker, .analytics-section-index, .strip-label, .stat-label, .analytics-metric-label):not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell :is(.panel-overline, .panel-overline span, .analytics-section-index, .strip-label):not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell :is(.stat-detail, .welcome-sub, .page-intro p, .hero-copy > p, .panel-heading p, .analytics-page-header p, .analytics-chart-heading p, .analytics-next-meta, .analytics-metric-bottom, .habit-row-copy p, .planner-activity-copy small, .planner-group-heading small, .task-copy > span, .quiet-empty, .empty-state p):not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell :is(.weekly-hint, .weekly-footer-note, .weekly-chart-top small, .weekly-day-label small, .weekly-matrix-label>small):not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell :is(.weekly-hint, .weekly-footer-note, .weekly-day-label small, .weekly-chart-top small, .planner-legend, .planner-week-day-dots small, .monthly-calendar-legend, .monthly-week-note):not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell :is(.welcome-sub, .detail-main>p, .principle-card p, .research-note p, .reflection-panel p):not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell :is(.workspace-label, .sidebar-section-head, .panel-overline, .eyebrow, .analytics-kicker, .analytics-section-index, .analytics-table-head, .analytics-footer, .analytics-chart-legend, .analytics-y-labels, .analytics-x-labels, .analytics-chart-footer, .analytics-table-footer, .analytics-micro-note):not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell.dark-mode .analytics-metric-bottom .analytics-micro-note:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell.dark-mode .analytics-metric-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell.dark-mode .detail-title-row .category-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell.dark-mode .detail-title-row .frequency-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell.dark-mode .primary-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell.dark-mode .weekly-habit-name:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell.dark-mode .weekly-matrix-day b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell.dark-mode .weekly-matrix-day small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.app-shell.dark-mode .weekly-matrix-label>small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.auth-brand-copy>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.auth-eyebrow:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.auth-footnote:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.auth-forgot:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.auth-form-kicker:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.auth-form-subtitle:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.auth-form>label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.auth-input-wrap input:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.auth-loading-screen>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.auth-message:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.auth-retry-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.auth-screen .auth-submit:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.auth-secure-note:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.auth-submit:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.auth-switch:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.auth-switch button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.auth-value-list b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.auth-value-list small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.auth-workspace-error:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.avatar:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.breadcrumbs:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.category-select button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.category-select button > span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.category-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.choose-task-panel > p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-add-row:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-agenda-empty:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-agenda-group-heading:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-agenda-group-heading>small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-card-topline:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-focus-description>b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-focus-description>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-focus-more:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-focus-presets button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-focus-presets button small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-focus-timer>small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-footer:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-habit-index:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-habit-item .habit-row-copy p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-habit-item .habit-streak:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-habit-item .habit-title-line b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-header-actions .primary-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-heading-copy>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-insight-footer:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-insight-footer button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-kpi-card>b small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-kpi-card>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-kpi-top:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-local-badge:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-orbit-inner span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-overline:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-panel-heading h2>span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-panel-heading p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-plan-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-running-state:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-score-bottom:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-score-copy>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-score-footer:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-score-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-section-index:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-task-capture input:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-task-item .task-copy>b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-task-item .task-copy>span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-text-link:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.command-weekly-intro p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.consistency-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.date-chip:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.detail-check:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.detail-main > p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.detail-main>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.detail-stats b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.detail-stats span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.detail-title-row > b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.detail-title-row>b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.empty-state > b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.empty-state p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.experiment-number:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.experiment-row b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.experiment-row p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.eyebrow:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.field-hint:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.field-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.field-label input:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.field-label select:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.filter-pills button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.focus-caption:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.focus-footer:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.focus-large-ring .focus-caption:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.focus-large-top .live-pill:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.focus-motivation b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.focus-motivation p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.focus-rule-panel p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.focus-session-badge:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.focus-task-choice b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.focus-task-choice small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.frequency-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habit-activity-bar-slot>small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habit-activity-caption:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habit-activity-caption b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habit-activity-caption>span:last-child:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habit-activity-legend:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habit-chart-empty:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habit-chart-x-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habit-chart-y-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habit-duration-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habit-plan-meta:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habit-reminder-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habit-row-copy p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habit-schedule-days legend:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habit-schedule-days>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habit-session-timer-actions button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habit-session-timer-copy em:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habit-session-timer-copy small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habit-streak:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habit-streak small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habit-title-line b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habit-weekday-picker button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habits-library .detail-check:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habits-library .detail-main>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habits-library .detail-stats>span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habits-library .habit-edit-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habits-overview-strip .strip-quote:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.habits-overview-strip b small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.heading-count:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.heatmap-days:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.heatmap-footer > span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.heatmap-months:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.hero-copy > p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.hero-copy>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.hero-meta:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.if-then-preview b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.if-then-preview p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.insights-stat-grid .stat-detail:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.insights-stat-grid .stat-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.large-presets button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.live-pill:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.local-mode-note:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.local-save:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.logged-pill:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.mini-week > span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.modal-top p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-calendar-legend:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-current-month:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-current-month b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-day-habit-count:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-day-habit-count > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-day-habit-count>small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-day-no-activity:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-day-status:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-day-task-count > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-day-task-count>small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-day-top>b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-day-top>i:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-detail-collapse:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-detail-emoji:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-detail-empty:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-detail-group-title b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-detail-group-title>small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-detail-header p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-detail-item-copy > b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-detail-item-copy > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-detail-item-copy>b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-detail-item-copy>small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-item-status:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-navigation button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-stat b i:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-stat small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-title-block p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-today-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-week-note:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-weekday-row > span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.monthly-weekday-row>span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.nav-copy b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.nav-copy small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.nav-count:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.notification-permission-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.orbit-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.orbit-value small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.page-footer:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.panel-heading p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.panel-overline:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.period-chip:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-activity-copy>b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-activity-copy>small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-activity-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-add-inline:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-date-nav button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-empty-filter:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-empty-state>b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-empty-state>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-field:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-field>input:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-field>select:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-filter-chips button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-focus-kicker:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-focus-note>b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-focus-note>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-group-count:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-group-heading>div b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-group-heading>div small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-groupby:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-groupby select:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-habit-symbol:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-heading-copy .heading-count:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-heading-copy>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-legend:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-month-count:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-month-date:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-month-weekday:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-principle p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-quick-add .secondary-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-quick-add p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-repeat-preview:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-repeat-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-segment button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-summary-main p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-summary-metrics b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-summary-metrics span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-summary-progress small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-week-day-count:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-week-day-dots:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-week-day-dots small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.planner-week-day-name:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.primary-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.principle-card h3:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.principle-card p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.principle-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.profile-copy b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.profile-copy small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.quiet-empty:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.rank-name b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.rank-name small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.rank-name>b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.rank-number:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.rank-streak:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.ranking-row .rank-name b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.reflection-quote:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.reminder-alarm p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.reminder-alarm-actions button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.reminder-alarm-kicker:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.reminder-footnote:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.reminder-media-heading b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.reminder-media-heading small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.reminder-media-open:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.reminder-music-help:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.reminder-permission-status:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.reminder-replay-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.reminder-settings-copy b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.reminder-settings-copy small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.reminder-stop-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.reminder-switch:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.research-note b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.research-note button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.research-note p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.review-date-chip:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.routine-mini:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.secondary-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.section-kicker:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.sidebar-empty:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.sidebar-section-head:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.sidebar-tip b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.sidebar-tip p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.sidebar-tools button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.stat-detail:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.stat-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.strip-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.strip-quote:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.task-add-form input:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.task-copy > b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.task-copy > span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.task-copy>b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.task-copy>span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.tasks-board-count:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.tasks-board-footer:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.tasks-board-footer>button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.tasks-category-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.tasks-danger-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.tasks-delete-dialog p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.tasks-empty>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.tasks-filter-tabs button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.tasks-filter-tabs button>span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.tasks-list-copy>b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.tasks-list-meta:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.tasks-priority:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.tasks-repeat-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.tasks-search input:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.tasks-search-filter select:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.tasks-state:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.tasks-summary-card>small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.tasks-summary-card>span:last-child:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.tasks-summary-note>div>b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.tasks-summary-note>div>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.text-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.timer-presets button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.timer-reassurance:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.toast:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.weekly-average:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.weekly-chart-top b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.weekly-chart-top small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.weekly-day-label b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.weekly-day-label small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.weekly-empty:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.weekly-footer:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.weekly-footer-note:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.weekly-habit-name:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.weekly-hint:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.weekly-matrix-day:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.weekly-matrix-day b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.weekly-matrix-day small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.weekly-matrix-head:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.weekly-matrix-label > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.weekly-matrix-label>small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.weekly-not-due:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.welcome-sub:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
-.workspace-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; }
+#root .app-shell .background-push-option .notification-permission-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .background-push-option .reminder-permission-status:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .detail-main > p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .focus-background-push-row > button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .focus-background-push-row > div > b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .focus-background-push-row > div > p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .focus-control-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .focus-custom-audio-name:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .focus-custom-controls > label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .focus-custom-controls > label span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .focus-custom-controls input:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .focus-custom-duration-row input:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .focus-ringtone-setting > label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .focus-ringtone-setting > label span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .focus-ringtone-setting > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .focus-ringtone-setting input:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .focus-setting-block select:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .focus-settings-heading > div > b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .focus-settings-note:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .focus-sound-actions .text-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .focus-sound-note:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .focus-upload-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .focus-upload-label input[type="file"]:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .habit-activity-caption:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .habit-activity-caption span:last-child:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .habit-activity-caption span:last-child b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .habit-activity-legend:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .habit-chart-x-axis:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .habit-chart-x-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .habit-chart-y-axis:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .habit-chart-y-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .habit-modal .habit-weekday-picker button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .habit-overview-copy p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .habit-overview-ring > span > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .habit-row-copy p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .habits-overview-cards .analytics-metric-bottom:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .habits-overview-cards .analytics-metric-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .habits-overview-cards .analytics-metric-value small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .habits-overview-cards .analytics-trend-positive:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .habits-overview-strip .habit-overview-stat > b i:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .habits-overview-strip .habit-overview-stat > b small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .habits-overview-strip .habit-overview-stat > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .habits-overview-strip .strip-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .habits-overview-strip > .habit-overview-feature > p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .habits-overview-strip > .habit-overview-secondary > .strip-quote:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .habits-overview-strip > .habit-overview-stat > b > i:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .habits-overview-strip > .habit-overview-stat > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .habits-overview-strip > .strip-quote:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .habits-overview-strip b small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .insights-stat-card .stat-detail:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .insights-stat-card .stat-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .insights-stat-grid .stat-detail:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .insights-stat-grid .stat-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .mini-week > span b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .mini-week > span small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-activity .monthly-calendar-legend:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-activity .monthly-day-habit-count:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-activity .monthly-day-habit-count > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-activity .monthly-day-no-activity:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-activity .monthly-day-status:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-activity .monthly-day-task-count > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-activity .monthly-day-top > b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-activity .monthly-day-top > i:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-activity .monthly-stats-row .monthly-stat small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-activity .monthly-week-note:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-activity .monthly-weekday-row > span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-calendar-legend:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-current-month b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-day-habit-count:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-day-habit-count > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-day-no-activity:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-day-status:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-day-task-count > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-day-task-count > strong:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-day-top > b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-day-top > i:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-detail-header p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-detail-item-copy small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-stat b i:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-stat small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-title-block p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .monthly-weekday-row > span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .nav-copy b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .nav-copy small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .nav-item.active .nav-copy b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .nav-list > .nav-item .nav-copy b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .nav-list > .nav-item .nav-count:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .planner-activity-copy > b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .planner-activity-copy > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .planner-activity-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .planner-calendar-panel .planner-legend:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .planner-day-summary .planner-summary-main > p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .planner-filter-chips > button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .planner-focus-note .planner-focus-kicker:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .planner-focus-note > p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .planner-group-heading > div > b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .planner-group-heading > div > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .planner-groupby:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .planner-groupby select:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .planner-page .page-footer:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .planner-principle .panel-overline:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .planner-principle p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .planner-quick-add .panel-overline:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .planner-quick-add .secondary-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .planner-quick-add p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .planner-repeat-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .rank-name small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .reflection-panel .experiment-number:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .reflection-panel .experiment-row b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .reflection-panel .experiment-row p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .reflection-panel .reflection-quote:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .reflection-panel .reflection-quote > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .reflection-panel .reflection-quote-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .reflection-panel .research-source-links:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .reminder-footnote:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .routine-mini:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .routine-mini > span:nth-child(2):not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .sidebar .nav-list > .nav-item .nav-copy b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .sidebar .nav-list > .nav-item .nav-count:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .sidebar .nav-list > .nav-item.active .nav-copy b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .sidebar .routine-mini > span:nth-child(2):not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .sidebar .sidebar-section-head:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .sidebar .workspace-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .sidebar-section-head:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .tasks-summary-card > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .tasks-summary-card > span:last-child:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .tasks-summary-note > div > p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .today-analytics-main-grid .analytics-next-meta:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .today-analytics-main-grid .analytics-side-link:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .today-analytics-metrics .analytics-metric-bottom:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .today-analytics-metrics .analytics-metric-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .today-analytics-metrics .analytics-trend-positive:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .today-analytics-page-header p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .today-analytics-progress-card .analytics-today-stats > span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .today-analytics-progress-card .analytics-today-stats b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .app-shell .workspace-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .auth-brand-copy .auth-eyebrow:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .auth-brand-copy > p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .auth-footnote:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .auth-forgot:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .auth-form > label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .auth-form-column .auth-forgot:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .auth-form-column .auth-input-wrap input:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .auth-form-kicker:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .auth-form-subtitle:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .auth-input-wrap input:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .auth-message:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .auth-secure-note:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .auth-submit:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .auth-switch:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .auth-switch button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .auth-value-list b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+#root .auth-value-list small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.add-inline:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-area-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-chart-filter:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-chart-footer:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-chart-footer button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-chart-heading p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-chart-legend:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-chart-legend>b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-chart-legend>b small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-chart-tabs button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-consistency-cell>span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-create-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-daily-ring b small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-daily-ring>div>span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-footer:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-kicker:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-live-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-metric-bottom:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-metric-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-metric-value small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-micro-note:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-next-meta:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-no-habits:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-no-habits button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-page-header p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-plain-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-routine-name b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-routine-name small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-routine-rank:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-saved:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-section-index:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-side-link:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-streak-value:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-streak-value small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-table-footer:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-table-footer>button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-table-head:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-table-header h2 span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-table-header p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-table-header>.analytics-plain-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-today-stats b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-today-stats>span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-trend-positive:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-view-tabs button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-x-labels:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.analytics-y-labels:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .analytics-metric-bottom:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .habit-activity-caption:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .habit-activity-caption span:last-child:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .habit-activity-legend:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .habit-chart-x-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .habit-chart-y-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .habit-schedule-days legend:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .habit-schedule-days>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .habit-weekday-picker button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .mini-week > span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .mini-week > span b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .mini-week > span small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-card-heading h2 > span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-card-heading p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-detail-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-empty-action:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-empty-state > div b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-empty-state > div p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-eyebrow:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-header-actions button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-item-copy p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-item-minimum:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-item-title > b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-item-title > span:not(.today-priority-tag):not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-next-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-next-meta:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-page-header p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-priority-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-progress-breakdown > span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-progress-breakdown b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-progress-breakdown small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-progress-copy p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-progress-number > span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-progress-stat > span:last-child:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-progress-stat small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-quiet-link:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-rhythm-quote > b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-section-kicker:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-side-card p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .today-text-link:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .weekly-chart-top b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .weekly-chart-top small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .weekly-day-label b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .weekly-day-label small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .weekly-footer:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .weekly-habit-name:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .weekly-matrix-day b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .weekly-matrix-day small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell .weekly-matrix-label>small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell :is(.analytics-chart-legend, .analytics-y-labels, .analytics-x-labels, .analytics-chart-footer, .analytics-table-footer, .analytics-footer, .analytics-table-head):not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell :is(.habit-row-copy small, .analytics-routine-name small, .planner-activity-tag, .analytics-area-tag, .analytics-streak-value small):not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell :is(.habit-title-line b, .task-copy > b, .habit-row-copy b, .planner-activity-copy b, .analytics-routine-name b):not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell :is(.nav-copy small, .routine-mini, .sidebar-tip p, .profile-copy small):not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell :is(.nav-copy small, .sidebar-empty, .sidebar-tip p, .profile-copy small, .routine-mini, .stat-detail, .analytics-metric-bottom, .analytics-chart-heading p, .analytics-table-header p, .analytics-page-header p, .analytics-next-meta, .analytics-routine-name small):not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell :is(.panel-overline, .eyebrow, .analytics-kicker, .analytics-section-index, .strip-label, .stat-label, .analytics-metric-label):not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell :is(.panel-overline, .panel-overline span, .analytics-section-index, .strip-label):not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell :is(.stat-detail, .welcome-sub, .page-intro p, .hero-copy > p, .panel-heading p, .analytics-page-header p, .analytics-chart-heading p, .analytics-next-meta, .analytics-metric-bottom, .habit-row-copy p, .planner-activity-copy small, .planner-group-heading small, .task-copy > span, .quiet-empty, .empty-state p):not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell :is(.weekly-hint, .weekly-footer-note, .weekly-chart-top small, .weekly-day-label small, .weekly-matrix-label>small):not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell :is(.weekly-hint, .weekly-footer-note, .weekly-day-label small, .weekly-chart-top small, .planner-legend, .planner-week-day-dots small, .monthly-calendar-legend, .monthly-week-note):not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell :is(.welcome-sub, .detail-main>p, .principle-card p, .research-note p, .reflection-panel p):not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell :is(.workspace-label, .sidebar-section-head, .panel-overline, .eyebrow, .analytics-kicker, .analytics-section-index, .analytics-table-head, .analytics-footer, .analytics-chart-legend, .analytics-y-labels, .analytics-x-labels, .analytics-chart-footer, .analytics-table-footer, .analytics-micro-note):not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell.dark-mode .analytics-metric-bottom .analytics-micro-note:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell.dark-mode .analytics-metric-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell.dark-mode .detail-title-row .category-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell.dark-mode .detail-title-row .frequency-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell.dark-mode .primary-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell.dark-mode .weekly-habit-name:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell.dark-mode .weekly-matrix-day b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell.dark-mode .weekly-matrix-day small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.app-shell.dark-mode .weekly-matrix-label>small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.auth-brand-copy>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.auth-eyebrow:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.auth-footnote:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.auth-forgot:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.auth-form-kicker:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.auth-form-subtitle:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.auth-form>label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.auth-input-wrap input:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.auth-loading-screen>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.auth-message:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.auth-retry-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.auth-screen .auth-submit:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.auth-secure-note:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.auth-submit:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.auth-switch:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.auth-switch button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.auth-value-list b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.auth-value-list small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.auth-workspace-error:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.avatar:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.breadcrumbs:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.category-select button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.category-select button > span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.category-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.choose-task-panel > p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-add-row:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-agenda-empty:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-agenda-group-heading:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-agenda-group-heading>small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-card-topline:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-focus-description>b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-focus-description>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-focus-more:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-focus-presets button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-focus-presets button small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-focus-timer>small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-footer:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-habit-index:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-habit-item .habit-row-copy p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-habit-item .habit-streak:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-habit-item .habit-title-line b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-header-actions .primary-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-heading-copy>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-insight-footer:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-insight-footer button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-kpi-card>b small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-kpi-card>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-kpi-top:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-local-badge:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-orbit-inner span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-overline:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-panel-heading h2>span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-panel-heading p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-plan-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-running-state:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-score-bottom:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-score-copy>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-score-footer:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-score-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-section-index:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-task-capture input:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-task-item .task-copy>b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-task-item .task-copy>span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-text-link:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.command-weekly-intro p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.consistency-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.date-chip:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.detail-check:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.detail-main > p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.detail-main>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.detail-stats b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.detail-stats span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.detail-title-row > b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.detail-title-row>b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.empty-state > b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.empty-state p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.experiment-number:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.experiment-row b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.experiment-row p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.eyebrow:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.field-hint:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.field-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.field-label input:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.field-label select:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.filter-pills button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.focus-caption:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.focus-footer:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.focus-large-ring .focus-caption:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.focus-large-top .live-pill:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.focus-motivation b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.focus-motivation p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.focus-rule-panel p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.focus-session-badge:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.focus-task-choice b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.focus-task-choice small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.frequency-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habit-activity-bar-slot>small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habit-activity-caption:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habit-activity-caption b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habit-activity-caption>span:last-child:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habit-activity-legend:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habit-chart-empty:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habit-chart-x-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habit-chart-y-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habit-duration-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habit-plan-meta:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habit-reminder-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habit-row-copy p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habit-schedule-days legend:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habit-schedule-days>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habit-session-timer-actions button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habit-session-timer-copy em:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habit-session-timer-copy small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habit-streak:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habit-streak small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habit-title-line b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habit-weekday-picker button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habits-library .detail-check:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habits-library .detail-main>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habits-library .detail-stats>span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habits-library .habit-edit-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habits-overview-strip .strip-quote:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.habits-overview-strip b small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.heading-count:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.heatmap-days:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.heatmap-footer > span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.heatmap-months:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.hero-copy > p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.hero-copy>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.hero-meta:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.if-then-preview b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.if-then-preview p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.insights-stat-grid .stat-detail:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.insights-stat-grid .stat-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.large-presets button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.live-pill:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.local-mode-note:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.local-save:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.logged-pill:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.mini-week > span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.modal-top p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-calendar-legend:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-current-month:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-current-month b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-day-habit-count:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-day-habit-count > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-day-habit-count>small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-day-no-activity:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-day-status:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-day-task-count > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-day-task-count>small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-day-top>b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-day-top>i:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-detail-collapse:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-detail-emoji:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-detail-empty:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-detail-group-title b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-detail-group-title>small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-detail-header p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-detail-item-copy > b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-detail-item-copy > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-detail-item-copy>b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-detail-item-copy>small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-item-status:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-navigation button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-stat b i:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-stat small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-title-block p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-today-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-week-note:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-weekday-row > span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.monthly-weekday-row>span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.nav-copy b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.nav-copy small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.nav-count:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.notification-permission-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.orbit-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.orbit-value small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.page-footer:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.panel-heading p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.panel-overline:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.period-chip:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-activity-copy>b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-activity-copy>small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-activity-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-add-inline:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-date-nav button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-empty-filter:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-empty-state>b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-empty-state>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-field:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-field>input:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-field>select:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-filter-chips button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-focus-kicker:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-focus-note>b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-focus-note>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-group-count:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-group-heading>div b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-group-heading>div small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-groupby:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-groupby select:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-habit-symbol:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-heading-copy .heading-count:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-heading-copy>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-legend:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-month-count:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-month-date:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-month-weekday:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-principle p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-quick-add .secondary-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-quick-add p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-repeat-preview:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-repeat-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-segment button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-summary-main p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-summary-metrics b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-summary-metrics span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-summary-progress small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-week-day-count:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-week-day-dots:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-week-day-dots small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.planner-week-day-name:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.primary-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.principle-card h3:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.principle-card p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.principle-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.profile-copy b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.profile-copy small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.quiet-empty:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.rank-name b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.rank-name small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.rank-name>b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.rank-number:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.rank-streak:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.ranking-row .rank-name b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.reflection-quote:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.reminder-alarm p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.reminder-alarm-actions button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.reminder-alarm-kicker:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.reminder-footnote:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.reminder-media-heading b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.reminder-media-heading small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.reminder-media-open:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.reminder-music-help:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.reminder-permission-status:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.reminder-replay-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.reminder-settings-copy b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.reminder-settings-copy small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.reminder-stop-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.reminder-switch:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.research-note b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.research-note button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.research-note p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.review-date-chip:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.routine-mini:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.secondary-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.section-kicker:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.sidebar-empty:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.sidebar-section-head:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.sidebar-tip b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.sidebar-tip p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.sidebar-tools button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.stat-detail:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.stat-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.strip-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.strip-quote:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.task-add-form input:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.task-copy > b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.task-copy > span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.task-copy>b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.task-copy>span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.tasks-board-count:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.tasks-board-footer:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.tasks-board-footer>button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.tasks-category-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.tasks-danger-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.tasks-delete-dialog p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.tasks-empty>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.tasks-filter-tabs button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.tasks-filter-tabs button>span:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.tasks-list-copy>b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.tasks-list-meta:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.tasks-priority:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.tasks-repeat-tag:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.tasks-search input:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.tasks-search-filter select:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.tasks-state:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.tasks-summary-card>small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.tasks-summary-card>span:last-child:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.tasks-summary-note>div>b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.tasks-summary-note>div>p:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.text-button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.timer-presets button:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.timer-reassurance:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.toast:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.weekly-average:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.weekly-chart-top b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.weekly-chart-top small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.weekly-day-label b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.weekly-day-label small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.weekly-empty:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.weekly-footer:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.weekly-footer-note:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.weekly-habit-name:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.weekly-hint:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.weekly-matrix-day:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.weekly-matrix-day b:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.weekly-matrix-day small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.weekly-matrix-head:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.weekly-matrix-label > small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.weekly-matrix-label>small:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.weekly-not-due:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.welcome-sub:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+.workspace-label:not(#cadence-readability-specificity-guard) { font-size: 14px !important; line-height: 1.35 !important; }
+
+/* Keep labels legible without forcing them into clipped one-line boxes. */
+#root .app-shell :is(.planner-activity-copy>b, .planner-activity-copy > b, .monthly-detail-item-copy>b, .monthly-detail-item-copy > b, .monthly-detail-item-copy>small, .monthly-detail-item-copy > small, .analytics-routine-name b, .analytics-routine-name small, .monthly-stat small, .monthly-current-month b, .monthly-detail-collapse, .analytics-plain-button, .analytics-view-tabs button, .analytics-saved, .analytics-metric-label, .analytics-metric-bottom, .monthly-day-status, .monthly-day-habit-count, .monthly-day-task-count, .habit-reminder-tag, .focus-settings-note, .background-push-option .notification-permission-button, .command-text-link, .today-text-link, .today-quiet-link, .habit-streak, .detail-check, .research-note button) {
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  text-overflow: clip !important;
+}
+#root .app-shell :is(.analytics-metric-label, .analytics-metric-bottom, .monthly-day-habit-count, .monthly-day-task-count) {
+  flex-wrap: wrap;
+  min-width: 0;
+  row-gap: 5px;
+}
+#root .app-shell :is(.monthly-detail-item-copy, .planner-activity-copy, .analytics-routine-name, .analytics-metric-bottom > span, .analytics-metric-label > span) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+#root .app-shell :is(.planner-groupby select, .planner-field > select) {
+  min-width: 120px !important;
+  max-width: 100% !important;
+}
+#root .app-shell :is(.habit-row-copy p, .rank-name b, .weekly-habit-name, .planner-activity-copy > b, .monthly-detail-item-copy > b, .monthly-detail-item-copy > small, .analytics-routine-name b, .analytics-routine-name small) {
+  display: block;
+  width: 100%;
+}
+@media (max-width: 980px) {
+  #root .app-shell .weekly-matrix { min-width: 760px; }
+  #root .app-shell :is(.weekly-tracker-panel, .weekly-tracker-shell) { overflow-x: auto !important; }
+}
