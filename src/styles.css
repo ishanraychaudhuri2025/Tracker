@@ -10194,3 +10194,67 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     letter-spacing: .2px !important;
   }
 }
+
+
+/* Today metric cards: keep supporting copy distinct from the mini charts, with calmer typography. */
+#root .app-shell .today-analytics-metrics > .analytics-metric-card {
+  box-sizing: border-box !important;
+  min-width: 0 !important;
+  min-height: 145px !important;
+  padding: 15px 14px 32px !important;
+  overflow: hidden !important;
+}
+#root .app-shell .today-analytics-metrics .analytics-metric-bottom {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  gap: 0 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 15px !important;
+  margin-top: 4px !important;
+  margin-bottom: 7px !important;
+  font-size: 9.5px !important;
+  line-height: 1.3 !important;
+  white-space: normal !important;
+}
+#root .app-shell .today-analytics-metrics .analytics-metric-bottom > span:first-child {
+  display: block !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow-wrap: anywhere !important;
+}
+#root .app-shell .today-analytics-metrics .analytics-metric-line,
+#root .app-shell .today-analytics-metrics .analytics-mini-bars,
+#root .app-shell .today-analytics-metrics .analytics-streak-steps,
+#root .app-shell .today-analytics-metrics .analytics-checkin-grid {
+  bottom: 7px !important;
+  z-index: 1 !important;
+}
+#root .app-shell .today-analytics-metrics .analytics-metric-line {
+  height: 14px !important;
+}
+#root .app-shell .today-analytics-metrics .analytics-mini-bars,
+#root .app-shell .today-analytics-metrics .analytics-streak-steps {
+  height: 18px !important;
+}
+@media (max-width: 1080px) {
+  #root .app-shell .today-analytics-metrics .analytics-metric-bottom {
+    font-size: 9px !important;
+  }
+  #root .app-shell .today-analytics-metrics > .analytics-metric-card {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+}
+@media (max-width: 420px) {
+  #root .app-shell .today-analytics-metrics .analytics-metric-bottom {
+    font-size: 8.5px !important;
+    line-height: 1.25 !important;
+    margin-bottom: 5px !important;
+  }
+  #root .app-shell .today-analytics-metrics > .analytics-metric-card {
+    padding-bottom: 29px !important;
+  }
+}
