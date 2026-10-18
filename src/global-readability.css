@@ -751,3 +751,14 @@ input::placeholder, textarea::placeholder {
   #root .app-shell .weekly-matrix { min-width: 760px; }
   #root .app-shell :is(.weekly-tracker-panel, .weekly-tracker-shell) { overflow-x: auto !important; }
 }
+
+/* Contrast audit: replace low-luminance metadata colors on dark surfaces. */
+#root .app-shell :is(.analytics-footer, .analytics-micro-note, .command-habit-index, .auth-footnote, .auth-secure-note, .analytics-routine-name small, .analytics-view-tabs button, .analytics-streak-value small, .analytics-daily-ring > div > span, .local-mode-note, .analytics-chart-tabs button, .analytics-saved, .analytics-metric-bottom, .analytics-next-meta, .local-save, .nav-copy small) {
+  color: #d0c2e0 !important;
+}
+#root .auth-screen :is(.auth-footnote, .auth-secure-note, .auth-helper, .auth-description) {
+  color: #cfc1df !important;
+}
+#root .app-shell :is(.analytics-chart-heading p, .analytics-table-header p, .analytics-next-meta, .analytics-micro-note, .auth-footnote, .auth-secure-note) {
+  line-height: 1.6 !important;
+}
