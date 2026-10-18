@@ -10093,3 +10093,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 @media (prefers-reduced-motion: reduce) {
   .profile-settings-backdrop, .profile-settings-modal, .profile-logo-choice { animation: none !important; transition: none !important; }
 }
+
+
+/* Small polish from the Habits view: slightly tighter label spacing and gently rounded bar tops. */
+#root .app-shell .habits-library .mini-week > span {
+  gap: 3.3px !important; /* 5% tighter than the current 3.5px label gap */
+}
+#root .app-shell .weekly-tracker-panel .weekly-bar-track > span {
+  border-radius: 2px 2px 3px 3px !important;
+  clip-path: none !important;
+}
