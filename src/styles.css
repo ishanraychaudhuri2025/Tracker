@@ -10889,3 +10889,173 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     font-size: 9px !important;
   }
 }
+
+
+/* Cadence boot splash: near-black canvas with the brand waveform drawing left to right. */
+#root .auth-loading-screen {
+  box-sizing: border-box !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 99999 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
+  width: 100% !important;
+  min-width: 100% !important;
+  min-height: 100vh !important;
+  min-height: 100dvh !important;
+  margin: 0 !important;
+  padding: 28px !important;
+  overflow: hidden !important;
+  background:
+    radial-gradient(ellipse at 50% 48%, rgba(111, 54, 158, .095) 0%, rgba(34, 17, 49, .045) 27%, transparent 58%),
+    #07060b !important;
+  color: #f5effb !important;
+  text-align: center !important;
+}
+#root .auth-loading-screen::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 24px !important;
+  border: 1px solid rgba(197, 156, 225, .035) !important;
+  border-radius: 18px !important;
+  pointer-events: none !important;
+}
+#root .auth-loading-mark,
+#root .cadence-splash-mark {
+  position: relative !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 124px !important;
+  height: 124px !important;
+  flex: 0 0 124px !important;
+  margin: 0 auto 19px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  color: #d9adff !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+#root .auth-loading-mark .cadence-mark-svg,
+#root .cadence-splash-mark .cadence-mark-svg {
+  display: block !important;
+  width: 106px !important;
+  height: 106px !important;
+  max-width: none !important;
+  overflow: visible !important;
+  filter: drop-shadow(0 0 7px rgba(192, 112, 255, .27)) !important;
+}
+#root .auth-loading-mark .cadence-wave-path,
+#root .cadence-splash-mark .cadence-wave-path {
+  stroke-dasharray: 1 !important;
+  stroke-dashoffset: 1 !important;
+  animation: cadence-splash-wave-draw 1.62s cubic-bezier(.64, 0, .28, 1) .08s forwards,
+             cadence-splash-wave-glow 1.9s ease-in-out 1.75s infinite !important;
+}
+#root .cadence-splash-wordmark {
+  display: block !important;
+  width: 166px !important;
+  max-width: 58vw !important;
+  height: auto !important;
+  margin: 0 auto !important;
+  object-fit: contain !important;
+  opacity: 0 !important;
+  filter: drop-shadow(0 0 14px rgba(178, 105, 239, .08)) !important;
+  animation: cadence-splash-wordmark-in .65s ease-out .95s forwards !important;
+}
+#root .cadence-splash-progress {
+  display: block !important;
+  position: relative !important;
+  width: 112px !important;
+  height: 2px !important;
+  margin: 24px auto 0 !important;
+  overflow: hidden !important;
+  border-radius: 999px !important;
+  background: rgba(180, 139, 207, .13) !important;
+}
+#root .cadence-splash-progress > span {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: inherit !important;
+  background: linear-gradient(90deg, #7e3eb2, #d5a4ff 58%, #a65be8) !important;
+  transform: scaleX(0) !important;
+  transform-origin: left center !important;
+  box-shadow: 0 0 8px rgba(192, 112, 255, .55) !important;
+  animation: cadence-splash-progress-draw 1.72s cubic-bezier(.64, 0, .28, 1) .02s forwards !important;
+}
+#root .cadence-splash-screen::before {
+  inset: 18px !important;
+  border-color: rgba(197, 156, 225, .025) !important;
+  border-radius: 12px !important;
+}
+#root .cadence-splash-screen .cadence-splash-mark {
+  width: 144px !important;
+  height: 144px !important;
+  flex-basis: 144px !important;
+  margin-bottom: 10px !important;
+}
+#root .cadence-splash-screen .cadence-mark-svg {
+  width: 126px !important;
+  height: 126px !important;
+}
+#root .auth-loading-screen h1 {
+  max-width: min(92vw, 520px) !important;
+  margin: 0 !important;
+  color: #f2e7fb !important;
+  font: 500 24px/1.2 var(--cadence-font-display) !important;
+  letter-spacing: -.025em !important;
+}
+#root .auth-loading-screen > p {
+  max-width: min(90vw, 410px) !important;
+  margin: 10px auto 0 !important;
+  color: #9c89ad !important;
+  font: 400 11px/1.6 var(--cadence-font-ui) !important;
+}
+@keyframes cadence-splash-wave-draw {
+  0% { stroke-dashoffset: 1; opacity: .35; }
+  8% { opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 1; }
+}
+@keyframes cadence-splash-wave-glow {
+  0%, 100% { filter: drop-shadow(0 0 5px rgba(178, 100, 245, .42)); }
+  50% { filter: drop-shadow(0 0 13px rgba(197, 132, 255, .85)); }
+}
+@keyframes cadence-splash-wordmark-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes cadence-splash-progress-draw {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@media (max-width: 520px) {
+  #root .cadence-splash-screen .cadence-splash-mark {
+    width: 126px !important;
+    height: 126px !important;
+    flex-basis: 126px !important;
+  }
+  #root .cadence-splash-screen .cadence-mark-svg {
+    width: 112px !important;
+    height: 112px !important;
+  }
+  #root .cadence-splash-wordmark { width: 148px !important; }
+  #root .cadence-splash-progress { width: 100px !important; margin-top: 21px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #root .auth-loading-mark .cadence-wave-path,
+  #root .cadence-splash-mark .cadence-wave-path,
+  #root .cadence-splash-wordmark,
+  #root .cadence-splash-progress > span {
+    animation: none !important;
+  }
+  #root .auth-loading-mark .cadence-wave-path,
+  #root .cadence-splash-mark .cadence-wave-path {
+    stroke-dashoffset: 0 !important;
+  }
+  #root .cadence-splash-wordmark { opacity: 1 !important; }
+  #root .cadence-splash-progress > span { transform: scaleX(1) !important; }
+}
