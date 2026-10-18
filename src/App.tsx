@@ -1926,6 +1926,18 @@ function App() {
           <span className="reminder-alarm-kicker">CADENCE BACKGROUND REMINDER</span>
           <h2 id="push-arrival-title">{pushArrival.title}</h2>
           <p>{pushArrival.body}</p>
+          {pushArrival.kind === 'focus' && focusRingtoneKind === 'custom' && parseReminderMedia(focusRingtoneData) && <div className="focus-music-embed focus-completion-embed" aria-label="Focus completion soundtrack">
+            <iframe
+              src={parseReminderMedia(focusRingtoneData)?.embedUrl}
+              title={'Focus completion soundtrack from ' + (parseReminderMedia(focusRingtoneData)?.provider || 'music service')}
+              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+            />
+            <a href={parseReminderMedia(focusRingtoneData)?.originalUrl} target="_blank" rel="noreferrer">
+              Open in {parseReminderMedia(focusRingtoneData)?.provider} <ArrowUpRight size={13} />
+            </a>
+          </div>}
           <div className="reminder-alarm-actions">
             <button type="button" className="secondary-button" onClick={() => {
               unlockReminderAudio();
