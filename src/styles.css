@@ -10140,3 +10140,57 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   white-space: nowrap !important;
   overflow: hidden !important;
 }
+
+
+/* Planner completion ring: scale the circle up so its label can be readable without escaping the edge. */
+#root .app-shell .planner-summary-progress {
+  width: 96px !important;
+  height: 96px !important;
+  flex: 0 0 96px !important;
+  overflow: hidden !important;
+}
+#root .app-shell .planner-summary-progress::before {
+  inset: 7px !important;
+}
+#root .app-shell .planner-summary-progress > div {
+  padding: 0 7px !important;
+  gap: 3px !important;
+}
+#root .app-shell .planner-summary-progress > div > b {
+  font-size: 21px !important;
+  line-height: 1.05 !important;
+  letter-spacing: -.45px !important;
+}
+#root .app-shell .planner-summary-progress > div > small {
+  font-size: 8.5px !important;
+  line-height: 1.15 !important;
+  letter-spacing: .35px !important;
+  overflow: visible !important;
+}
+@media (max-width: 560px) {
+  #root .app-shell .planner-day-summary {
+    gap: 10px !important;
+  }
+  #root .app-shell .planner-summary-main {
+    flex-basis: calc(100% - 82px) !important;
+  }
+  #root .app-shell .planner-summary-progress {
+    width: 72px !important;
+    height: 72px !important;
+    flex-basis: 72px !important;
+  }
+  #root .app-shell .planner-summary-progress::before {
+    inset: 5px !important;
+  }
+  #root .app-shell .planner-summary-progress > div {
+    padding: 0 5px !important;
+    gap: 2px !important;
+  }
+  #root .app-shell .planner-summary-progress > div > b {
+    font-size: 16px !important;
+  }
+  #root .app-shell .planner-summary-progress > div > small {
+    font-size: 7.5px !important;
+    letter-spacing: .2px !important;
+  }
+}
