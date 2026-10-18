@@ -1,0 +1,19 @@
+{
+  "name": "Cadence — Find Your Rhythm",
+  "short_name": "Cadence",
+  "description": "Build a steadier rhythm for habits, focus, and follow-through.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#07050c",
+  "theme_color": "#07050c",
+  "icons": [
+    {
+      "src": "/cadence-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
