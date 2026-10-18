@@ -1412,7 +1412,7 @@ function App() {
             </button>
           ))}
         </nav>
-        <div className="sidebar-section-head"><span>YOUR ROUTINES</span><IconButton label="Create a habit" onClick={openCreateHabit}><Plus size={15} /></IconButton></div>
+        <div className="sidebar-section-head"><span>Your routines</span><IconButton label="Create a habit" onClick={openCreateHabit}><Plus size={15} /></IconButton></div>
         <div className="routine-list">
           {habits.slice(0, 5).map((habit) => (
             <button className="routine-mini" key={habit.id} type="button" onClick={() => { setPage('Habits'); setFilter(habit.category); }}>
