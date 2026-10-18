@@ -53,6 +53,34 @@ function HabitGlyph({ habit, size = 17 }: { habit: Habit; size?: number }) {
 }
 type ActiveReminder = { habitId: string; habitName: string; reminderTime: string; reminderSoundUrl?: string };
 
+type ProfileLogoKey = 'initials' | 'wave' | 'zap' | 'sparkles' | 'target' | 'flame' | 'leaf' | 'code' | 'heart' | 'brain' | 'compass';
+type LocalProfile = { name: string; logo: ProfileLogoKey };
+const PROFILE_LOGO_KEYS: ProfileLogoKey[] = ['initials', 'wave', 'zap', 'sparkles', 'target', 'flame', 'leaf', 'code', 'heart', 'brain', 'compass'];
+const PROFILE_LOGO_CHOICES: { key: ProfileLogoKey; label: string }[] = [
+  { key: 'initials', label: 'Initials' }, { key: 'wave', label: 'Wave' }, { key: 'zap', label: 'Lightning' },
+  { key: 'sparkles', label: 'Sparkles' }, { key: 'target', label: 'Target' }, { key: 'flame', label: 'Flame' },
+  { key: 'leaf', label: 'Leaf' }, { key: 'code', label: 'Code' }, { key: 'heart', label: 'Heart' },
+  { key: 'brain', label: 'Mind' }, { key: 'compass', label: 'Compass' },
+];
+
+function ProfileGlyph({ logo, name, size = 17 }: { logo: ProfileLogoKey; name: string; size?: number }) {
+  if (logo === 'initials') {
+    const initials = name.trim().toLowerCase() === 'your workspace' ? 'IR' : (name.trim().slice(0, 2).toUpperCase() || 'IR');
+    return <span className="profile-avatar-initials">{initials}</span>;
+  }
+  const iconProps = { size, strokeWidth: 1.8, 'aria-hidden': true as const };
+  if (logo === 'zap') return <Zap {...iconProps} />;
+  if (logo === 'sparkles') return <Sparkles {...iconProps} />;
+  if (logo === 'target') return <Target {...iconProps} />;
+  if (logo === 'flame') return <Flame {...iconProps} />;
+  if (logo === 'leaf') return <Leaf {...iconProps} />;
+  if (logo === 'code') return <Code2 {...iconProps} />;
+  if (logo === 'heart') return <Heart {...iconProps} />;
+  if (logo === 'brain') return <Brain {...iconProps} />;
+  if (logo === 'compass') return <Compass {...iconProps} />;
+  return <Activity {...iconProps} />;
+}
+
 type ReminderMedia = { provider: 'YouTube' | 'Spotify'; originalUrl: string; embedUrl: string };
 
 function parseReminderMedia(input?: string): ReminderMedia | null {
@@ -263,6 +291,72 @@ function App() {
   const [focusTaskId, setFocusTaskId] = useState<string | null>(null);
   const [toast, setToast] = useState('');
   const [authSession, setAuthSession] = useState<Session | null>(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profileNameDraft, setProfileNameDraft] = useState('');
+  const [profileLogoDraft, setProfileLogoDraft] = useState<ProfileLogoKey>('initials');
+  const [profileSaveBusy, setProfileSaveBusy] = useState(false);
+  const [localProfile, setLocalProfile] = useState<LocalProfile>(() => {
+    try {
+      const raw = typeof window !== 'undefined' ? window.localStorage.getItem('cadence-profile-local') : null;
+      const saved = raw ? JSON.parse(raw) as Partial<LocalProfile> : {};
+      return {
+        name: typeof saved.name === 'string' ? saved.name : '',
+        logo: PROFILE_LOGO_KEYS.includes(saved.logo as ProfileLogoKey) ? saved.logo as ProfileLogoKey : 'initials',
+      };
+    } catch {
+      return { name: '', logo: 'initials' };
+    }
+  });
+  const metadataDisplayName = typeof authSession?.user.user_metadata?.display_name === 'string'
+    ? authSession.user.user_metadata.display_name.trim() : '';
+  const profileDisplayName = authSession
+    ? (metadataDisplayName || authSession.user.email?.split('@')[0] || 'Your workspace')
+    : (localProfile.name.trim() || 'Your workspace');
+  const metadataLogo = authSession?.user.user_metadata?.avatar_key as ProfileLogoKey | undefined;
+  const profileLogo: ProfileLogoKey = authSession
+    ? (metadataLogo && PROFILE_LOGO_KEYS.includes(metadataLogo) ? metadataLogo : 'initials')
+    : localProfile.logo;
+
+  const openProfileSettings = () => {
+    setProfileNameDraft(profileDisplayName === 'Your workspace' ? '' : profileDisplayName);
+    setProfileLogoDraft(profileLogo);
+    setShowProfileModal(true);
+  };
+
+  const saveProfile = async () => {
+    const displayName = profileNameDraft.trim().replace(/\\s+/g, ' ').slice(0, 32);
+    if (!displayName) {
+      setToast('Enter a username before saving.');
+      return;
+    }
+    setProfileSaveBusy(true);
+    try {
+      if (authSession && supabase) {
+        const { error } = await supabase.auth.updateUser({
+          data: { display_name: displayName, avatar_key: profileLogoDraft },
+        });
+        if (error) throw error;
+        setAuthSession((current) => current ? {
+          ...current,
+          user: {
+            ...current.user,
+            user_metadata: { ...current.user.user_metadata, display_name: displayName, avatar_key: profileLogoDraft },
+          },
+        } : current);
+      } else {
+        const nextProfile = { name: displayName, logo: profileLogoDraft };
+        window.localStorage.setItem('cadence-profile-local', JSON.stringify(nextProfile));
+        setLocalProfile(nextProfile);
+      }
+      setShowProfileModal(false);
+      setToast('Profile updated.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Please try again.';
+      setToast('Could not save your profile. ' + message);
+    } finally {
+      setProfileSaveBusy(false);
+    }
+  };
   const [passwordRecovery, setPasswordRecovery] = useState(false);
   const [authReady, setAuthReady] = useState(!supabaseConfigured);
   const [workspaceReady, setWorkspaceReady] = useState(!supabaseConfigured);
@@ -1272,7 +1366,13 @@ function App() {
         </div>
         <div className="sidebar-bottom">
           <div className="profile-row">
-            <span className="avatar">{authSession?.user.email?.slice(0, 2).toUpperCase() || 'IR'}</span><span className="profile-copy"><b>{authSession?.user.email?.split('@')[0] || 'Your workspace'}</b><small>{authSession ? 'Synced workspace' : 'Personal edition'}</small></span>{authSession && supabase ? <button type="button" className="profile-signout" aria-label="Sign out" title="Sign out" onClick={() => { void supabase?.auth.signOut(); }}><LogOut size={15}/></button> : <MoreHorizontal size={18} className="muted-icon" />}
+            <button type="button" className="profile-identity" onClick={openProfileSettings} aria-label="Customize username and profile logo" title="Customize profile">
+              <span className={`avatar profile-avatar ${profileLogo === 'initials' ? 'profile-avatar-initials-mode' : 'profile-avatar-symbol-mode'}`}><ProfileGlyph logo={profileLogo} name={profileDisplayName} size={17} /></span>
+              <span className="profile-copy"><b>{profileDisplayName}</b><small>{authSession ? 'Synced workspace' : 'Personal edition'}</small></span>
+            </button>
+            {authSession && supabase
+              ? <button type="button" className="profile-signout" aria-label="Sign out" title="Sign out" onClick={() => { void supabase?.auth.signOut(); }}><LogOut size={15}/></button>
+              : <button type="button" className="profile-edit-trigger" aria-label="Customize profile" title="Customize profile" onClick={openProfileSettings}><Pencil size={15} /></button>}
           </div>
           <div className="sidebar-tools"><button type="button" onClick={() => setDark((current) => !current)}><span>{dark ? <Sun size={15} /> : <Moon size={15} />}</span>{dark ? 'Soft violet appearance' : 'Midnight appearance'}</button><button type="button" onClick={() => setToast(authSession ? 'Your workspace syncs to your account.' : 'Cloud auth is not connected yet.')}><Settings2 size={15} />Preferences</button>{!supabaseConfigured && <span className="local-mode-note">LOCAL MODE · CLOUD NOT CONNECTED</span>}</div>
         </div>
@@ -1756,6 +1856,34 @@ function App() {
           <button type="button" className="reminder-stop-button" onClick={() => setPushArrival(null)}>Dismiss</button>
         </section>
       </div>}
+      {showProfileModal && <div className="profile-settings-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowProfileModal(false); }}>
+        <section className="profile-settings-modal" role="dialog" aria-modal="true" aria-labelledby="profile-settings-title">
+          <div className="profile-settings-header">
+            <div><span className="panel-overline">YOUR CADENCE PROFILE</span><h2 id="profile-settings-title">Make it yours.</h2><p>Choose the name and mark that represent you.</p></div>
+            <button type="button" className="profile-settings-close" onClick={() => setShowProfileModal(false)} aria-label="Close profile settings"><X size={17} /></button>
+          </div>
+          <form className="profile-settings-form" onSubmit={(event) => { event.preventDefault(); void saveProfile(); }}>
+            <label className="profile-settings-label">Username
+              <input value={profileNameDraft} onChange={(event) => setProfileNameDraft(event.target.value)} maxLength={32} autoComplete="nickname" placeholder="What should we call you?" required autoFocus />
+              <small>Up to 32 characters. This is the name shown in your sidebar.</small>
+            </label>
+            <div className="profile-logo-section">
+              <div className="profile-logo-section-heading"><b>Profile logo</b><span>Select a symbol</span></div>
+              <div className="profile-logo-grid">
+                {PROFILE_LOGO_CHOICES.map((choice) => <button key={choice.key} type="button" className={`profile-logo-choice ${profileLogoDraft === choice.key ? 'is-selected' : ''}`} aria-pressed={profileLogoDraft === choice.key} onClick={() => setProfileLogoDraft(choice.key)}>
+                  <span className="profile-logo-choice-icon"><ProfileGlyph logo={choice.key} name={profileNameDraft.trim() || 'Your workspace'} size={18} /></span>
+                  <small>{choice.label}</small>
+                </button>)}
+              </div>
+            </div>
+            <p className="profile-settings-note">{authSession ? 'Your name and logo are saved to your account.' : 'You are in local mode; your profile is saved in this browser.'}</p>
+            <div className="profile-settings-actions">
+              <button type="button" className="secondary-button" onClick={() => setShowProfileModal(false)} disabled={profileSaveBusy}>Cancel</button>
+              <button type="submit" className="primary-button" disabled={profileSaveBusy}>{profileSaveBusy ? 'Saving…' : <><Check size={15} /> Save profile</>}</button>
+            </div>
+          </form>
+        </section>
+      </div>}
       {toast && <div className="toast" role="status"><span><Check size={15} /></span>{toast}<button type="button" aria-label="Dismiss message" onClick={() => setToast('')}><X size={14} /></button></div>}
     </div>
   );
@@ -2000,7 +2128,8 @@ function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habi
     const completed = scheduled && Boolean(habit.logs[key]);
     const percent = scheduled ? (completed ? 100 : 0) : null;
     const day = new Date(key + "T12:00:00");
-    return { key, day, x: (index + 0.5) * (857 / 14), y: percent === null ? 90 : 90 - percent * 0.8, percent, scheduled, completed };
+    // Keep all values inside a padded 16–84% plot area so endpoint markers never crowd the frame.
+    return { key, day, x: (index + 0.5) * (857 / 14), y: percent === null ? 84 : 84 - percent * 0.68, percent, scheduled, completed };
   });
   const chartedPoints = chartPoints.filter((point) => point.percent !== null);
   // Use straight segments instead of cubic curves so the trend stays crisp
@@ -2010,7 +2139,7 @@ function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habi
   }, "");
   const firstChartPoint = chartedPoints[0];
   const lastChartPoint = chartedPoints[chartedPoints.length - 1];
-  const areaPath = firstChartPoint && lastChartPoint ? linePath + " L " + lastChartPoint.x + " 90 L " + firstChartPoint.x + " 90 Z" : "";
+  const areaPath = firstChartPoint && lastChartPoint ? linePath + " L " + lastChartPoint.x + " 84 L " + firstChartPoint.x + " 84 Z" : "";
   const chartId = habit.id.replace(/[^a-zA-Z0-9_-]/g, "");
   return <article className="habit-detail-card">
     <div className="habit-detail-row">
@@ -2058,7 +2187,7 @@ function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habi
                   <stop offset="100%" stopColor="#ac70ff" stopOpacity=".015" />
                 </linearGradient>
               </defs>
-              {[10, 50, 90].map((y) => <line key={y} x1="0" y1={y} x2="857" y2={y} className="habit-chart-grid-line" />)}
+              {[16, 50, 84].map((y) => <line key={y} x1="0" y1={y} x2="857" y2={y} className="habit-chart-grid-line" />)}
               {areaPath && <path d={areaPath} fill={"url(#cadence-habit-area-" + chartId + ")"} className="habit-activity-area" />}
               {linePath && <path d={linePath} fill="none" stroke={"url(#cadence-habit-line-" + chartId + ")"} className="habit-activity-line" pathLength={1} />}
               {chartedPoints.map((point) => (
