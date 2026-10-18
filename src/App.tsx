@@ -246,6 +246,12 @@ function IconButton({ label, onClick, children, className = '' }: { label: strin
 }
 
 function App() {
+  const [splashFinished, setSplashFinished] = useState(false);
+  useEffect(() => {
+    const splashTimer = window.setTimeout(() => setSplashFinished(true), 2000);
+    return () => window.clearTimeout(splashTimer);
+  }, []);
+
   const [habits, setHabits] = useState<Habit[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [page, setPage] = useState<Page>('Today');
@@ -1322,6 +1328,14 @@ function App() {
   const timeText = `${String(Math.floor(focusSeconds / 60)).padStart(2, '0')}:${String(focusSeconds % 60).padStart(2, '0')}`;
   const timerProgress = 1 - focusSeconds / (focusPreset * 60 || 1);
 
+  if (!splashFinished) {
+    return <div className="auth-loading-screen cadence-splash-screen" role="status" aria-label="Loading Cadence">
+      <div className="cadence-splash-mark"><CadenceMark /></div>
+      <img className="cadence-splash-wordmark" src="/cadence-wordmark.svg" alt="Cadence" />
+      <span className="cadence-splash-progress" aria-hidden="true"><span /></span>
+    </div>;
+  }
+
   if (supabaseConfigured && passwordRecovery) return <AuthScreen initialMode="update" />;
     if (supabaseConfigured && !authReady) {
     return <div className="auth-loading-screen"><div className="auth-loading-mark"><CadenceMark /></div><h1>Preparing your workspace</h1><p>Securely loading your routines and task history…</p></div>;
@@ -1898,7 +1912,7 @@ function CadenceMark() {
         <stop offset="100%" stopColor="#8B35E6" />
       </linearGradient>
     </defs>
-    <path d="M2 23 C7 23 8 23 11 20 C14 17 14 10 18 10 C22 10 22 34 27 34 C31 34 32 6 36 6 C39 6 40 21 42 21" fill="none" stroke="url(#cadence-wave-stroke)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
+    <path className="cadence-wave-path" pathLength={1} d="M2 23 C7 23 8 23 11 20 C14 17 14 10 18 10 C22 10 22 34 27 34 C31 34 32 6 36 6 C39 6 40 21 42 21" fill="none" stroke="url(#cadence-wave-stroke)" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>;
 }
 function StatCard({ icon, label, value, detail, tone }: { icon: ReactNode; label: string; value: string; detail: string; tone: string }) {
