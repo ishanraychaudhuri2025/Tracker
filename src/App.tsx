@@ -324,7 +324,7 @@ function App() {
     ? (metadataLogo && PROFILE_LOGO_KEYS.includes(metadataLogo) ? metadataLogo : 'initials')
     : localProfile.logo;
   const metadataAvatarData = typeof authSession?.user.user_metadata?.avatar_data === 'string' ? authSession.user.user_metadata.avatar_data : '';
-  const profilePhoto = metadataAvatarData || localProfile.avatarData || '';
+  const profilePhoto = authSession ? metadataAvatarData : (localProfile.avatarData || '');
   const [profilePhotoDraft, setProfilePhotoDraft] = useState('');
 
   const openProfileSettings = () => {
