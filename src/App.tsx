@@ -227,12 +227,18 @@ function App() {
   const emptyHabitDraft = { name: '', category: 'Craft' as Category, frequency: 'Daily' as Frequency, cue: '', minimum: '', reminderEnabled: false, reminderTime: '09:00', reminderSoundUrl: '', customDays: [1, 2, 3, 4, 5], durationMonths: 0, timerMinutes: 0 };
   const [habitDraft, setHabitDraft] = useState(emptyHabitDraft);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>(typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'unsupported');
+  const [backgroundPushAvailable, setBackgroundPushAvailable] = useState(false);
+  const [backgroundPushEnabled, setBackgroundPushEnabled] = useState(false);
+  const [backgroundPushBusy, setBackgroundPushBusy] = useState(false);
+  const [pendingPushReminder, setPendingPushReminder] = useState<string | null>(null);
+  const [pushArrival, setPushArrival] = useState<{ kind: 'task' | 'focus'; title: string; body: string } | null>(null);
   const [activeReminder, setActiveReminder] = useState<ActiveReminder | null>(null);
   const [reminderSoundStopped, setReminderSoundStopped] = useState(false);
   const [reminderMediaReload, setReminderMediaReload] = useState(0);
   const audioContextRef = useRef<AudioContext | null>(null);
   const focusCompletionAudioRef = useRef<HTMLAudioElement | null>(null);
   const firedRemindersRef = useRef<Set<string>>(new Set());
+  const firedTaskRemindersRef = useRef<Set<string>>(new Set());
   const snoozeTimeoutRef = useRef<number | null>(null);
   const [dark, setDark] = useState(true);
   const [focusRunning, setFocusRunning] = useState(false);
@@ -274,6 +280,84 @@ function App() {
   const rawExperimentAction = experimentHabit?.minimum?.trim() || 'do the smallest version for two minutes';
   const experimentAction = rawExperimentAction.charAt(0).toLowerCase() + rawExperimentAction.slice(1);
   const activeReminderMedia = parseReminderMedia(activeReminder?.reminderSoundUrl);
+
+  useEffect(() => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+      setBackgroundPushAvailable(false);
+      return undefined;
+    }
+    let cancelled = false;
+    setBackgroundPushAvailable(true);
+    navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(async (registration) => {
+      const subscription = await registration.pushManager.getSubscription();
+      if (!cancelled) setBackgroundPushEnabled(Boolean(subscription));
+    }).catch(() => {
+      if (!cancelled) setBackgroundPushAvailable(false);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  // The service worker adds this query parameter when a user clicks a
+  // background notification. Route the click into the correct workspace view.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const reminder = params.get('cadenceReminder');
+    if (!reminder) return;
+    setPendingPushReminder(reminder);
+    const kind = reminder.split(':', 1)[0];
+    if (kind === 'habit') setPage('Habits');
+    if (kind === 'task') setPage('Tasks');
+    if (kind === 'focus') setPage('Focus');
+    params.delete('cadenceReminder');
+    const rest = params.toString();
+    const cleanUrl = window.location.pathname + (rest ? '?' + rest : '') + window.location.hash;
+    window.history.replaceState(window.history.state, '', cleanUrl);
+  }, []);
+
+  useEffect(() => {
+    if (!pendingPushReminder || !workspaceReady) return;
+    const divider = pendingPushReminder.indexOf(':');
+    const kind = divider < 0 ? pendingPushReminder : pendingPushReminder.slice(0, divider);
+    const id = divider < 0 ? '' : pendingPushReminder.slice(divider + 1);
+    if (kind === 'focus') {
+      setPage('Focus');
+      setPushArrival({
+        kind: 'focus',
+        title: 'Focus block complete',
+        body: 'Your scheduled focus session has ended. Take a short reset before choosing your next step.',
+      });
+      setPendingPushReminder(null);
+      return;
+    }
+    if (kind === 'habit') {
+      const habit = habits.find((item) => item.id === id);
+      if (!habit) return;
+      setPage('Habits');
+      if (habit.logs[today]) {
+        setToast(habit.name + ' is already checked off for today. Nice work.');
+      } else {
+        setReminderSoundStopped(false);
+        setActiveReminder((current) => current || {
+          habitId: habit.id,
+          habitName: habit.name,
+          reminderTime: habit.reminderTime || (String(new Date().getHours()).padStart(2, '0') + ':' + String(new Date().getMinutes()).padStart(2, '0')),
+          reminderSoundUrl: habit.reminderSoundUrl || '',
+        });
+      }
+      setPendingPushReminder(null);
+      return;
+    }
+    if (kind === 'task') {
+      const task = tasks.find((item) => item.id === id);
+      setPage('Tasks');
+      setPushArrival({
+        kind: 'task',
+        title: task ? 'Time for ' + task.title : 'Your task reminder',
+        body: task ? 'Your planned time has arrived. Start with the smallest useful next step.' : 'A scheduled task reminder arrived. Review Tasks to see what is next.',
+      });
+      setPendingPushReminder(null);
+    }
+  }, [pendingPushReminder, workspaceReady, habits, tasks, today]);
 
   useEffect(() => {
     const pageRoot = document.querySelector<HTMLElement>('.page-transition-shell');
@@ -417,6 +501,79 @@ function App() {
         : 'Notifications were not allowed. Your in-app sound reminder can still work while Cadence is open.');
     } catch {
       setToast('The browser could not request notification permission. Check this site’s browser settings.');
+    }
+  };
+
+  const enableBackgroundPushNotifications = async () => {
+    if (!backgroundPushAvailable) {
+      setToast('Background push is not supported in this browser. Try the latest Chrome or Edge over HTTPS.');
+      return;
+    }
+    if (!supabase || !authSession) {
+      setToast('Sign in to your Cadence workspace before enabling background alerts.');
+      return;
+    }
+    if (Notification.permission !== 'granted') {
+      const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
+      if (permission !== 'granted') {
+        setToast('Allow notifications for Cadence in your browser settings, then try again.');
+        return;
+      }
+    }
+    setBackgroundPushBusy(true);
+    try {
+      const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+      await navigator.serviceWorker.ready;
+      const { data: keyData, error: keyError } = await supabase.functions.invoke('cadence-push', { body: { action: 'public-key' } });
+      if (keyError) throw keyError;
+      if (!keyData?.publicKey) throw new Error('The push service did not return its application key.');
+      const encoded = String(keyData.publicKey).replace(/-/g, '+').replace(/_/g, '/');
+      const padded = encoded + '='.repeat((4 - encoded.length % 4) % 4);
+      const binary = window.atob(padded);
+      const applicationServerKey = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+      let subscription = await registration.pushManager.getSubscription();
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey,
+        });
+      }
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+      const { error: saveError } = await supabase.functions.invoke('cadence-push', {
+        body: { action: 'subscribe', subscription: subscription.toJSON(), timezone },
+      });
+      if (saveError) throw saveError;
+      setBackgroundPushEnabled(true);
+      setToast('Background alerts are enabled on this device for scheduled habits, tasks, and focus sessions.');
+    } catch (caught) {
+      const message = caught instanceof Error ? caught.message : 'Unknown push setup error';
+      setToast('Could not enable background alerts: ' + message);
+    } finally {
+      setBackgroundPushBusy(false);
+    }
+  };
+
+  const disableBackgroundPushNotifications = async () => {
+    if (!supabase || !authSession || !('serviceWorker' in navigator)) return;
+    setBackgroundPushBusy(true);
+    try {
+      const registration = await navigator.serviceWorker.getRegistration('/');
+      const subscription = await registration?.pushManager.getSubscription();
+      if (subscription) {
+        const { error } = await supabase.functions.invoke('cadence-push', {
+          body: { action: 'unsubscribe', endpoint: subscription.endpoint },
+        });
+        if (error) throw error;
+        await subscription.unsubscribe();
+      }
+      setBackgroundPushEnabled(false);
+      setToast('Background alerts have been disabled on this device.');
+    } catch (caught) {
+      const message = caught instanceof Error ? caught.message : 'Unknown push removal error';
+      setToast('Could not disable background alerts: ' + message);
+    } finally {
+      setBackgroundPushBusy(false);
     }
   };
 
@@ -637,40 +794,65 @@ function App() {
   }, [focusRunning, focusSeconds, focusRingtoneKind, focusRingtoneData]);
 
   useEffect(() => {
-    if (!habits.some((habit) => habit.reminderEnabled && habit.reminderTime)) return undefined;
     const checkReminders = () => {
       const now = new Date();
       const currentTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
       const day = toKey(now);
       const due = habits.filter((habit) => habit.reminderEnabled && isDue(habit, day) && habit.reminderTime === currentTime && !habit.logs[day]);
       const fresh = due.filter((habit) => !firedRemindersRef.current.has(`${habit.id}:${day}:${currentTime}`));
-      if (!fresh.length) return;
       fresh.forEach((habit) => {
         firedRemindersRef.current.add(`${habit.id}:${day}:${currentTime}`);
         if ('Notification' in window && Notification.permission === 'granted') {
           try {
             const notification = new Notification(`Time for ${habit.name}`, {
               body: 'A small step is enough. Open Cadence to check in.',
-              tag: `streako-${habit.id}-${day}`,
+              tag: `cadence-habit-${habit.id}-${day}`,
             });
             notification.onclick = () => {
               window.focus();
               notification.close();
             };
-          } catch { /* The in-app alarm remains available if notification delivery is blocked. */ }
+          } catch { /* The in-app alarm remains available if desktop notifications are blocked. */ }
         }
       });
-      setActiveReminder((current) => current || {
-        habitId: fresh[0].id,
-        habitName: fresh[0].name,
-        reminderTime: currentTime,
-        reminderSoundUrl: fresh[0].reminderSoundUrl,
+      if (fresh.length) {
+        setActiveReminder((current) => current || {
+          habitId: fresh[0].id,
+          habitName: fresh[0].name,
+          reminderTime: currentTime,
+          reminderSoundUrl: fresh[0].reminderSoundUrl,
+        });
+      }
+
+      // Planner tasks can have timed reminders too. Keep them independent from
+      // habit reminders so a task still alerts when no habit alarm is configured.
+      const dueTasks = tasks.filter((task) => task.time === currentTime && taskOccursOn(task, day) && !taskIsDone(task, day));
+      const freshTasks = dueTasks.filter((task) => !firedTaskRemindersRef.current.has(`${task.id}:${day}:${currentTime}`));
+      freshTasks.forEach((task) => {
+        firedTaskRemindersRef.current.add(`${task.id}:${day}:${currentTime}`);
+        if ('Notification' in window && Notification.permission === 'granted') {
+          try {
+            const notification = new Notification('Time for ' + task.title, {
+              body: 'Your planned time has arrived. Open Cadence and take the next step.',
+              tag: 'cadence-task-' + task.id + '-' + day,
+            });
+            notification.onclick = () => {
+              window.focus();
+              notification.close();
+            };
+          } catch { /* Scheduled push notifications remain available when configured. */ }
+        }
       });
+      if (freshTasks.length) {
+        setToast(freshTasks.length === 1 ? 'Time for ' + freshTasks[0].title : freshTasks.length + ' tasks are due now.');
+        unlockReminderAudio();
+        playReminderMelody();
+      }
     };
     const interval = window.setInterval(checkReminders, 10000);
     checkReminders();
     return () => window.clearInterval(interval);
-  }, [habits]);
+  }, [habits, tasks]);
 
   useEffect(() => {
     if (!activeReminder || reminderSoundStopped) return undefined;
@@ -898,7 +1080,38 @@ function App() {
     setTasks((current) => [...current, { ...draft, id: `t-${crypto.randomUUID()}`, completed: false, completedDates: [] }]);
     setToast('Added to your calendar');
   };
-  const resetFocus = (minutes = focusPreset) => { setFocusRunning(false); setFocusPreset(minutes); setFocusSeconds(minutes * 60); };
+  const syncRemoteFocusTimer = async (action: 'focus-start' | 'focus-stop', seconds = 0) => {
+    if (!supabase || !authSession || !backgroundPushEnabled) return;
+    try {
+      const focusLabel = tasks.find((task) => task.id === focusTaskId)?.title || 'Focus session';
+      const { error } = await supabase.functions.invoke('cadence-push', {
+        body: { action, seconds, label: focusLabel },
+      });
+      if (error) throw error;
+    } catch {
+      setToast('The local focus timer still works, but its background alert could not be scheduled. Check push settings.');
+    }
+  };
+  const toggleFocusTimer = () => {
+    unlockReminderAudio();
+    if (focusSeconds === 0) {
+      resetFocus();
+      return;
+    }
+    if (focusRunning) {
+      setFocusRunning(false);
+      void syncRemoteFocusTimer('focus-stop');
+    } else {
+      setFocusRunning(true);
+      void syncRemoteFocusTimer('focus-start', focusSeconds);
+    }
+  };
+  const resetFocus = (minutes = focusPreset) => {
+    setFocusRunning(false);
+    void syncRemoteFocusTimer('focus-stop');
+    setFocusPreset(minutes);
+    setFocusSeconds(minutes * 60);
+  };
   const applyCustomFocusDuration = () => {
     const minutes = Number(focusCustomMinutes);
     if (!Number.isInteger(minutes) || minutes < 1 || minutes > 180) {
@@ -1335,7 +1548,7 @@ function App() {
               </div>
               <p className="focus-sound-note">Your uploaded ringtone stays in this browser on this device. Use Preview sound to check your selection.</p>
             </section>
-            <div className="focus-large-actions"><button className="primary-button" type="button" onClick={() => { unlockReminderAudio(); if (focusSeconds === 0) resetFocus(); else setFocusRunning((running) => !running); }}>{focusRunning ? 'Pause focus' : focusSeconds === 0 ? 'Start another' : 'Start focusing'} {focusRunning ? <span className="pause-glyph">Ⅱ</span> : <ArrowRight size={16} />}</button><button className="secondary-button" type="button" onClick={() => resetFocus() }><RotateCcw size={15} /> Reset</button></div><p className="timer-reassurance"><ShieldCheck size={15} /> Missed a block? Nothing is lost. Restart with the next minute.</p></div><div className="focus-side-column"><section className="panel choose-task-panel"><div className="panel-overline">YOUR NEXT PRIORITY</div><h3>What will you work on?</h3><p>Choose one task. Everything else can wait for this block.</p>{todayTasks.filter((task) => !task.completed).map((task) => <button key={task.id} type="button" className={`focus-task-choice ${focusTaskId === task.id ? 'selected' : ''}`} onClick={() => { setFocusTaskId(task.id); setToast(`Focus target selected: ${task.title}`); }}><span className="todo-box" /><span><b>{task.title}</b><small>{task.estimate} min · {task.priority} priority</small></span><ArrowUpRight size={15} /></button>)}{todayTasks.filter((task) => !task.completed).length === 0 && <p className="quiet-empty">Your task list is clear. Enjoy the breathing room.</p>}<button className="text-button" type="button" onClick={() => setPage('Tasks')}>Manage today’s tasks <ArrowRight size={14} /></button></section><section className="panel focus-rule-panel"><span className="rule-icon"><Leaf size={17} /></span><div className="panel-overline">A GENTLER RULE</div><h3>Return your attention.</h3><p>Focus isn’t never getting distracted. It’s noticing and coming back—without making a story out of it.</p></section></div></section>
+            <div className="focus-large-actions"><button className="primary-button" type="button" onClick={toggleFocusTimer}>{focusRunning ? 'Pause focus' : focusSeconds === 0 ? 'Start another' : 'Start focusing'} {focusRunning ? <span className="pause-glyph">Ⅱ</span> : <ArrowRight size={16} />}</button><button className="secondary-button" type="button" onClick={() => resetFocus() }><RotateCcw size={15} /> Reset</button></div><p className="timer-reassurance"><ShieldCheck size={15} /> Missed a block? Nothing is lost. Restart with the next minute.</p></div><div className="focus-side-column"><section className="panel choose-task-panel"><div className="panel-overline">YOUR NEXT PRIORITY</div><h3>What will you work on?</h3><p>Choose one task. Everything else can wait for this block.</p>{todayTasks.filter((task) => !task.completed).map((task) => <button key={task.id} type="button" className={`focus-task-choice ${focusTaskId === task.id ? 'selected' : ''}`} onClick={() => { setFocusTaskId(task.id); setToast(`Focus target selected: ${task.title}`); }}><span className="todo-box" /><span><b>{task.title}</b><small>{task.estimate} min · {task.priority} priority</small></span><ArrowUpRight size={15} /></button>)}{todayTasks.filter((task) => !task.completed).length === 0 && <p className="quiet-empty">Your task list is clear. Enjoy the breathing room.</p>}<button className="text-button" type="button" onClick={() => setPage('Tasks')}>Manage today’s tasks <ArrowRight size={14} /></button></section><section className="panel focus-rule-panel"><span className="rule-icon"><Leaf size={17} /></span><div className="panel-overline">A GENTLER RULE</div><h3>Return your attention.</h3><p>Focus isn’t never getting distracted. It’s noticing and coming back—without making a story out of it.</p></section></div></section>
         </>}
         </div>
       </main>
@@ -1368,7 +1581,16 @@ function App() {
                 <span className="reminder-permission-status">{notificationPermission === 'granted' ? 'Desktop notifications enabled' : notificationPermission === 'denied' ? 'Browser notifications are blocked' : notificationPermission === 'unsupported' ? 'Desktop notifications unavailable' : 'Allow desktop notifications'}</span>
                 <button type="button" className="secondary-button notification-permission-button" onClick={() => { void enableDesktopNotifications(); }}>{notificationPermission === 'granted' ? 'Enabled' : notificationPermission === 'denied' ? 'How to allow' : notificationPermission === 'unsupported' ? 'Not supported' : 'Enable'}</button>
               </div>
-              <p className="reminder-footnote">Reminders run while Cadence is open (including a minimized tab). Browser permission is needed for desktop notifications. Use Stop sound to silence the looping alarm, or Mark done to close it.</p>
+              <div className="reminder-notification-option background-push-option">
+                <span className="reminder-permission-status">
+                  {backgroundPushEnabled ? 'Background alerts enabled on this device' : !backgroundPushAvailable ? 'Background push is not supported in this browser' : authSession ? 'Receive scheduled alerts while Cadence is closed' : 'Sign in to enable background alerts'}
+                </span>
+                <button type="button" className="secondary-button notification-permission-button" disabled={backgroundPushBusy || !backgroundPushAvailable || !authSession} onClick={() => { void (backgroundPushEnabled ? disableBackgroundPushNotifications() : enableBackgroundPushNotifications()); }}>
+                  {backgroundPushBusy ? 'Please wait…' : backgroundPushEnabled ? 'Disable' : 'Enable background alerts'}
+                </button>
+              </div>
+              <p className="reminder-footnote">Background push delivers system notifications for scheduled habits, tasks, and Focus sessions while the browser is closed or in the background. Click a notification to open Cadence. Browsers cannot be forced to launch the app or autoplay custom music while closed; system notification sound depends on your device settings.</p>
+              <p className="reminder-footnote">While Cadence is open, in-app reminders can play the selected sound. Use Stop sound to silence the looping habit alarm, or Mark done to close it.</p>
             </div>}
           </section>
           <div className="if-then-preview"><span><Sparkles size={15} /></span><p><b>Your if–then plan</b><br />If {habitDraft.cue.trim() || 'my cue happens'}, then I’ll {habitDraft.minimum.trim() || 'do the smallest version'}.</p></div><div className="modal-actions"><button className="secondary-button" type="button" onClick={() => { setShowHabitModal(false); setEditingHabitId(null); setHabitDraft({ ...emptyHabitDraft }); }}>Cancel</button><button className="primary-button" type="submit">{editingHabitId ? <><Check size={15} /> Save changes</> : <><Plus size={15} /> Create habit</>}</button></div></form></section></div>}
@@ -1398,6 +1620,27 @@ function App() {
             <button type="button" className="primary-button" onClick={() => { toggleHabit(activeReminder.habitId); stopReminderAlarm(); }}><Check size={15} /> Mark done</button>
           </div>
           <div className="reminder-sound-controls">{activeReminderMedia && <button type="button" className="reminder-replay-button" onClick={() => { setReminderSoundStopped(false); setReminderMediaReload((value) => value + 1); }}>Play soundtrack again</button>}<button type="button" className="reminder-stop-button" onClick={() => setReminderSoundStopped(true)}>Stop sound</button></div>
+        </section>
+      </div>}
+      {pushArrival && <div className="reminder-alarm-backdrop" role="presentation">
+        <section className="reminder-alarm" role="alertdialog" aria-modal="true" aria-labelledby="push-arrival-title">
+          <span className="reminder-alarm-icon"><Bell size={22} /></span>
+          <span className="reminder-alarm-kicker">CADENCE BACKGROUND REMINDER</span>
+          <h2 id="push-arrival-title">{pushArrival.title}</h2>
+          <p>{pushArrival.body}</p>
+          <div className="reminder-alarm-actions">
+            <button type="button" className="secondary-button" onClick={() => {
+              unlockReminderAudio();
+              if (pushArrival.kind === 'focus') playFocusCompletionSound();
+              else playReminderMelody();
+            }}>Play alert sound</button>
+            <button type="button" className="primary-button" onClick={() => {
+              setPage(pushArrival.kind === 'focus' ? 'Focus' : 'Tasks');
+              setPushArrival(null);
+            }}>Open {pushArrival.kind === 'focus' ? 'Focus' : 'Tasks'}</button>
+          </div>
+          <p className="reminder-footnote">Your browser controls whether custom audio can start automatically. This button plays the selected sound after your interaction.</p>
+          <button type="button" className="reminder-stop-button" onClick={() => setPushArrival(null)}>Dismiss</button>
         </section>
       </div>}
       {toast && <div className="toast" role="status"><span><Check size={15} /></span>{toast}<button type="button" aria-label="Dismiss message" onClick={() => setToast('')}><X size={14} /></button></div>}
