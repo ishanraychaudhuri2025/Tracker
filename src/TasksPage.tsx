@@ -18,7 +18,7 @@ type TasksPageProps = {
   onDeleteTask: (taskId: string) => void;
 };
 
-const categories: TaskCategory[] = ['Study', 'Work', 'Health', 'Personal', 'Admin'];
+const categories: TaskCategory[] = ['Study', 'Work', 'Health', 'Personal'];
 const recurrences: Recurrence[] = ['None', 'Daily', 'Weekdays', 'Weekends', 'Weekly', 'Monthly'];
 const filters: TaskFilter[] = ['All', 'Today', 'Upcoming', 'Overdue', 'Completed'];
 
