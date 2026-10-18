@@ -11310,3 +11310,125 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     flex-basis: 29px !important;
   }
 }
+
+
+/* Focus soundtrack links: replace file-upload styling with a calm link-and-player flow. */
+#root .app-shell .focus-music-link-row {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 9px !important;
+  min-width: 0 !important;
+  margin-top: 12px !important;
+  padding: 13px !important;
+  border: 1px solid rgba(174, 130, 205, .17) !important;
+  border-radius: 13px !important;
+  background: rgba(7, 4, 12, .32) !important;
+}
+#root .app-shell .focus-music-link-row > .focus-upload-label {
+  color: #ded0eb !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+}
+#root .app-shell .focus-music-link-control {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: stretch !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+}
+#root .app-shell .focus-music-link-control > input {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 40px !important;
+  padding: 9px 11px !important;
+  border: 1px solid rgba(181, 143, 206, .24) !important;
+  border-radius: 9px !important;
+  color: #eee2f7 !important;
+  background: rgba(5, 3, 9, .55) !important;
+  font: 400 11px/1.35 var(--cadence-font-ui) !important;
+}
+#root .app-shell .focus-music-link-control > input:focus {
+  outline: none !important;
+  border-color: rgba(192, 136, 244, .65) !important;
+  box-shadow: 0 0 0 3px rgba(169, 96, 221, .1) !important;
+}
+#root .app-shell .focus-music-link-control > input::placeholder {
+  color: #887795 !important;
+}
+#root .app-shell .focus-music-link-control > .secondary-button {
+  align-self: stretch !important;
+  min-height: 40px !important;
+  white-space: nowrap !important;
+}
+#root .app-shell .focus-music-link-row .focus-sound-note {
+  margin: 0 !important;
+  color: #a996b8 !important;
+  font-size: 10px !important;
+  line-height: 1.5 !important;
+}
+#root .app-shell .focus-music-saved {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  padding-top: 2px !important;
+}
+#root .app-shell .focus-music-provider {
+  min-width: 0 !important;
+  color: #ceb0e9 !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+}
+#root .app-shell .focus-music-saved .text-button {
+  flex: 0 0 auto !important;
+  font-size: 10px !important;
+}
+#root .app-shell .focus-music-embed {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 7px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin-top: 10px !important;
+}
+#root .app-shell .focus-music-embed > iframe {
+  display: block !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 152px !important;
+  border: 1px solid rgba(183, 138, 213, .2) !important;
+  border-radius: 10px !important;
+  background: #100b15 !important;
+}
+#root .app-shell .focus-music-embed > a {
+  display: inline-flex !important;
+  align-items: center !important;
+  align-self: flex-start !important;
+  gap: 5px !important;
+  color: #c8a2e6 !important;
+  font-size: 10px !important;
+  line-height: 1.4 !important;
+  text-decoration: none !important;
+}
+#root .app-shell .focus-music-embed > a:hover {
+  color: #f0dfff !important;
+}
+#root .app-shell .focus-completion-embed {
+  margin: 14px 0 !important;
+}
+#root .app-shell .focus-completion-embed > iframe {
+  height: 150px !important;
+}
+@media (max-width: 520px) {
+  #root .app-shell .focus-music-link-row { padding: 10px !important; }
+  #root .app-shell .focus-music-link-control {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  #root .app-shell .focus-music-link-control > .secondary-button {
+    justify-self: start !important;
+  }
+  #root .app-shell .focus-music-embed > iframe { height: 138px !important; }
+}
