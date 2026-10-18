@@ -11059,3 +11059,22 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   #root .cadence-splash-wordmark { opacity: 1 !important; }
   #root .cadence-splash-progress > span { transform: scaleX(1) !important; }
 }
+
+
+/* Non-splash account loading states keep a compact mark while retaining the dark treatment. */
+#root .auth-loading-screen:not(.cadence-splash-screen) .auth-loading-mark {
+  width: 72px !important;
+  height: 72px !important;
+  flex-basis: 72px !important;
+  margin-bottom: 16px !important;
+}
+#root .auth-loading-screen:not(.cadence-splash-screen) .auth-loading-mark .cadence-mark-svg {
+  width: 62px !important;
+  height: 62px !important;
+}
+#root .auth-loading-screen.auth-workspace-error-screen .auth-loading-mark {
+  width: 50px !important;
+  height: 50px !important;
+  flex-basis: 50px !important;
+  margin-bottom: 19px !important;
+}
