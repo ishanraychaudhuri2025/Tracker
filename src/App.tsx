@@ -1330,7 +1330,7 @@ function App() {
 
   if (!splashFinished) {
     return <div className="auth-loading-screen cadence-splash-screen" role="status" aria-label="Loading Cadence">
-      <div className="cadence-splash-mark"><CadenceMark /></div>
+      <div className="cadence-splash-mark"><img className="cadence-splash-icon" src="/cadence-icon.svg" alt="Cadence waveform" /></div>
       <img className="cadence-splash-wordmark" src="/cadence-wordmark.svg" alt="Cadence" />
       <span className="cadence-splash-progress" aria-hidden="true"><span /></span>
     </div>;
