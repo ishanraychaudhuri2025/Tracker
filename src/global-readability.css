@@ -762,3 +762,25 @@ input::placeholder, textarea::placeholder {
 #root .app-shell :is(.analytics-chart-heading p, .analytics-table-header p, .analytics-next-meta, .analytics-micro-note, .auth-footnote, .auth-secure-note) {
   line-height: 1.6 !important;
 }
+
+/* Strong overrides for legacy cards whose old CSS forced one-line labels. */
+#root .app-shell .habits-overview-cards .analytics-metric-label:not(#cadence-readability-specificity-guard),
+#root .app-shell .habits-overview-cards .analytics-metric-bottom:not(#cadence-readability-specificity-guard),
+#root .app-shell .monthly-detail-item-copy > b:not(#cadence-readability-specificity-guard),
+#root .app-shell .monthly-detail-item-copy > small:not(#cadence-readability-specificity-guard),
+#root .app-shell .planner-activity-copy > b:not(#cadence-readability-specificity-guard),
+#root .app-shell .analytics-routine-name b:not(#cadence-readability-specificity-guard),
+#root .app-shell .analytics-routine-name small:not(#cadence-readability-specificity-guard) {
+  white-space: normal !important;
+  text-overflow: clip !important;
+  overflow: visible !important;
+  overflow-wrap: anywhere;
+  line-height: 1.4 !important;
+}
+#root .app-shell .habits-overview-cards .analytics-metric-label:not(#cadence-readability-specificity-guard),
+#root .app-shell .habits-overview-cards .analytics-metric-bottom:not(#cadence-readability-specificity-guard) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 7px;
+}
