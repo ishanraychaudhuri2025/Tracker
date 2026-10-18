@@ -11255,3 +11255,58 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     border-radius: 15px;
   }
 }
+
+
+/* Luxury sidebar heading: editorial serif, title case, restrained tracking. */
+#root .app-shell .sidebar .sidebar-section-head {
+  font-family: var(--cadence-font-display, "Playfair Display", Georgia, serif) !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  font-style: normal !important;
+  letter-spacing: .015em !important;
+  line-height: 1.25 !important;
+  text-transform: none !important;
+  color: #dbc9e7 !important;
+  padding-top: 13px !important;
+}
+#root .app-shell .sidebar .sidebar-section-head > span {
+  text-shadow: none !important;
+}
+
+/* Planner routine marks: replace inconsistent emoji glyphs with a consistent icon tile. */
+#root .app-shell .planner-habit-symbol {
+  box-sizing: border-box !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 32px !important;
+  height: 32px !important;
+  flex: 0 0 32px !important;
+  border-radius: 10px !important;
+  border: 1px solid rgba(191, 143, 225, .17) !important;
+  background: linear-gradient(145deg, rgba(142, 84, 185, .17), rgba(44, 26, 58, .32)) !important;
+  color: #cba3ed !important;
+  font-size: 0 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+#root .app-shell .planner-habit-symbol svg {
+  display: block !important;
+  width: 15px !important;
+  height: 15px !important;
+  stroke-width: 1.75 !important;
+  color: inherit !important;
+}
+#root .app-shell .planner-habit-row.is-complete .planner-habit-symbol {
+  color: #dfbaff !important;
+  border-color: rgba(198, 142, 247, .3) !important;
+  background: linear-gradient(145deg, rgba(160, 92, 215, .25), rgba(69, 38, 91, .4)) !important;
+}
+@media (max-width: 560px) {
+  #root .app-shell .sidebar .sidebar-section-head {
+    font-size: 13px !important;
+  }
+  #root .app-shell .planner-habit-symbol {
+    width: 29px !important;
+    height: 29px !important;
+    flex-basis: 29px !important;
+  }
+}
