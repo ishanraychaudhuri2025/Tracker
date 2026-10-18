@@ -9794,3 +9794,24 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     height: 34px !important;
   }
 }
+
+
+/* Final weekday-strip adjustment: increase box dimensions by a further 5%; leave labels unchanged. */
+#root .app-shell .habits-library .mini-week {
+  width: min(100%, 389px) !important;
+}
+#root .app-shell .habits-library .mini-week > span {
+  min-height: 39.5px !important;
+  height: 39.5px !important;
+}
+@media (max-width: 900px) {
+  #root .app-shell .habits-library .mini-week {
+    width: min(100%, 389px) !important;
+  }
+}
+@media (max-width: 520px) {
+  #root .app-shell .habits-library .mini-week > span {
+    min-height: 35.7px !important;
+    height: 35.7px !important;
+  }
+}
