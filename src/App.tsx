@@ -299,6 +299,8 @@ function App() {
     catch { return ''; }
   });
   const [focusMusicPreviewOpen, setFocusMusicPreviewOpen] = useState(false);
+  const [focusLocalAudioUrl, setFocusLocalAudioUrl] = useState('');
+  const [focusLocalAudioName, setFocusLocalAudioName] = useState('');
   const [focusRingtoneName, setFocusRingtoneName] = useState(() => {
     try {
       if (typeof window === 'undefined') return '';
@@ -730,7 +732,38 @@ function App() {
     setToast('Custom soundtrack link removed.');
   };
 
+  const handleFocusAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('audio/')) {
+      setToast('Choose a valid audio file.');
+      event.target.value = '';
+      return;
+    }
+    if (file.size >= 20 * 1024 * 1024) {
+      setToast('Choose an audio file smaller than 20 MB.');
+      event.target.value = '';
+      return;
+    }
+    if (focusLocalAudioUrl) URL.revokeObjectURL(focusLocalAudioUrl);
+    const url = URL.createObjectURL(file);
+    setFocusLocalAudioUrl(url);
+    setFocusLocalAudioName(file.name);
+    setFocusMusicPreviewOpen(false);
+    setFocusRingtoneKind('custom');
+    try { window.localStorage.setItem('cadence-focus-ringtone-kind', 'custom'); } catch { /* Storage may be unavailable. */ }
+    setToast('Audio loaded for this session. Press Play to start it.');
+  };
+
   const previewFocusRingtone = () => {
+    if (focusLocalAudioUrl) {
+      const audio = focusCompletionAudioRef.current;
+      if (audio) {
+        audio.src = focusLocalAudioUrl;
+        void audio.play().then(() => setToast('Your uploaded soundtrack is playing.')).catch(() => setToast('Press Play on the audio player to start playback.'));
+      }
+      return;
+    }
     if (focusRingtoneKind === 'custom') {
       if (!parseReminderMedia(focusRingtoneData)) {
         setToast('Save a valid Spotify or YouTube link first.');
@@ -1797,6 +1830,16 @@ function App() {
                 </div>
               </div>
               {focusRingtoneKind === 'custom' && <div className="focus-music-link-row">
+                <div className="focus-upload-label">Use a streaming link or your own audio</div>
+                <label className="focus-upload-label" htmlFor="focus-audio-upload">Upload audio (under 20 MB)</label>
+                <input id="focus-audio-upload" type="file" accept="audio/*" onChange={handleFocusAudioUpload} aria-describedby="focus-audio-upload-help" />
+                <p id="focus-audio-upload-help" className="focus-sound-note">MP3, M4A, WAV, or another browser-supported audio format. Uploaded audio is available for this browser session; choose the file again after refreshing.</p>
+                {focusLocalAudioUrl && <div className="focus-music-saved">
+                  <span className="focus-music-provider">{focusLocalAudioName}</span>
+                  <button type="button" className="text-button" onClick={() => { if (focusLocalAudioUrl) URL.revokeObjectURL(focusLocalAudioUrl); setFocusLocalAudioUrl(''); setFocusLocalAudioName(''); if (focusCompletionAudioRef.current) focusCompletionAudioRef.current.pause(); }}>Remove audio</button>
+                </div>}
+                {focusLocalAudioUrl && <audio ref={focusCompletionAudioRef} controls preload="metadata" src={focusLocalAudioUrl} style={{ width: '100%', marginTop: 10 }} />}
+                <div className="focus-music-link-row">
                 <label className="focus-upload-label" htmlFor="focus-music-link">Spotify or YouTube link</label>
                 <div className="focus-music-link-control">
                   <input
@@ -1828,6 +1871,7 @@ function App() {
                     Open in {parseReminderMedia(focusRingtoneData)?.provider} <ArrowUpRight size={13} />
                   </a>
                 </div>}
+                </div>
               </div>}
               <div className="focus-sound-actions">
                 <button type="button" className="secondary-button" onClick={previewFocusRingtone}>{focusRingtoneKind === 'custom' ? 'Preview soundtrack' : 'Preview sound'}</button>
