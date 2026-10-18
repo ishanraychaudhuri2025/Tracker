@@ -11078,3 +11078,49 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   flex-basis: 50px !important;
   margin-bottom: 19px !important;
 }
+
+ 
+/* Use the exact Cadence icon asset for the startup wave; reveal it left-to-right. */
+#root .cadence-splash-screen .cadence-splash-mark {
+  overflow: visible !important;
+}
+#root .cadence-splash-screen .cadence-splash-icon {
+  display: block !important;
+  width: 96px !important;
+  height: 96px !important;
+  max-width: none !important;
+  flex: 0 0 96px !important;
+  object-fit: contain !important;
+  opacity: 1 !important;
+  clip-path: inset(0 100% 0 0) !important;
+  filter: drop-shadow(0 0 2px rgba(190, 111, 255, .18)) !important;
+  animation: cadence-exact-logo-reveal 1.55s cubic-bezier(.62, 0, .25, 1) .08s forwards !important;
+}
+@keyframes cadence-exact-logo-reveal {
+  0% {
+    clip-path: inset(0 100% 0 0);
+    filter: drop-shadow(0 0 0 rgba(190, 111, 255, 0));
+  }
+  72% {
+    clip-path: inset(0 0 0 0);
+    filter: drop-shadow(0 0 10px rgba(190, 111, 255, .52));
+  }
+  100% {
+    clip-path: inset(0 0 0 0);
+    filter: drop-shadow(0 0 5px rgba(190, 111, 255, .28));
+  }
+}
+@media (max-width: 520px) {
+  #root .cadence-splash-screen .cadence-splash-icon {
+    width: 88px !important;
+    height: 88px !important;
+    flex-basis: 88px !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #root .cadence-splash-screen .cadence-splash-icon {
+    clip-path: inset(0) !important;
+    animation: none !important;
+    filter: drop-shadow(0 0 5px rgba(190, 111, 255, .28)) !important;
+  }
+}
