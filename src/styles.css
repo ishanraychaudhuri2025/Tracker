@@ -10532,3 +10532,360 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   border-color: rgba(194, 151, 224, .32) !important;
   background: rgba(153, 95, 194, .12) !important;
 }
+
+
+/* CADENCE TYPE SYSTEM v2 — one refined scale for the entire product.
+   Editorial serif for display, restrained sans for interface, mono reserved for data. */
+:root {
+  --cadence-type-display-xl: clamp(27px, 2.65vw, 36px);
+  --cadence-type-display-lg: clamp(23px, 2.1vw, 29px);
+  --cadence-type-heading: clamp(17px, 1.35vw, 20px);
+  --cadence-type-body: 12.5px;
+  --cadence-type-caption: 10px;
+  --cadence-type-label: 9.5px;
+  --cadence-type-micro: 9px;
+  --cadence-leading-tight: 1.12;
+  --cadence-leading-heading: 1.22;
+  --cadence-leading-body: 1.55;
+  --cadence-tracking-display: -.035em;
+  --cadence-tracking-label: .075em;
+}
+#root .app-shell,
+#root .app-shell button,
+#root .app-shell input,
+#root .app-shell select,
+#root .app-shell textarea,
+#root .auth-screen,
+#root .auth-screen button,
+#root .auth-screen input,
+#root .auth-screen select,
+#root .auth-screen textarea {
+  font-family: var(--cadence-font-ui) !important;
+  font-optical-sizing: auto;
+  font-kerning: normal;
+}
+#root .app-shell :is(h1, h2, h3, h4, h5, h6) {
+  text-wrap: pretty;
+}
+#root .app-shell :is(.welcome-row h1, .page-intro h1, .app-shell h1, .analytics-page-header h1, .today-analytics-page-header h1) {
+  font-family: var(--cadence-font-display) !important;
+  font-size: var(--cadence-type-display-xl) !important;
+  font-weight: 500 !important;
+  line-height: 1.08 !important;
+  letter-spacing: var(--cadence-tracking-display) !important;
+  text-wrap: balance;
+}
+#root .app-shell .command-heading-copy h1 {
+  font-family: var(--cadence-font-display) !important;
+  font-size: clamp(28px, 2.9vw, 37px) !important;
+  font-weight: 500 !important;
+  line-height: 1.06 !important;
+  letter-spacing: -.04em !important;
+  text-wrap: balance;
+}
+#root .auth-screen .auth-brand-copy h1 {
+  font-family: var(--cadence-font-display) !important;
+  font-size: clamp(31px, 3.5vw, 42px) !important;
+  font-weight: 400 !important;
+  line-height: 1.1 !important;
+  letter-spacing: -.035em !important;
+  text-wrap: balance;
+}
+#root .app-shell :is(
+  .hero-copy h2,
+  .panel-heading h2,
+  .panel-heading h3,
+  .section-heading h2,
+  .section-heading h3,
+  .analytics-chart-heading h2,
+  .planner-heading-copy h3,
+  .planner-summary-main h2,
+  .weekly-heading h3,
+  .command-weekly-intro h2,
+  .monthly-title-block h3,
+  .monthly-detail-header h4,
+  .today-side-card h2,
+  .habits-overview-copy h2
+) {
+  font-family: var(--cadence-font-display) !important;
+  font-size: var(--cadence-type-display-lg) !important;
+  font-weight: 500 !important;
+  line-height: var(--cadence-leading-heading) !important;
+  letter-spacing: -.025em !important;
+  text-wrap: balance;
+}
+#root .app-shell :is(.panel h3, .panel-heading h4, .tasks-summary-card h3, .focus-rule-panel h3, .choose-task-panel h3) {
+  font-family: var(--cadence-font-display) !important;
+  font-size: var(--cadence-type-heading) !important;
+  font-weight: 500 !important;
+  line-height: var(--cadence-leading-heading) !important;
+  letter-spacing: -.02em !important;
+}
+#root .auth-screen .auth-form-column h2,
+#root .app-shell :is(.modal-top h2, .profile-settings-header h2) {
+  font-family: var(--cadence-font-display) !important;
+  font-size: clamp(22px, 1.9vw, 26px) !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+  letter-spacing: -.025em !important;
+}
+
+/* Display values: strong enough for quick scanning without overpowering card labels. */
+#root .app-shell :is(.orbit-value, .stat-value) {
+  font-family: var(--cadence-font-display) !important;
+  font-size: clamp(22px, 1.8vw, 27px) !important;
+  font-weight: 500 !important;
+  line-height: 1.02 !important;
+  letter-spacing: -.035em !important;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+#root .app-shell :is(.analytics-metric-value, .today-analytics-metrics .analytics-metric-value) {
+  font-family: var(--cadence-font-display) !important;
+  font-size: clamp(23px, 2vw, 29px) !important;
+  font-weight: 500 !important;
+  line-height: 1.08 !important;
+  letter-spacing: -.035em !important;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+#root .app-shell .command-score-value {
+  font-family: var(--cadence-font-display) !important;
+  font-size: clamp(39px, 4vw, 52px) !important;
+  font-weight: 500 !important;
+  line-height: .99 !important;
+  letter-spacing: -.045em !important;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+#root .app-shell :is(.command-kpi-card > b, .tasks-summary-card > b, .monthly-stat b) {
+  font-family: var(--cadence-font-display) !important;
+  font-size: clamp(21px, 1.8vw, 26px) !important;
+  font-weight: 500 !important;
+  line-height: 1.05 !important;
+  letter-spacing: -.025em !important;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+#root .app-shell :is(.today-progress-number, .today-progress-stat > b, .command-orbit-inner b) {
+  font-family: var(--cadence-font-display) !important;
+  font-weight: 500 !important;
+  letter-spacing: -.03em !important;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+#root .app-shell .focus-time {
+  font-family: var(--cadence-font-mono) !important;
+  font-size: clamp(35px, 3.4vw, 42px) !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+  letter-spacing: -.04em !important;
+  font-variant-numeric: tabular-nums;
+}
+#root .app-shell .focus-large-ring .focus-time {
+  font-size: clamp(37px, 4vw, 45px) !important;
+}
+#root .app-shell .habits-overview-strip > .habit-overview-feature > b {
+  font-family: var(--cadence-font-display) !important;
+  font-size: clamp(31px, 2.7vw, 38px) !important;
+  font-weight: 400 !important;
+  line-height: 1 !important;
+  letter-spacing: -.04em !important;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+#root .app-shell .habits-overview-strip .habit-overview-stat > b {
+  font-family: var(--cadence-font-display) !important;
+  font-size: 26px !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+  letter-spacing: -.03em !important;
+}
+#root .app-shell .insights-stat-grid .stat-value,
+#root .app-shell .insights-stat-card .stat-value {
+  font-family: var(--cadence-font-display) !important;
+  font-size: clamp(27px, 2.5vw, 34px) !important;
+  font-weight: 400 !important;
+  line-height: 1.03 !important;
+  letter-spacing: -.035em !important;
+}
+
+/* Descriptions and paragraphs: uniform rhythm, measured line lengths, no oversized supporting copy. */
+#root .app-shell :is(
+  .welcome-sub,
+  .page-intro > div > p,
+  .analytics-page-header > div > p,
+  .command-heading-copy > p,
+  .monthly-title-block > p,
+  .planner-summary-main > p,
+  .today-side-card > p,
+  .hero-copy > p,
+  .focus-rule-panel > p,
+  .choose-task-panel > p,
+  .auth-screen p,
+  .profile-settings-header > p
+) {
+  font-size: var(--cadence-type-body) !important;
+  line-height: var(--cadence-leading-body) !important;
+  font-weight: 400 !important;
+  letter-spacing: -.005em !important;
+  text-wrap: pretty;
+}
+#root .app-shell :is(.analytics-metric-bottom, .stat-detail, .analytics-next-meta, .planner-activity-copy > small, .planner-group-heading > div > small, .nav-copy > small, .profile-copy > small) {
+  font-size: var(--cadence-type-caption) !important;
+  line-height: 1.45 !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+}
+#root .app-shell :is(.analytics-metric-label, .panel-overline, .section-kicker, .analytics-kicker, .eyebrow, .workspace-label, .sidebar-section-head, .command-overline, .monthly-stat small, .tasks-summary-card small) {
+  font-size: var(--cadence-type-label) !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  letter-spacing: var(--cadence-tracking-label) !important;
+}
+#root .app-shell :is(.analytics-metric-label, .panel-overline, .section-kicker, .analytics-kicker, .eyebrow, .workspace-label, .sidebar-section-head) {
+  text-transform: uppercase;
+}
+
+/* Data labels stay compact and consistent, without tiny low-contrast helper text. */
+#root .app-shell :is(
+  .planner-month-weekday,
+  .planner-week-day-name,
+  .planner-week-day-count,
+  .planner-month-count,
+  .planner-legend,
+  .weekly-day-label,
+  .weekly-matrix-day,
+  .weekly-matrix-head,
+  .habit-chart-x-label,
+  .habit-activity-legend,
+  .habit-activity-caption,
+  .analytics-chart-legend,
+  .analytics-x-labels,
+  .analytics-y-labels,
+  .monthly-legend,
+  .command-chart-label,
+  .command-kpi-card > small
+) {
+  font-family: var(--cadence-font-ui) !important;
+  font-size: 10px !important;
+  line-height: 1.35 !important;
+  letter-spacing: .005em !important;
+}
+#root .app-shell :is(.planner-month-weekday, .analytics-chart-legend, .analytics-x-labels, .analytics-y-labels, .monthly-legend) {
+  font-weight: 500 !important;
+}
+#root .app-shell :is(.analytics-metric-value small, .monthly-stat b i, .command-orbit-inner small, .habit-overview-ring small) {
+  font-family: var(--cadence-font-ui) !important;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+}
+
+/* Buttons, filters and fields: medium weight, neutral tracking, consistent baselines. */
+#root .app-shell :is(
+  .primary-button,
+  .secondary-button,
+  .analytics-plain-button,
+  .analytics-view-tabs button,
+  .analytics-chart-tabs button,
+  .planner-segment button,
+  .planner-date-nav button,
+  .planner-filter-chips button,
+  .command-header-actions button,
+  .command-period-tabs button,
+  .text-button,
+  .profile-settings-actions button,
+  .auth-submit-button,
+  .auth-retry-button
+) {
+  font-family: var(--cadence-font-ui) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 1.25 !important;
+  letter-spacing: -.005em !important;
+}
+#root .app-shell :is(input, select, textarea),
+#root .auth-screen :is(input, select, textarea) {
+  font-family: var(--cadence-font-ui) !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  line-height: 1.4 !important;
+  letter-spacing: 0 !important;
+}
+#root .app-shell :is(label, .field-label, .planner-field > span, .profile-settings-label, .auth-form-column label) {
+  font-size: 11px !important;
+  line-height: 1.45 !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+}
+
+/* Sidebar and top bar: discrete typography with consistent vertical rhythm. */
+#root .app-shell .nav-copy > b {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+  letter-spacing: -.005em !important;
+}
+#root .app-shell .routine-mini {
+  font-family: var(--cadence-font-ui) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  line-height: 1.35 !important;
+  letter-spacing: -.005em !important;
+}
+#root .app-shell .breadcrumbs {
+  font-size: 11px !important;
+  line-height: 1.3 !important;
+  letter-spacing: 0 !important;
+}
+#root .app-shell .local-save,
+#root .app-shell .date-chip {
+  font-size: 11px !important;
+  line-height: 1.25 !important;
+  letter-spacing: 0 !important;
+}
+
+/* Slightly tighten visual spacing: avoid oversized gaps around titles and labels. */
+#root .app-shell :is(.page-intro, .welcome-row) {
+  row-gap: 14px;
+}
+#root .app-shell :is(.page-intro h1, .welcome-row h1, .analytics-page-header h1, .today-analytics-page-header h1) {
+  margin-top: 10px !important;
+  margin-bottom: 7px !important;
+}
+#root .app-shell :is(.panel-heading, .analytics-chart-heading, .weekly-heading, .planner-calendar-head) {
+  gap: 10px;
+}
+#root .app-shell :is(.panel p, .quiet-empty, .empty-state p) {
+  line-height: 1.55;
+}
+#root .app-shell :is(.stat-card, .analytics-metric-card, .insights-stat-card, .command-kpi-card) {
+  font-kerning: normal;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+/* Mobile type stays legible while preserving the compact editorial hierarchy. */
+@media (max-width: 900px) {
+  :root {
+    --cadence-type-body: 12px;
+    --cadence-type-caption: 9.5px;
+    --cadence-type-label: 9px;
+  }
+  #root .app-shell :is(.primary-button, .secondary-button, .analytics-plain-button, .analytics-view-tabs button, .planner-segment button, .text-button) {
+    font-size: 11.5px !important;
+  }
+}
+@media (max-width: 560px) {
+  :root {
+    --cadence-type-display-xl: clamp(25px, 7vw, 31px);
+    --cadence-type-display-lg: 22px;
+    --cadence-type-heading: 17px;
+    --cadence-type-body: 12px;
+    --cadence-type-caption: 9.5px;
+    --cadence-type-label: 8.8px;
+  }
+  #root .app-shell :is(.welcome-row h1, .page-intro h1, .app-shell h1, .analytics-page-header h1, .today-analytics-page-header h1, .command-heading-copy h1) {
+    line-height: 1.08 !important;
+  }
+  #root .app-shell :is(.analytics-metric-label, .panel-overline, .section-kicker, .analytics-kicker, .eyebrow, .workspace-label, .sidebar-section-head) {
+    letter-spacing: .06em !important;
+  }
+  #root .app-shell :is(.planner-month-weekday, .planner-week-day-name, .planner-week-day-count, .planner-month-count, .planner-legend, .weekly-day-label, .weekly-matrix-day, .weekly-matrix-head, .habit-chart-x-label, .habit-activity-legend, .habit-activity-caption, .analytics-chart-legend, .analytics-x-labels, .analytics-y-labels, .monthly-legend) {
+    font-size: 9px !important;
+  }
+}
