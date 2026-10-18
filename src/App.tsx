@@ -297,6 +297,48 @@ function App() {
     return () => { cancelled = true; };
   }, []);
 
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return undefined;
+    const onPushMessage = (event: MessageEvent) => {
+      const message = event.data as { type?: string; payload?: { kind?: string; id?: string; title?: string; body?: string; soundUrl?: string } } | undefined;
+      if (message?.type !== 'CADENCE_PUSH_REMINDER' || !message.payload) return;
+      const payload = message.payload;
+      // A push received while this tab is hidden should trigger the same
+      // music/alarm path as a reminder caught by the page timer.
+      if (payload.kind === 'habit') {
+        const habit = habits.find((item) => item.id === payload.id);
+        if (!habit || habit.logs[today]) return;
+        setReminderSoundStopped(false);
+        setActiveReminder((current) => current || {
+          habitId: habit.id,
+          habitName: habit.name,
+          reminderTime: habit.reminderTime || (String(new Date().getHours()).padStart(2, '0') + ':' + String(new Date().getMinutes()).padStart(2, '0')),
+          reminderSoundUrl: habit.reminderSoundUrl || payload.soundUrl || '',
+        });
+        return;
+      }
+      if (payload.kind === 'task') {
+        const task = tasks.find((item) => item.id === payload.id);
+        if (task && taskIsDone(task, today)) return;
+        setPushArrival((current) => current || {
+          kind: 'task',
+          title: payload.title || (task ? 'Time for ' + task.title : 'Your task reminder'),
+          body: payload.body || 'Your planned time has arrived. Start with the smallest useful next step.',
+        });
+        return;
+      }
+      if (payload.kind === 'focus') {
+        setPushArrival((current) => current || {
+          kind: 'focus',
+          title: payload.title || 'Focus block complete',
+          body: payload.body || 'Your scheduled focus session has ended. Take a short reset before choosing your next step.',
+        });
+      }
+    };
+    navigator.serviceWorker.addEventListener('message', onPushMessage);
+    return () => navigator.serviceWorker.removeEventListener('message', onPushMessage);
+  }, [habits, tasks, today]);
+
   // The service worker adds this query parameter when a user clicks a
   // background notification. Route the click into the correct workspace view.
   useEffect(() => {
@@ -434,16 +476,46 @@ function App() {
     });
   };
 
-  const playFocusCompletionSound = () => {
+  // Unlock Web Audio during a real user gesture, so a reminder can sound even
+  // while Cadence is in a background tab or the browser is minimized.
+  useEffect(() => {
+    const unlock = () => unlockReminderAudio();
+    window.addEventListener('pointerdown', unlock, { capture: true, passive: true });
+    window.addEventListener('touchstart', unlock, { capture: true, passive: true });
+    window.addEventListener('keydown', unlock, true);
+    const onVisibilityChange = () => {
+      if (!document.hidden && audioContextRef.current?.state === 'suspended') {
+        void audioContextRef.current.resume().catch(() => undefined);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      window.removeEventListener('pointerdown', unlock, true);
+      window.removeEventListener('touchstart', unlock, true);
+      window.removeEventListener('keydown', unlock, true);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, []);
+
+  const playFocusCompletionSound = (loop = false) => {
     if (focusRingtoneKind === 'custom') {
       if (!focusRingtoneData) {
-        setToast('Choose a short audio file in Focus settings to use your own ringtone.');
+        if (!loop) setToast('Choose a short audio file in Focus settings to use your own ringtone.');
         return;
       }
-      const audio = new Audio(focusRingtoneData);
+      let audio = focusCompletionAudioRef.current;
+      if (!audio || audio.src !== focusRingtoneData) {
+        audio?.pause();
+        audio = new Audio(focusRingtoneData);
+        focusCompletionAudioRef.current = audio;
+      }
+      audio.loop = loop;
       audio.volume = 0.88;
-      focusCompletionAudioRef.current = audio;
-      void audio.play().catch(() => setToast('The browser blocked the ringtone. Use Preview sound once, then try again.'));
+      if (loop && !audio.paused && !audio.ended) return;
+      audio.currentTime = 0;
+      void audio.play().catch(() => {
+        if (!loop) setToast('The browser blocked the ringtone. Use Preview sound once, then try again.');
+      });
       return;
     }
 
@@ -505,6 +577,8 @@ function App() {
   };
 
   const enableBackgroundPushNotifications = async () => {
+    // This button click is a user gesture; unlock audio before the first reminder.
+    unlockReminderAudio();
     if (!backgroundPushAvailable) {
       setToast('Background push is not supported in this browser. Try the latest Chrome or Edge over HTTPS.');
       return;
@@ -782,7 +856,11 @@ function App() {
       setFocusRunning(false);
       setFocusSessions((count) => count + 1);
       setToast('Focus session complete. Take a small reset.');
-      playFocusCompletionSound();
+      setPushArrival((current) => current || {
+        kind: 'focus',
+        title: 'Focus block complete',
+        body: 'Your scheduled focus session has ended. Take a short reset before choosing your next step.',
+      });
       if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
         try {
           new Notification('Focus block complete', {
@@ -845,8 +923,17 @@ function App() {
       });
       if (freshTasks.length) {
         setToast(freshTasks.length === 1 ? 'Time for ' + freshTasks[0].title : freshTasks.length + ' tasks are due now.');
-        unlockReminderAudio();
-        playReminderMelody();
+        // If a habit is due at the same moment, its alarm already loops;
+        // otherwise keep a task alarm open until it is acknowledged.
+        if (!fresh.length) {
+          setPushArrival((current) => current || {
+            kind: 'task',
+            title: freshTasks.length === 1 ? 'Time for ' + freshTasks[0].title : freshTasks.length + ' tasks are due now',
+            body: freshTasks.length === 1
+              ? 'Your planned time has arrived. Start with the smallest useful next step.'
+              : 'Several planned tasks are due. Open Cadence to review what is next.',
+          });
+        }
       }
     };
     const interval = window.setInterval(checkReminders, 10000);
@@ -863,6 +950,23 @@ function App() {
     const interval = window.setInterval(playReminderMelody, 2800);
     return () => window.clearInterval(interval);
   }, [activeReminder, reminderSoundStopped]);
+
+  useEffect(() => {
+    if (!pushArrival) return undefined;
+    const play = () => {
+      if (pushArrival.kind === 'focus') playFocusCompletionSound(true);
+      else playReminderMelody();
+    };
+    play();
+    const interval = window.setInterval(play, 2800);
+    return () => {
+      window.clearInterval(interval);
+      if (pushArrival.kind === 'focus' && focusCompletionAudioRef.current) {
+        focusCompletionAudioRef.current.pause();
+        focusCompletionAudioRef.current.currentTime = 0;
+      }
+    };
+  }, [pushArrival, focusRingtoneKind, focusRingtoneData]);
 
   useEffect(() => () => {
     if (snoozeTimeoutRef.current !== null) window.clearTimeout(snoozeTimeoutRef.current);
