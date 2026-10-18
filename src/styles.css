@@ -9773,3 +9773,24 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     font-size: 6.5px !important;
   }
 }
+
+
+/* Fine adjustment: add 10% breathing room to the habit weekday boxes only. */
+#root .app-shell .habits-library .mini-week {
+  width: min(100%, 370px) !important; /* 336px × 1.10, rounded */
+}
+#root .app-shell .habits-library .mini-week > span {
+  min-height: 37.5px !important; /* 34px × 1.10 */
+  height: 37.5px !important;
+}
+@media (max-width: 900px) {
+  #root .app-shell .habits-library .mini-week {
+    width: min(100%, 370px) !important;
+  }
+}
+@media (max-width: 520px) {
+  #root .app-shell .habits-library .mini-week > span {
+    min-height: 34px !important; /* 31px × 1.10 */
+    height: 34px !important;
+  }
+}
