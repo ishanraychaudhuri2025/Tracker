@@ -1167,7 +1167,6 @@ function App() {
           {habits.length === 0 && <p className="sidebar-empty">Your first routine starts here.</p>}
         </div>
         <div className="sidebar-bottom">
-          <div className="sidebar-tip"><div className="tip-icon"><Sparkles size={15} /></div><div><b>Small counts.</b><p>Never miss twice. Restart gently.</p></div></div>
           <div className="profile-row">
             <span className="avatar">{authSession?.user.email?.slice(0, 2).toUpperCase() || 'IR'}</span><span className="profile-copy"><b>{authSession?.user.email?.split('@')[0] || 'Your workspace'}</b><small>{authSession ? 'Synced workspace' : 'Personal edition'}</small></span>{authSession && supabase ? <button type="button" className="profile-signout" aria-label="Sign out" title="Sign out" onClick={() => { void supabase?.auth.signOut(); }}><LogOut size={15}/></button> : <MoreHorizontal size={18} className="muted-icon" />}
           </div>
@@ -1900,11 +1899,10 @@ function HabitDetail({ habit, today, onToggle, onEdit, onDelete }: { habit: Habi
     return { key, day, x: (index + 0.5) * (857 / 14), y: percent === null ? 90 : 90 - percent * 0.8, percent, scheduled, completed };
   });
   const chartedPoints = chartPoints.filter((point) => point.percent !== null);
-  const linePath = chartedPoints.reduce((path, point, index, points) => {
-    if (index === 0) return "M " + point.x + " " + point.y;
-    const previous = points[index - 1];
-    const midX = (previous.x + point.x) / 2;
-    return path + " C " + midX + " " + previous.y + ", " + midX + " " + point.y + ", " + point.x + " " + point.y;
+  // Use straight segments instead of cubic curves so the trend stays crisp
+  // and completion peaks have a clean, flat-edged appearance.
+  const linePath = chartedPoints.reduce((path, point, index) => {
+    return path + (index === 0 ? "M " : " L ") + point.x + " " + point.y;
   }, "");
   const firstChartPoint = chartedPoints[0];
   const lastChartPoint = chartedPoints[chartedPoints.length - 1];
