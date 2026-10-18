@@ -1178,7 +1178,7 @@ function App() {
       <main className="main-content">
         <header className="topbar">
           <div className="breadcrumbs"><span>Workspace</span><span className="crumb-slash">/</span><b>{page}</b></div>
-          <div className="topbar-actions"><span className="local-save" title={cloudError || cloudStatus}><span className="save-dot" /> {cloudStatus}</span><IconButton label="Notifications and reminders" onClick={() => { const count = habits.filter((habit) => habit.reminderEnabled).length; setToast(count ? `${count} habit reminder${count === 1 ? '' : 's'} scheduled. Cadence must remain open for alerts.` : 'No reminders yet. Enable one when creating a habit.'); }}><Bell size={17} /></IconButton><button className="date-chip" type="button" onClick={() => setPage('Today')}><CalendarDays size={15} />{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}<ChevronDown size={13} /></button></div>
+          <div className="topbar-actions"><span className="local-save" title={cloudError || cloudStatus}><span className="save-dot" /> {cloudStatus}</span><IconButton label={backgroundPushEnabled ? 'Background alerts enabled' : 'Enable background alerts'} onClick={() => { if (backgroundPushEnabled) { setPage('Focus'); setToast('Background alerts are enabled on this device. Manage them in the Focus settings.'); } else { void enableBackgroundPushNotifications(); } }}><Bell size={17} /></IconButton><button className="date-chip" type="button" onClick={() => setPage('Today')}><CalendarDays size={15} />{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}<ChevronDown size={13} /></button></div>
         </header>
 
         <div key={page} className="page-transition-shell">
@@ -1547,6 +1547,16 @@ function App() {
                 }}>Remove custom ringtone</button>}
               </div>
               <p className="focus-sound-note">Your uploaded ringtone stays in this browser on this device. Use Preview sound to check your selection.</p>
+              <div className="focus-background-push-row">
+                <div>
+                  <b>Background alerts</b>
+                  <p>{backgroundPushEnabled ? 'Enabled on this device for habits, timed tasks, and Focus sessions.' : !backgroundPushAvailable ? 'Your browser does not support background push alerts.' : authSession ? 'Receive scheduled alerts even when Cadence is closed.' : 'Sign in to enable alerts across your devices.'}</p>
+                </div>
+                <button type="button" className="secondary-button" disabled={backgroundPushBusy || !backgroundPushAvailable || !authSession} onClick={() => { void (backgroundPushEnabled ? disableBackgroundPushNotifications() : enableBackgroundPushNotifications()); }}>
+                  {backgroundPushBusy ? 'Please wait…' : backgroundPushEnabled ? 'Disable' : 'Enable'}
+                </button>
+              </div>
+              <p className="focus-sound-note">Push notifications use your device’s notification sound. A browser cannot force itself to open or autoplay a custom music track while closed; click the alert to open Cadence, then use Play alert sound if needed.</p>
             </section>
             <div className="focus-large-actions"><button className="primary-button" type="button" onClick={toggleFocusTimer}>{focusRunning ? 'Pause focus' : focusSeconds === 0 ? 'Start another' : 'Start focusing'} {focusRunning ? <span className="pause-glyph">Ⅱ</span> : <ArrowRight size={16} />}</button><button className="secondary-button" type="button" onClick={() => resetFocus() }><RotateCcw size={15} /> Reset</button></div><p className="timer-reassurance"><ShieldCheck size={15} /> Missed a block? Nothing is lost. Restart with the next minute.</p></div><div className="focus-side-column"><section className="panel choose-task-panel"><div className="panel-overline">YOUR NEXT PRIORITY</div><h3>What will you work on?</h3><p>Choose one task. Everything else can wait for this block.</p>{todayTasks.filter((task) => !task.completed).map((task) => <button key={task.id} type="button" className={`focus-task-choice ${focusTaskId === task.id ? 'selected' : ''}`} onClick={() => { setFocusTaskId(task.id); setToast(`Focus target selected: ${task.title}`); }}><span className="todo-box" /><span><b>{task.title}</b><small>{task.estimate} min · {task.priority} priority</small></span><ArrowUpRight size={15} /></button>)}{todayTasks.filter((task) => !task.completed).length === 0 && <p className="quiet-empty">Your task list is clear. Enjoy the breathing room.</p>}<button className="text-button" type="button" onClick={() => setPage('Tasks')}>Manage today’s tasks <ArrowRight size={14} /></button></section><section className="panel focus-rule-panel"><span className="rule-icon"><Leaf size={17} /></span><div className="panel-overline">A GENTLER RULE</div><h3>Return your attention.</h3><p>Focus isn’t never getting distracted. It’s noticing and coming back—without making a story out of it.</p></section></div></section>
         </>}
