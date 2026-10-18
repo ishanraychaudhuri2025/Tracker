@@ -271,6 +271,9 @@ function App() {
   const [reminderMediaReload, setReminderMediaReload] = useState(0);
   const audioContextRef = useRef<AudioContext | null>(null);
   const focusCompletionAudioRef = useRef<HTMLAudioElement | null>(null);
+  // Detached media survives page changes and can keep sounding in a background tab.
+  const focusAlarmAudioRef = useRef<HTMLAudioElement | null>(null);
+  const focusAudioFallbackNotifiedRef = useRef(false);
   const firedRemindersRef = useRef<Set<string>>(new Set());
   const firedTaskRemindersRef = useRef<Set<string>>(new Set());
   const snoozeTimeoutRef = useRef<number | null>(null);
@@ -695,6 +698,52 @@ function App() {
     });
   };
 
+  const primeFocusAlarmAudio = () => {
+    unlockReminderAudio();
+    const audio = focusAlarmAudioRef.current;
+    if (!audio || !focusLocalAudioUrl || !audio.paused) return;
+    const originalVolume = audio.volume;
+    audio.loop = false;
+    audio.volume = 0;
+    // Start silently during the Start button gesture so Chrome can authorize
+    // subsequent playback from this same media element when the timer ends.
+    void audio.play().then(() => {
+      window.setTimeout(() => {
+        audio.pause();
+        try { audio.currentTime = 0; } catch { /* Some encodings are not immediately seekable. */ }
+        audio.volume = originalVolume;
+      }, 120);
+    }).catch(() => { audio.volume = originalVolume; });
+  };
+
+  const startFocusAlarmPlayback = () => {
+    unlockReminderAudio();
+    if (focusRingtoneKind === 'custom' && focusLocalAudioUrl && focusAlarmAudioRef.current) {
+      const audio = focusAlarmAudioRef.current;
+      if (!audio.paused && !audio.ended) return;
+      if (focusCompletionAudioRef.current) focusCompletionAudioRef.current.pause();
+      audio.loop = true;
+      audio.volume = 1;
+      try { audio.currentTime = 0; } catch { /* Start from its current position if required. */ }
+      void audio.play().catch(() => {
+        playReminderMelody();
+        if (!focusAudioFallbackNotifiedRef.current) {
+          focusAudioFallbackNotifiedRef.current = true;
+          setToast('Chrome blocked the uploaded track, so Cadence is playing its alarm tone instead. The alarm will repeat until stopped.');
+        }
+      });
+      return;
+    }
+    if (focusRingtoneKind === 'custom') {
+      // Streaming embeds try autoplay in the completion dialog. Keep a native
+      // Cadence alarm running as a fallback if the provider/browser blocks it.
+      if (parseReminderMedia(focusRingtoneData)) setFocusMusicPreviewOpen(true);
+      playReminderMelody();
+      return;
+    }
+    playFocusCompletionSound(true);
+  };
+
   const saveFocusMusicLink = () => {
     const media = parseReminderMedia(focusRingtoneDraft);
     if (!media) {
@@ -702,6 +751,16 @@ function App() {
       return;
     }
     try {
+      if (focusAlarmAudioRef.current) {
+        focusAlarmAudioRef.current.pause();
+        focusAlarmAudioRef.current.loop = false;
+        focusAlarmAudioRef.current.removeAttribute('src');
+        focusAlarmAudioRef.current.load();
+        focusAlarmAudioRef.current = null;
+      }
+      if (focusLocalAudioUrl) URL.revokeObjectURL(focusLocalAudioUrl);
+      setFocusLocalAudioUrl('');
+      setFocusLocalAudioName('');
       window.localStorage.setItem('cadence-focus-music-url', media.originalUrl);
       window.localStorage.setItem('cadence-focus-ringtone-name', media.provider);
       window.localStorage.setItem('cadence-focus-ringtone-kind', 'custom');
@@ -745,8 +804,18 @@ function App() {
       event.target.value = '';
       return;
     }
+    if (focusAlarmAudioRef.current) {
+      focusAlarmAudioRef.current.pause();
+      focusAlarmAudioRef.current.loop = false;
+      focusAlarmAudioRef.current.removeAttribute('src');
+      focusAlarmAudioRef.current.load();
+    }
     if (focusLocalAudioUrl) URL.revokeObjectURL(focusLocalAudioUrl);
     const url = URL.createObjectURL(file);
+    const alarmAudio = new Audio(url);
+    alarmAudio.preload = 'auto';
+    alarmAudio.loop = true;
+    focusAlarmAudioRef.current = alarmAudio;
     setFocusLocalAudioUrl(url);
     setFocusLocalAudioName(file.name);
     setFocusMusicPreviewOpen(false);
@@ -1176,24 +1245,39 @@ function App() {
 
   useEffect(() => {
     if (!pushArrival) return undefined;
+    focusAudioFallbackNotifiedRef.current = false;
     const play = () => {
-      if (pushArrival.kind === 'focus') playFocusCompletionSound(true);
+      if (pushArrival.kind === 'focus') startFocusAlarmPlayback();
       else playReminderMelody();
     };
+    // Start immediately, then repeat until Stop alarm clears pushArrival.
     play();
     const interval = window.setInterval(play, 2800);
     return () => {
       window.clearInterval(interval);
-      if (pushArrival.kind === 'focus' && focusCompletionAudioRef.current) {
-        focusCompletionAudioRef.current.pause();
-        focusCompletionAudioRef.current.currentTime = 0;
+      if (pushArrival.kind === 'focus') {
+        if (focusAlarmAudioRef.current) {
+          focusAlarmAudioRef.current.pause();
+          focusAlarmAudioRef.current.loop = false;
+          try { focusAlarmAudioRef.current.currentTime = 0; } catch { /* Ignore non-seekable media. */ }
+        }
+        if (focusCompletionAudioRef.current) {
+          focusCompletionAudioRef.current.pause();
+          focusCompletionAudioRef.current.loop = false;
+          try { focusCompletionAudioRef.current.currentTime = 0; } catch { /* Ignore non-seekable media. */ }
+        }
       }
     };
-  }, [pushArrival, focusRingtoneKind, focusRingtoneData]);
+  }, [pushArrival, focusRingtoneKind, focusRingtoneData, focusLocalAudioUrl]);
 
   useEffect(() => () => {
     if (snoozeTimeoutRef.current !== null) window.clearTimeout(snoozeTimeoutRef.current);
     if (audioContextRef.current) void audioContextRef.current.close().catch(() => undefined);
+    if (focusAlarmAudioRef.current) {
+      focusAlarmAudioRef.current.pause();
+      focusAlarmAudioRef.current.loop = false;
+      focusAlarmAudioRef.current = null;
+    }
   }, []);
 
   useEffect(() => {
@@ -1421,6 +1505,7 @@ function App() {
   };
   const toggleFocusTimer = () => {
     unlockReminderAudio();
+    primeFocusAlarmAudio();
     if (focusSeconds === 0) {
       resetFocus();
       return;
@@ -1836,7 +1921,12 @@ function App() {
                 <p id="focus-audio-upload-help" className="focus-sound-note">MP3, M4A, WAV, or another browser-supported audio format. Uploaded audio is available for this browser session; choose the file again after refreshing.</p>
                 {focusLocalAudioUrl && <div className="focus-music-saved">
                   <span className="focus-music-provider">{focusLocalAudioName}</span>
-                  <button type="button" className="text-button" onClick={() => { if (focusLocalAudioUrl) URL.revokeObjectURL(focusLocalAudioUrl); setFocusLocalAudioUrl(''); setFocusLocalAudioName(''); if (focusCompletionAudioRef.current) focusCompletionAudioRef.current.pause(); }}>Remove audio</button>
+                  <button type="button" className="text-button" onClick={() => {
+                    if (focusAlarmAudioRef.current) { focusAlarmAudioRef.current.pause(); focusAlarmAudioRef.current.loop = false; focusAlarmAudioRef.current.removeAttribute('src'); focusAlarmAudioRef.current.load(); focusAlarmAudioRef.current = null; }
+                    if (focusCompletionAudioRef.current) { focusCompletionAudioRef.current.pause(); focusCompletionAudioRef.current.loop = false; }
+                    if (focusLocalAudioUrl) URL.revokeObjectURL(focusLocalAudioUrl);
+                    setFocusLocalAudioUrl(''); setFocusLocalAudioName('');
+                  }}>Remove audio</button>
                 </div>}
                 {focusLocalAudioUrl && <audio ref={focusCompletionAudioRef} controls preload="metadata" src={focusLocalAudioUrl} style={{ width: '100%', marginTop: 10 }} />}
                 <div className="focus-music-link-row">
@@ -1970,7 +2060,7 @@ function App() {
           <span className="reminder-alarm-kicker">CADENCE BACKGROUND REMINDER</span>
           <h2 id="push-arrival-title">{pushArrival.title}</h2>
           <p>{pushArrival.body}</p>
-          {pushArrival.kind === 'focus' && focusRingtoneKind === 'custom' && parseReminderMedia(focusRingtoneData) && <div className="focus-music-embed focus-completion-embed" aria-label="Focus completion soundtrack">
+          {pushArrival.kind === 'focus' && focusRingtoneKind === 'custom' && !focusLocalAudioUrl && parseReminderMedia(focusRingtoneData) && <div className="focus-music-embed focus-completion-embed" aria-label="Focus completion soundtrack">
             <iframe
               src={parseReminderMedia(focusRingtoneData)?.embedUrl}
               title={'Focus completion soundtrack from ' + (parseReminderMedia(focusRingtoneData)?.provider || 'music service')}
@@ -1985,7 +2075,7 @@ function App() {
           <div className="reminder-alarm-actions">
             <button type="button" className="secondary-button" onClick={() => {
               unlockReminderAudio();
-              if (pushArrival.kind === 'focus') playFocusCompletionSound();
+              if (pushArrival.kind === 'focus') startFocusAlarmPlayback();
               else playReminderMelody();
             }}>Play alert sound</button>
             <button type="button" className="primary-button" onClick={() => {
@@ -1994,7 +2084,7 @@ function App() {
             }}>Open {pushArrival.kind === 'focus' ? 'Focus' : 'Tasks'}</button>
           </div>
           <p className="reminder-footnote">Your browser controls whether custom audio can start automatically. This button plays the selected sound after your interaction.</p>
-          <button type="button" className="reminder-stop-button" onClick={() => setPushArrival(null)}>Dismiss</button>
+          <button type="button" className="reminder-stop-button" onClick={() => setPushArrival(null)}>Stop alarm</button>
         </section>
       </div>}
       {showProfileModal && <div className="profile-settings-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowProfileModal(false); }}>
