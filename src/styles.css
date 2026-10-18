@@ -10482,3 +10482,53 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     font-size: 23px !important;
   }
 }
+
+
+/* Sidebar hierarchy: make section labels legible and add a quiet divider before routines. */
+#root .app-shell .sidebar .workspace-label {
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 9px !important;
+  min-height: 30px !important;
+  margin: 28px 7px 12px !important;
+  padding: 0 9px !important;
+  border: 1px solid rgba(195, 158, 224, .16) !important;
+  border-radius: 7px !important;
+  background: linear-gradient(90deg, rgba(153, 95, 194, .095), rgba(153, 95, 194, .025)) !important;
+  color: #c0adce !important;
+  font-size: 9px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  letter-spacing: 1.35px !important;
+  white-space: nowrap !important;
+}
+#root .app-shell .sidebar .workspace-label .live-dot {
+  width: 5px !important;
+  height: 5px !important;
+  flex: 0 0 5px !important;
+  background: #c995ff !important;
+  box-shadow: 0 0 0 3px rgba(182, 113, 239, .11) !important;
+}
+#root .app-shell .sidebar .sidebar-section-head {
+  box-sizing: border-box !important;
+  min-height: 38px !important;
+  margin: 19px 7px 8px !important;
+  padding: 13px 1px 0 !important;
+  border-top: 1px solid rgba(194, 162, 213, .14) !important;
+  color: #bba6ca !important;
+  font-size: 9px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  letter-spacing: 1.15px !important;
+}
+#root .app-shell .sidebar .sidebar-section-head .icon-button {
+  margin-top: -4px !important;
+  color: #c8a5e3 !important;
+  border: 1px solid rgba(194, 151, 224, .16) !important;
+  background: rgba(153, 95, 194, .06) !important;
+}
+#root .app-shell .sidebar .sidebar-section-head .icon-button:hover {
+  border-color: rgba(194, 151, 224, .32) !important;
+  background: rgba(153, 95, 194, .12) !important;
+}
