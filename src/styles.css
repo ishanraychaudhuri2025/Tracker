@@ -9730,3 +9730,46 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     max-height: 46px !important;
   }
 }
+
+
+/* Habits: scale the seven-day mini strip down by 30% without affecting other calendars. */
+#root .app-shell .habits-library .mini-week {
+  width: min(100%, 336px) !important; /* 480px × 0.70 */
+  max-width: 100% !important;
+  gap: 5.6px !important; /* 8px × 0.70 */
+  margin-top: 10.5px !important;
+  margin-bottom: 5.6px !important;
+}
+#root .app-shell .habits-library .mini-week > span {
+  min-height: 34px !important; /* 48px × 0.70 */
+  height: 34px !important;
+  padding: 3.5px 1.5px !important;
+  gap: 3.5px !important; /* 5px × 0.70 */
+  border-radius: 7px !important;
+}
+#root .app-shell .habits-library .mini-week > span b {
+  font-size: 8.4px !important; /* 12px × 0.70 */
+  line-height: 1.1 !important;
+}
+#root .app-shell .habits-library .mini-week > span small {
+  font-size: 7px !important; /* 10px × 0.70 */
+  line-height: 1.1 !important;
+}
+@media (max-width: 900px) {
+  #root .app-shell .habits-library .mini-week {
+    width: min(100%, 336px) !important;
+    gap: 5.6px !important;
+  }
+}
+@media (max-width: 520px) {
+  #root .app-shell .habits-library .mini-week > span {
+    min-height: 31px !important;
+    height: 31px !important;
+  }
+  #root .app-shell .habits-library .mini-week > span b {
+    font-size: 8px !important;
+  }
+  #root .app-shell .habits-library .mini-week > span small {
+    font-size: 6.5px !important;
+  }
+}
