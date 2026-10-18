@@ -26,7 +26,7 @@ type PlannerPageProps = {
 };
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const CATEGORIES: TaskCategory[] = ['Study', 'Work', 'Health', 'Personal', 'Admin'];
+const CATEGORIES: TaskCategory[] = ['Study', 'Work', 'Health', 'Personal'];
 const RECURRENCES: Recurrence[] = ['None', 'Daily', 'Weekdays', 'Weekends', 'Weekly', 'Monthly'];
 
 function toKey(date: Date) {
@@ -182,7 +182,7 @@ export function PlannerPage({ habits, tasks, today, onToggleHabit, onToggleTask,
   const filteredTasks = categoryFilter === 'All' ? scheduledTasks : scheduledTasks.filter((task) => (task.category ?? 'Personal') === categoryFilter);
   const groupedTasks: { label: string; items: Task[] }[] = groupBy === 'Time'
     ? ['Morning', 'Afternoon', 'Evening', 'Anytime'].map((label) => ({ label, items: filteredTasks.filter((task) => timeGroup(task) === label).sort((a, b) => (a.time ?? '99:99').localeCompare(b.time ?? '99:99')) }))
-    : CATEGORIES.map((label) => ({ label, items: filteredTasks.filter((task) => (task.category ?? 'Personal') === label).sort((a, b) => (a.time ?? '99:99').localeCompare(b.time ?? '99:99')) }));
+    : CATEGORIES.map((label) => ({ label, items: filteredTasks.filter((task) => ((task.category ?? 'Personal') === label || (label === 'Personal' && task.category === 'Admin')).sort((a, b) => (a.time ?? '99:99').localeCompare(b.time ?? '99:99')) }));
 
   return <div className="planner-page">
     <section className="page-intro planner-page-intro">
