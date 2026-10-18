@@ -11124,3 +11124,26 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     filter: drop-shadow(0 0 5px rgba(190, 111, 255, .28)) !important;
   }
 }
+
+/* Sidebar refinement: remove the redundant workspace eyebrow and reclaim its space. */
+#root .app-shell .sidebar .workspace-label {
+  display: none !important;
+}
+#root .app-shell .sidebar .nav-list {
+  margin-top: 16px !important;
+}
+#root .app-shell .sidebar .sidebar-section-head {
+  margin-top: 24px !important;
+  padding-top: 14px !important;
+  border-top: 1px solid rgba(193, 156, 220, 0.14) !important;
+  color: #c9b4d9 !important;
+  font-family: var(--cadence-font-display, Georgia, serif) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 1.65px !important;
+  line-height: 1.4 !important;
+  text-transform: uppercase !important;
+}
+#root .app-shell .sidebar .sidebar-section-head > span {
+  text-shadow: 0 0 14px rgba(179, 111, 255, .12);
+}
