@@ -13,6 +13,8 @@ import { PlannerPage, taskIsDone, taskOccursOn } from './Planner';
 import TasksPage from './TasksPage';
 import AuthScreen from './components/AuthScreen';
 import { supabase, supabaseConfigured } from './lib/supabase';
+import { isRingtoneUploadSizeAllowed, isSupportedAudioMime, parseReminderMedia as parseReminderMediaUrl } from './lib/reminder-media.mjs';
+import type { ReminderMedia } from './lib/reminder-media.mjs';
 
 const STORAGE_KEY = 'streako-elite-v2';
 const todayKey = () => toKey(new Date());
@@ -51,7 +53,9 @@ function HabitGlyph({ habit, size = 17 }: { habit: Habit; size?: number }) {
   if (habit.category === 'Craft') return <PenTool {...iconProps} />;
   return <Compass {...iconProps} />;
 }
-type ActiveReminder = { habitId: string; habitName: string; reminderTime: string; reminderSoundUrl?: string };
+type LocalRingtone = { url: string; name: string; audio: HTMLAudioElement };
+type ActiveReminder = { habitId: string; habitName: string; reminderTime: string; reminderSoundUrl?: string; localRingtone?: LocalRingtone };
+type PushArrival = { kind: 'task' | 'focus'; title: string; body: string; taskId?: string; reminderSoundUrl?: string; localRingtone?: LocalRingtone };
 
 type ProfileLogoKey = 'initials' | 'wave' | 'zap' | 'sparkles' | 'target' | 'flame' | 'leaf' | 'code' | 'heart' | 'brain' | 'compass';
 type LocalProfile = { name: string; logo: ProfileLogoKey; avatarData?: string };
@@ -81,42 +85,9 @@ function ProfileGlyph({ logo, name, size = 17 }: { logo: ProfileLogoKey; name: s
   return <Activity {...iconProps} />;
 }
 
-type ReminderMedia = { provider: 'YouTube' | 'Spotify'; originalUrl: string; embedUrl: string };
-
 function parseReminderMedia(input?: string): ReminderMedia | null {
-  if (!input?.trim()) return null;
-  try {
-    const parsed = new URL(input.trim());
-    const host = parsed.hostname.toLowerCase().replace(/^www\./, '');
-    if (host === 'youtu.be' || host === 'youtube.com' || host === 'm.youtube.com' || host === 'youtube-nocookie.com') {
-      const segments = parsed.pathname.split('/').filter(Boolean);
-      const videoId = host === 'youtu.be'
-        ? segments[0]
-        : parsed.searchParams.get('v') || (['embed', 'shorts', 'live'].includes(segments[0] || '') ? segments[1] : undefined);
-      if (!videoId || !/^[a-zA-Z0-9_-]{6,20}$/.test(videoId)) return null;
-      return {
-        provider: 'YouTube',
-        originalUrl: parsed.toString(),
-        embedUrl: 'https://www.youtube-nocookie.com/embed/' + videoId + '?autoplay=1&mute=0&controls=1&rel=0&playsinline=1&loop=1&playlist=' + videoId + '&enablejsapi=1&origin=' + encodeURIComponent(window.location.origin),
-      };
-    }
-    if (host === 'open.spotify.com') {
-      const segments = parsed.pathname.split('/').filter(Boolean);
-      const types = ['track', 'album', 'playlist', 'episode', 'show'];
-      const typeIndex = segments.findIndex((segment) => types.includes(segment));
-      const type = segments[typeIndex];
-      const mediaId = segments[typeIndex + 1];
-      if (!type || !mediaId || !/^[a-zA-Z0-9]+$/.test(mediaId)) return null;
-      return {
-        provider: 'Spotify',
-        originalUrl: parsed.toString(),
-        embedUrl: 'https://open.spotify.com/embed/' + type + '/' + mediaId + '?utm_source=generator&autoplay=1',
-      };
-    }
-  } catch {
-    return null;
-  }
-  return null;
+  const origin = typeof window === 'undefined' ? 'https://cadence-elite.vercel.app' : window.location.origin;
+  return parseReminderMediaUrl(input, origin);
 }
 
 const formatReminderTime = (time: string) => {
@@ -265,17 +236,22 @@ function App() {
   const [backgroundPushEnabled, setBackgroundPushEnabled] = useState(false);
   const [backgroundPushBusy, setBackgroundPushBusy] = useState(false);
   const [pendingPushReminder, setPendingPushReminder] = useState<string | null>(null);
-  const [pushArrival, setPushArrival] = useState<{ kind: 'task' | 'focus'; title: string; body: string } | null>(null);
+  const [pushArrival, setPushArrival] = useState<PushArrival | null>(null);
   const [activeReminder, setActiveReminder] = useState<ActiveReminder | null>(null);
+  const [habitRingtoneFile, setHabitRingtoneFile] = useState<File | null>(null);
+  const [habitLocalRingtones, setHabitLocalRingtones] = useState<Record<string, LocalRingtone>>({});
+  const [taskLocalRingtones, setTaskLocalRingtones] = useState<Record<string, LocalRingtone>>({});
   const [reminderSoundStopped, setReminderSoundStopped] = useState(false);
   const [reminderMediaReload, setReminderMediaReload] = useState(0);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const localRingtoneRegistryRef = useRef<Set<LocalRingtone>>(new Set());
   const focusCompletionAudioRef = useRef<HTMLAudioElement | null>(null);
   // Detached media survives page changes and can keep sounding in a background tab.
   const focusAlarmAudioRef = useRef<HTMLAudioElement | null>(null);
   const focusAudioFallbackNotifiedRef = useRef(false);
   const firedRemindersRef = useRef<Set<string>>(new Set());
   const firedTaskRemindersRef = useRef<Set<string>>(new Set());
+  const localRingtoneFallbackNotifiedRef = useRef(false);
   const snoozeTimeoutRef = useRef<number | null>(null);
   const [dark, setDark] = useState(true);
   const [focusRunning, setFocusRunning] = useState(false);
@@ -441,6 +417,7 @@ function App() {
   const rawExperimentAction = experimentHabit?.minimum?.trim() || 'do the smallest version for two minutes';
   const experimentAction = rawExperimentAction.charAt(0).toLowerCase() + rawExperimentAction.slice(1);
   const activeReminderMedia = parseReminderMedia(activeReminder?.reminderSoundUrl);
+  const pushArrivalMedia = parseReminderMedia(pushArrival?.kind === 'task' ? pushArrival.reminderSoundUrl : undefined);
 
   useEffect(() => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
@@ -475,6 +452,7 @@ function App() {
           habitName: habit.name,
           reminderTime: habit.reminderTime || (String(new Date().getHours()).padStart(2, '0') + ':' + String(new Date().getMinutes()).padStart(2, '0')),
           reminderSoundUrl: habit.reminderSoundUrl || payload.soundUrl || '',
+          localRingtone: habitLocalRingtones[habit.id],
         });
         return;
       }
@@ -485,6 +463,9 @@ function App() {
           kind: 'task',
           title: payload.title || (task ? 'Time for ' + task.title : 'Your task reminder'),
           body: payload.body || 'Your planned time has arrived. Start with the smallest useful next step.',
+          taskId: task?.id ?? payload.id,
+          reminderSoundUrl: task?.reminderSoundUrl || payload.soundUrl || '',
+          localRingtone: task ? taskLocalRingtones[task.id] : undefined,
         });
         return;
       }
@@ -498,7 +479,7 @@ function App() {
     };
     navigator.serviceWorker.addEventListener('message', onPushMessage);
     return () => navigator.serviceWorker.removeEventListener('message', onPushMessage);
-  }, [habits, tasks, today]);
+  }, [habits, tasks, today, habitLocalRingtones, taskLocalRingtones]);
 
   // The service worker adds this query parameter when a user clicks a
   // background notification. Route the click into the correct workspace view.
@@ -545,6 +526,7 @@ function App() {
           habitName: habit.name,
           reminderTime: habit.reminderTime || (String(new Date().getHours()).padStart(2, '0') + ':' + String(new Date().getMinutes()).padStart(2, '0')),
           reminderSoundUrl: habit.reminderSoundUrl || '',
+          localRingtone: habitLocalRingtones[habit.id],
         });
       }
       setPendingPushReminder(null);
@@ -557,10 +539,13 @@ function App() {
         kind: 'task',
         title: task ? 'Time for ' + task.title : 'Your task reminder',
         body: task ? 'Your planned time has arrived. Start with the smallest useful next step.' : 'A scheduled task reminder arrived. Review Tasks to see what is next.',
+        taskId: task?.id,
+        reminderSoundUrl: task?.reminderSoundUrl || '',
+        localRingtone: task ? taskLocalRingtones[task.id] : undefined,
       });
       setPendingPushReminder(null);
     }
-  }, [pendingPushReminder, workspaceReady, habits, tasks, today]);
+  }, [pendingPushReminder, workspaceReady, habits, tasks, today, habitLocalRingtones, taskLocalRingtones]);
 
   useEffect(() => {
     const pageRoot = document.querySelector<HTMLElement>('.page-transition-shell');
@@ -634,6 +619,50 @@ function App() {
       gain.connect(context.destination);
       oscillator.start(startAt);
       oscillator.stop(startAt + 0.21);
+    });
+  };
+
+  const createLocalRingtone = (file: File): LocalRingtone => {
+    const url = URL.createObjectURL(file);
+    const audio = new Audio(url);
+    audio.preload = 'auto';
+    audio.loop = true;
+    audio.volume = 0;
+    // Prime this media element from the user's Save gesture for browser autoplay permission.
+    void audio.play().then(() => {
+      window.setTimeout(() => {
+        audio.pause();
+        try { audio.currentTime = 0; } catch { /* Ignore non-seekable audio. */ }
+        audio.volume = 1;
+      }, 120);
+    }).catch(() => { audio.volume = 1; });
+    const ringtone = { url, name: file.name, audio };
+    localRingtoneRegistryRef.current.add(ringtone);
+    return ringtone;
+  };
+
+  const releaseLocalRingtone = (ringtone: LocalRingtone) => {
+    ringtone.audio.pause();
+    ringtone.audio.loop = false;
+    ringtone.audio.removeAttribute('src');
+    ringtone.audio.load();
+    URL.revokeObjectURL(ringtone.url);
+    localRingtoneRegistryRef.current.delete(ringtone);
+  };
+
+  const startLocalRingtonePlayback = (ringtone: LocalRingtone) => {
+    unlockReminderAudio();
+    const audio = ringtone.audio;
+    if (!audio.paused && !audio.ended) return;
+    audio.loop = true;
+    audio.volume = 1;
+    try { audio.currentTime = 0; } catch { /* Use current position if the format is not seekable. */ }
+    void audio.play().catch(() => {
+      playReminderMelody();
+      if (!localRingtoneFallbackNotifiedRef.current) {
+        localRingtoneFallbackNotifiedRef.current = true;
+        setToast('The browser blocked the uploaded track, so Cadence is repeating its alarm tone instead.');
+      }
     });
   };
 
@@ -791,16 +820,35 @@ function App() {
     setToast('Custom soundtrack link removed.');
   };
 
+  const handleHabitRingtoneUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    event.target.value = '';
+    if (!isSupportedAudioMime(file.type)) {
+      setHabitRingtoneFile(null);
+      setToast('Choose a valid audio file.');
+      return;
+    }
+    if (!isRingtoneUploadSizeAllowed(file.size)) {
+      setHabitRingtoneFile(null);
+      setToast('Choose an audio file 20 MB or smaller.');
+      return;
+    }
+    setHabitRingtoneFile(file);
+    setHabitDraft((draft) => ({ ...draft, reminderSoundUrl: '' }));
+    setToast('Ringtone selected. Save the habit to use it during this browser session.');
+  };
+
   const handleFocusAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith('audio/')) {
+    if (!isSupportedAudioMime(file.type)) {
       setToast('Choose a valid audio file.');
       event.target.value = '';
       return;
     }
-    if (file.size >= 20 * 1024 * 1024) {
-      setToast('Choose an audio file smaller than 20 MB.');
+    if (!isRingtoneUploadSizeAllowed(file.size)) {
+      setToast('Choose a non-empty audio file up to 20 MB.');
       event.target.value = '';
       return;
     }
@@ -1191,6 +1239,7 @@ function App() {
           habitName: fresh[0].name,
           reminderTime: currentTime,
           reminderSoundUrl: fresh[0].reminderSoundUrl,
+          localRingtone: habitLocalRingtones[fresh[0].id],
         });
       }
 
@@ -1224,6 +1273,9 @@ function App() {
             body: freshTasks.length === 1
               ? 'Your planned time has arrived. Start with the smallest useful next step.'
               : 'Several planned tasks are due. Open Cadence to review what is next.',
+            taskId: freshTasks.length === 1 ? freshTasks[0].id : undefined,
+            reminderSoundUrl: freshTasks.length === 1 ? freshTasks[0].reminderSoundUrl || '' : '',
+            localRingtone: freshTasks.length === 1 ? taskLocalRingtones[freshTasks[0].id] : undefined,
           });
         }
       }
@@ -1231,26 +1283,44 @@ function App() {
     const interval = window.setInterval(checkReminders, 10000);
     checkReminders();
     return () => window.clearInterval(interval);
-  }, [habits, tasks]);
+  }, [habits, tasks, habitLocalRingtones, taskLocalRingtones]);
 
   useEffect(() => {
-    if (!activeReminder || reminderSoundStopped) return undefined;
-    // Repeat the native alarm while the reminder is open. Linked YouTube audio
-    // also attempts autoplay + loop; this chime is the fallback if the browser
-    // refuses audible autoplay for the embedded player.
-    playReminderMelody();
-    const interval = window.setInterval(playReminderMelody, 2800);
-    return () => window.clearInterval(interval);
+    if (!activeReminder || reminderSoundStopped) {
+      activeReminder?.localRingtone?.audio.pause();
+      return undefined;
+    }
+    localRingtoneFallbackNotifiedRef.current = false;
+    const play = () => {
+      if (activeReminder.localRingtone) {
+        const audio = activeReminder.localRingtone.audio;
+        if (audio.paused || audio.ended) startLocalRingtonePlayback(activeReminder.localRingtone);
+      } else playReminderMelody();
+    };
+    play();
+    const interval = window.setInterval(play, 2800);
+    return () => {
+      window.clearInterval(interval);
+      if (activeReminder.localRingtone) {
+        const audio = activeReminder.localRingtone.audio;
+        audio.pause();
+        audio.loop = false;
+        try { audio.currentTime = 0; } catch { /* Ignore non-seekable audio. */ }
+      }
+    };
   }, [activeReminder, reminderSoundStopped]);
 
   useEffect(() => {
     if (!pushArrival) return undefined;
     focusAudioFallbackNotifiedRef.current = false;
+    localRingtoneFallbackNotifiedRef.current = false;
     const play = () => {
       if (pushArrival.kind === 'focus') startFocusAlarmPlayback();
-      else playReminderMelody();
+      else if (pushArrival.localRingtone) {
+        const audio = pushArrival.localRingtone.audio;
+        if (audio.paused || audio.ended) startLocalRingtonePlayback(pushArrival.localRingtone);
+      } else playReminderMelody();
     };
-    // Start immediately, then repeat until Stop alarm clears pushArrival.
     play();
     const interval = window.setInterval(play, 2800);
     return () => {
@@ -1266,6 +1336,11 @@ function App() {
           focusCompletionAudioRef.current.loop = false;
           try { focusCompletionAudioRef.current.currentTime = 0; } catch { /* Ignore non-seekable media. */ }
         }
+      } else if (pushArrival.localRingtone) {
+        const audio = pushArrival.localRingtone.audio;
+        audio.pause();
+        audio.loop = false;
+        try { audio.currentTime = 0; } catch { /* Ignore non-seekable audio. */ }
       }
     };
   }, [pushArrival, focusRingtoneKind, focusRingtoneData, focusLocalAudioUrl]);
@@ -1278,6 +1353,7 @@ function App() {
       focusAlarmAudioRef.current.loop = false;
       focusAlarmAudioRef.current = null;
     }
+    for (const ringtone of localRingtoneRegistryRef.current) releaseLocalRingtone(ringtone);
   }, []);
 
   useEffect(() => {
@@ -1404,6 +1480,7 @@ function App() {
 
   const openEditHabit = (habit: Habit) => {
     setEditingHabitId(habit.id);
+    setHabitRingtoneFile(null);
     setHabitDraft({
       name: habit.name,
       category: habit.category,
@@ -1422,6 +1499,7 @@ function App() {
 
   const openCreateHabit = () => {
     setEditingHabitId(null);
+    setHabitRingtoneFile(null);
     setHabitDraft({ ...emptyHabitDraft });
     setShowHabitModal(true);
   };
@@ -1470,11 +1548,27 @@ function App() {
     } else {
       setHabits((current) => [next, ...current]);
     }
+    if (habitDraft.reminderEnabled && habitRingtoneFile) {
+      const previousRingtone = habitLocalRingtones[next.id];
+      if (previousRingtone) releaseLocalRingtone(previousRingtone);
+      const uploadedRingtone = createLocalRingtone(habitRingtoneFile);
+      setHabitLocalRingtones((current) => ({ ...current, [next.id]: uploadedRingtone }));
+    } else if (habitDraft.reminderEnabled && reminderMedia) {
+      const previousRingtone = habitLocalRingtones[next.id];
+      if (previousRingtone) releaseLocalRingtone(previousRingtone);
+      setHabitLocalRingtones((current) => {
+        const updated = { ...current };
+        delete updated[next.id];
+        return updated;
+      });
+    }
+    setHabitRingtoneFile(null);
     const wasEditing = Boolean(existing);
     const reminderMessage = habitDraft.reminderEnabled
       ? ' Reminder set for ' + formatReminderTime(habitDraft.reminderTime) + '; keep Cadence open for alerts.'
       : '';
     setHabitDraft({ ...emptyHabitDraft });
+    setHabitRingtoneFile(null);
     setEditingHabitId(null);
     setShowHabitModal(false);
     setPage('Habits');
@@ -1487,9 +1581,45 @@ function App() {
     const completedDates = task.completedDates ?? [];
     return { ...task, completedDates: completedDates.includes(dayKey) ? completedDates.filter((key) => key !== dayKey) : [...completedDates, dayKey] };
   }));
+  const deleteTask = (taskId: string) => {
+    const ringtone = taskLocalRingtones[taskId];
+    if (ringtone) releaseLocalRingtone(ringtone);
+    setTaskLocalRingtones((current) => {
+      const updated = { ...current };
+      delete updated[taskId];
+      return updated;
+    });
+    setTasks((current) => current.filter((task) => task.id !== taskId));
+    setToast('Task removed.');
+  };
+
   const addPlannerTask = (draft: import('./Planner').PlannerTaskDraft) => {
-    setTasks((current) => [...current, { ...draft, id: `t-${crypto.randomUUID()}`, completed: false, completedDates: [] }]);
+    const reminderMedia = parseReminderMedia(draft.reminderSoundUrl);
+    if (draft.reminderSoundUrl?.trim() && !reminderMedia) {
+      setToast('Add a valid YouTube or Spotify track, album, or playlist link.');
+      return false;
+    }
+    const id = `t-${crypto.randomUUID()}`;
+    const nextTask: Task = {
+      id,
+      title: draft.title,
+      date: draft.date,
+      time: draft.time,
+      category: draft.category,
+      recurrence: draft.recurrence,
+      priority: draft.priority,
+      estimate: draft.estimate,
+      completed: false,
+      completedDates: [],
+      ...(reminderMedia ? { reminderSoundUrl: reminderMedia.originalUrl } : {}),
+    };
+    setTasks((current) => [...current, nextTask]);
+    if (draft.reminderSoundFile) {
+      const ringtone = createLocalRingtone(draft.reminderSoundFile);
+      setTaskLocalRingtones((current) => ({ ...current, [id]: ringtone }));
+    }
     setToast('Added to your calendar');
+    return true;
   };
   const syncRemoteFocusTimer = async (action: 'focus-start' | 'focus-stop', seconds = 0) => {
     if (!supabase || !authSession || !backgroundPushEnabled) return;
@@ -1801,7 +1931,7 @@ function App() {
           <footer className="analytics-footer"><span><img className="cadence-footer-lockup" src="/cadence-icon.svg" alt="Cadence" width="36" height="36" /> <i>/</i> PERSONAL PERFORMANCE SYSTEM</span><span>YOUR PROGRESS, WITHOUT THE NOISE.</span></footer>
         </>}
   
-        {page === 'Tasks' && <TasksPage tasks={tasks} today={today} onToggleTask={toggleTask} onAddTask={addPlannerTask} onDeleteTask={(taskId) => { setTasks((current) => current.filter((task) => task.id !== taskId)); setToast('Task removed.'); }} />}
+        {page === 'Tasks' && <TasksPage tasks={tasks} today={today} onToggleTask={toggleTask} onAddTask={addPlannerTask} onDeleteTask={deleteTask} />}
 
         {page === 'Planner' && <PlannerPage habits={habits} tasks={tasks} today={today} onToggleHabit={toggleHabit} onToggleTask={toggleTask} onAddTask={addPlannerTask} />}
 
@@ -1916,7 +2046,7 @@ function App() {
               </div>
               {focusRingtoneKind === 'custom' && <div className="focus-music-link-row">
                 <div className="focus-upload-label">Use a streaming link or your own audio</div>
-                <label className="focus-upload-label" htmlFor="focus-audio-upload">Upload audio (under 20 MB)</label>
+                <label className="focus-upload-label" htmlFor="focus-audio-upload">Upload audio (up to 20 MB)</label>
                 <input id="focus-audio-upload" type="file" accept="audio/*" onChange={handleFocusAudioUpload} aria-describedby="focus-audio-upload-help" />
                 <p id="focus-audio-upload-help" className="focus-sound-note">MP3, M4A, WAV, or another browser-supported audio format. Uploaded audio is available for this browser session; choose the file again after refreshing.</p>
                 {focusLocalAudioUrl && <div className="focus-music-saved">
@@ -1985,7 +2115,7 @@ function App() {
         </div>
       </main>
 
-      {showHabitModal && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) { setShowHabitModal(false); setEditingHabitId(null); setHabitDraft({ ...emptyHabitDraft }); } }}><section className="habit-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div className="modal-top"><div><div className="panel-overline">START SMALL, STAY CONSISTENT</div><h2 id="modal-title">{editingHabitId ? 'Edit habit' : 'Create a habit'}</h2><p>{editingHabitId ? 'Update your routine without losing its history.' : 'Design the start, not just the finish line.'}</p></div><IconButton label="Close modal" onClick={() => setShowHabitModal(false)}><X size={18} /></IconButton></div><form onSubmit={addHabit}><label className="field-label">Habit name<input autoFocus value={habitDraft.name} onChange={(event) => setHabitDraft((draft) => ({ ...draft, name: event.target.value }))} placeholder="e.g. Practice coding" maxLength={70} required /></label><label className="field-label">Area of life<div className="category-select">{categories.map((category) => <button type="button" key={category} className={habitDraft.category === category ? `selected ${categoryTone[category]}` : ''} onClick={() => setHabitDraft((draft) => ({ ...draft, category }))}><CategoryGlyph category={category} size={15} />{category}</button>)}</div></label><label className="field-label">Frequency<select value={habitDraft.frequency} onChange={(event) => setHabitDraft((draft) => ({ ...draft, frequency: event.target.value as Frequency }))}>{frequencies.map((frequency) => <option key={frequency}>{frequency}</option>)}</select></label>
+      {showHabitModal && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) { setShowHabitModal(false); setEditingHabitId(null); setHabitRingtoneFile(null); setHabitDraft({ ...emptyHabitDraft }); } }}><section className="habit-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div className="modal-top"><div><div className="panel-overline">START SMALL, STAY CONSISTENT</div><h2 id="modal-title">{editingHabitId ? 'Edit habit' : 'Create a habit'}</h2><p>{editingHabitId ? 'Update your routine without losing its history.' : 'Design the start, not just the finish line.'}</p></div><IconButton label="Close modal" onClick={() => setShowHabitModal(false)}><X size={18} /></IconButton></div><form onSubmit={addHabit}><label className="field-label">Habit name<input autoFocus value={habitDraft.name} onChange={(event) => setHabitDraft((draft) => ({ ...draft, name: event.target.value }))} placeholder="e.g. Practice coding" maxLength={70} required /></label><label className="field-label">Area of life<div className="category-select">{categories.map((category) => <button type="button" key={category} className={habitDraft.category === category ? `selected ${categoryTone[category]}` : ''} onClick={() => setHabitDraft((draft) => ({ ...draft, category }))}><CategoryGlyph category={category} size={15} />{category}</button>)}</div></label><label className="field-label">Frequency<select value={habitDraft.frequency} onChange={(event) => setHabitDraft((draft) => ({ ...draft, frequency: event.target.value as Frequency }))}>{frequencies.map((frequency) => <option key={frequency}>{frequency}</option>)}</select></label>
           {habitDraft.frequency === 'Custom' && <fieldset className="habit-schedule-days"><legend>Repeat on these days</legend><div className="habit-weekday-picker">{[{ label: 'Sun', value: 0 }, { label: 'Mon', value: 1 }, { label: 'Tue', value: 2 }, { label: 'Wed', value: 3 }, { label: 'Thu', value: 4 }, { label: 'Fri', value: 5 }, { label: 'Sat', value: 6 }].map(({ label, value }) => <button type="button" key={value} className={habitDraft.customDays.includes(value) ? 'selected' : ''} aria-pressed={habitDraft.customDays.includes(value)} onClick={() => setHabitDraft((draft) => ({ ...draft, customDays: draft.customDays.includes(value) ? draft.customDays.filter((day) => day !== value) : [...draft.customDays, value].sort((left, right) => left - right) }))}>{label}</button>)}</div><p>Choose one or more weekdays. Only selected days count toward consistency and reminders.</p></fieldset>}<label className="field-label">When will you do it? <span className="field-hint">A reliable cue</span><input value={habitDraft.cue} onChange={(event) => setHabitDraft((draft) => ({ ...draft, cue: event.target.value }))} placeholder="After I finish breakfast…" maxLength={100} /></label><label className="field-label">Your minimum version <span className="field-hint">Make it hard to say no</span><input value={habitDraft.minimum} onChange={(event) => setHabitDraft((draft) => ({ ...draft, minimum: event.target.value }))} placeholder="Read one page, write one line…" maxLength={100} /></label>
           <div className="habit-configuration-grid">
             <label className="field-label">Duration<select value={String(habitDraft.durationMonths)} onChange={(event) => setHabitDraft((draft) => ({ ...draft, durationMonths: Number(event.target.value) }))}><option value="0">Forever</option><option value="1">1 month</option><option value="3">3 months</option><option value="6">6 months</option><option value="12">12 months</option></select><span className="field-hint">Starts on the creation date. Your history stays saved after it ends.</span></label>
@@ -2006,9 +2136,14 @@ function App() {
                 <input type="time" value={habitDraft.reminderTime} onChange={(event) => setHabitDraft((draft) => ({ ...draft, reminderTime: event.target.value }))} required />
               </label>
               <label className="field-label reminder-sound-label">Custom music link <span className="field-hint">Optional · YouTube or Spotify</span>
-                <input type="url" value={habitDraft.reminderSoundUrl} onChange={(event) => setHabitDraft((draft) => ({ ...draft, reminderSoundUrl: event.target.value }))} placeholder="https://open.spotify.com/track/…" autoComplete="url" />
+                <input type="url" value={habitDraft.reminderSoundUrl} onChange={(event) => { setHabitRingtoneFile(null); setHabitDraft((draft) => ({ ...draft, reminderSoundUrl: event.target.value })); }} placeholder="https://open.spotify.com/track/…" autoComplete="url" />
               </label>
-              <p className="reminder-music-help">YouTube links attempt to autoplay and loop. Browsers can block audible autoplay until you interact with the player; Spotify playback is controlled by its embed. The repeating Cadence chime stays active as a fallback until you stop it or mark the habit done.</p>
+              <label className="field-label reminder-sound-label">Upload audio (up to 20 MB)
+                <input id="habit-ringtone-upload" type="file" accept="audio/*" onChange={handleHabitRingtoneUpload} aria-describedby="habit-ringtone-help" />
+                <span className="field-hint">{habitRingtoneFile ? 'Selected: ' + habitRingtoneFile.name : editingHabitId && habitLocalRingtones[editingHabitId] ? 'Current upload: ' + habitLocalRingtones[editingHabitId].name : 'MP3, M4A, WAV, or another browser-supported audio format.'}</span>
+              </label>
+              {editingHabitId && habitLocalRingtones[editingHabitId] && !habitRingtoneFile && <button type="button" className="text-button" onClick={() => { const current = habitLocalRingtones[editingHabitId]; if (current) releaseLocalRingtone(current); setHabitLocalRingtones((items) => { const updated = { ...items }; delete updated[editingHabitId]; return updated; }); setHabitRingtoneFile(null); setHabitDraft((draft) => ({ ...draft, reminderSoundUrl: '' })); }}>Remove uploaded audio</button>}
+              <p id="habit-ringtone-help" className="reminder-music-help">Uploaded audio is available for this browser session, just like Focus. YouTube and Spotify attempt autoplay when the reminder appears; browsers may block it, so the repeating Cadence alarm remains as a fallback until you stop it or mark the habit done.</p>
               <div className="reminder-notification-option">
                 <span className="reminder-permission-status">{notificationPermission === 'granted' ? 'Desktop notifications enabled' : notificationPermission === 'denied' ? 'Browser notifications are blocked' : notificationPermission === 'unsupported' ? 'Desktop notifications unavailable' : 'Allow desktop notifications'}</span>
                 <button type="button" className="secondary-button notification-permission-button" onClick={() => { void enableDesktopNotifications(); }}>{notificationPermission === 'granted' ? 'Enabled' : notificationPermission === 'denied' ? 'How to allow' : notificationPermission === 'unsupported' ? 'Not supported' : 'Enable'}</button>
@@ -2025,13 +2160,17 @@ function App() {
               <p className="reminder-footnote">While Cadence is open, in-app reminders can play the selected sound. Use Stop sound to silence the looping habit alarm, or Mark done to close it.</p>
             </div>}
           </section>
-          <div className="if-then-preview"><span><Sparkles size={15} /></span><p><b>Your if–then plan</b><br />If {habitDraft.cue.trim() || 'my cue happens'}, then I’ll {habitDraft.minimum.trim() || 'do the smallest version'}.</p></div><div className="modal-actions"><button className="secondary-button" type="button" onClick={() => { setShowHabitModal(false); setEditingHabitId(null); setHabitDraft({ ...emptyHabitDraft }); }}>Cancel</button><button className="primary-button" type="submit">{editingHabitId ? <><Check size={15} /> Save changes</> : <><Plus size={15} /> Create habit</>}</button></div></form></section></div>}
+          <div className="modal-actions"><button className="secondary-button" type="button" onClick={() => { setShowHabitModal(false); setEditingHabitId(null); setHabitRingtoneFile(null); setHabitDraft({ ...emptyHabitDraft }); }}>Cancel</button><button className="primary-button" type="submit">{editingHabitId ? <><Check size={15} /> Save changes</> : <><Plus size={15} /> Create habit</>}</button></div></form></section></div>}
       {activeReminder && <div className="reminder-alarm-backdrop" role="presentation">
         <section className="reminder-alarm" role="alertdialog" aria-modal="true" aria-labelledby="reminder-alarm-title">
           <span className="reminder-alarm-icon"><Bell size={22} /></span>
           <span className="reminder-alarm-kicker">CADENCE REMINDER · {formatReminderTime(activeReminder.reminderTime)}</span>
           <h2 id="reminder-alarm-title">Time for {activeReminder.habitName}</h2>
           <p>A small step counts. Check in now, or snooze this reminder for ten minutes.</p>
+          {activeReminder.localRingtone && !reminderSoundStopped && <section className="reminder-media-player" aria-label="Uploaded reminder audio">
+            <div className="reminder-media-heading"><span className="reminder-media-wave"><CadenceMark /></span><div><b>{activeReminder.localRingtone.name}</b><small>Uploaded ringtone · browser-session audio</small></div></div>
+            <p className="reminder-music-help">Your selected track loops until you stop the reminder or mark the habit done.</p>
+          </section>}
           {activeReminderMedia && !reminderSoundStopped && <section className="reminder-media-player" aria-label="Custom reminder music">
             <div className="reminder-media-heading"><span className="reminder-media-wave"><CadenceMark /></span><div><b>Your reminder soundtrack</b><small>{activeReminderMedia?.provider} player</small></div></div>
             <iframe
@@ -2051,7 +2190,7 @@ function App() {
             <button type="button" className="secondary-button" onClick={snoozeReminderAlarm}><Clock3 size={15} /> Snooze 10 min</button>
             <button type="button" className="primary-button" onClick={() => { toggleHabit(activeReminder.habitId); stopReminderAlarm(); }}><Check size={15} /> Mark done</button>
           </div>
-          <div className="reminder-sound-controls">{activeReminderMedia && <button type="button" className="reminder-replay-button" onClick={() => { setReminderSoundStopped(false); setReminderMediaReload((value) => value + 1); }}>Play soundtrack again</button>}<button type="button" className="reminder-stop-button" onClick={() => setReminderSoundStopped(true)}>Stop sound</button></div>
+          <div className="reminder-sound-controls">{activeReminder.localRingtone && <button type="button" className="reminder-replay-button" onClick={() => { const ringtone = activeReminder.localRingtone; if (ringtone) { ringtone.audio.pause(); try { ringtone.audio.currentTime = 0; } catch { /* Ignore non-seekable audio. */ } setReminderSoundStopped(false); startLocalRingtonePlayback(ringtone); } }}>Play uploaded ringtone again</button>}{activeReminderMedia && <button type="button" className="reminder-replay-button" onClick={() => { setReminderSoundStopped(false); setReminderMediaReload((value) => value + 1); }}>Play soundtrack again</button>}<button type="button" className="reminder-stop-button" onClick={() => setReminderSoundStopped(true)}>Stop sound</button></div>
         </section>
       </div>}
       {pushArrival && <div className="reminder-alarm-backdrop" role="presentation">
@@ -2060,6 +2199,8 @@ function App() {
           <span className="reminder-alarm-kicker">CADENCE BACKGROUND REMINDER</span>
           <h2 id="push-arrival-title">{pushArrival.title}</h2>
           <p>{pushArrival.body}</p>
+          {pushArrival.kind === 'task' && pushArrival.localRingtone && <section className="reminder-media-player" aria-label="Uploaded task ringtone"><div className="reminder-media-heading"><span className="reminder-media-wave"><CadenceMark /></span><div><b>{pushArrival.localRingtone.name}</b><small>Uploaded task ringtone · browser-session audio</small></div></div><p className="reminder-music-help">Your selected track loops until you stop the alarm.</p></section>}
+          {pushArrival.kind === 'task' && pushArrivalMedia && <div className="focus-music-embed focus-completion-embed" aria-label="Task reminder soundtrack"><iframe src={pushArrivalMedia.embedUrl} title={'Task reminder soundtrack from ' + pushArrivalMedia.provider} allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen /><a href={pushArrivalMedia.originalUrl} target="_blank" rel="noreferrer">Open in {pushArrivalMedia.provider} <ArrowUpRight size={13} /></a></div>}
           {pushArrival.kind === 'focus' && focusRingtoneKind === 'custom' && !focusLocalAudioUrl && parseReminderMedia(focusRingtoneData) && <div className="focus-music-embed focus-completion-embed" aria-label="Focus completion soundtrack">
             <iframe
               src={parseReminderMedia(focusRingtoneData)?.embedUrl}
@@ -2076,6 +2217,7 @@ function App() {
             <button type="button" className="secondary-button" onClick={() => {
               unlockReminderAudio();
               if (pushArrival.kind === 'focus') startFocusAlarmPlayback();
+              else if (pushArrival.localRingtone) startLocalRingtonePlayback(pushArrival.localRingtone);
               else playReminderMelody();
             }}>Play alert sound</button>
             <button type="button" className="primary-button" onClick={() => {
@@ -2083,6 +2225,7 @@ function App() {
               setPushArrival(null);
             }}>Open {pushArrival.kind === 'focus' ? 'Focus' : 'Tasks'}</button>
           </div>
+          {pushArrival.kind === 'task' && <div className="reminder-sound-controls">{pushArrival.localRingtone && <button type="button" className="reminder-replay-button" onClick={() => { const ringtone = pushArrival.localRingtone; if (ringtone) { ringtone.audio.pause(); try { ringtone.audio.currentTime = 0; } catch { /* Ignore non-seekable audio. */ } startLocalRingtonePlayback(ringtone); } }}>Play uploaded ringtone again</button>}{pushArrivalMedia && <a className="reminder-replay-button" href={pushArrivalMedia.originalUrl} target="_blank" rel="noreferrer">Open soundtrack <ArrowUpRight size={13} /></a>}</div>}
           <p className="reminder-footnote">The alarm repeats until you press Stop alarm. Uploaded audio loops in Cadence; streaming players may block autoplay, so a repeating Cadence alarm tone is used as a fallback.</p>
           <button type="button" className="reminder-stop-button" onClick={() => setPushArrival(null)}>Stop alarm</button>
         </section>

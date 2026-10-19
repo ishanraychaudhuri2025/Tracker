@@ -36,6 +36,8 @@ export interface Task {
   date: string;
   category?: TaskCategory;
   time?: string;
+  /** Optional validated Spotify/YouTube soundtrack link used when this task reminder fires. */
+  reminderSoundUrl?: string;
   recurrence?: Recurrence;
   completedDates?: string[];
 }

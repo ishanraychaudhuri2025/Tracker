@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import type { FormEvent, CSSProperties } from 'react';
+import type { FormEvent, CSSProperties, ChangeEvent } from 'react';
+import { isRingtoneUploadSizeAllowed, isSupportedAudioMime } from './lib/reminder-media.mjs';
 import {
   Activity, BookOpen, Brain, CalendarDays, CalendarRange, Check, ChevronLeft, ChevronRight, Clock3, Code2, Compass, Coffee, Droplets, Dumbbell, Flower2, Heart,
   LayoutGrid, ListFilter, PenTool, Plus, Repeat2, X, Zap,
@@ -32,6 +33,8 @@ export type PlannerTaskDraft = {
   recurrence: Recurrence;
   priority: Task['priority'];
   estimate: number;
+  reminderSoundUrl?: string;
+  reminderSoundFile?: File | null;
 };
 
 type PlannerPageProps = {
@@ -40,7 +43,7 @@ type PlannerPageProps = {
   today: string;
   onToggleHabit: (habitId: string, dayKey: string) => void;
   onToggleTask: (taskId: string, dayKey: string) => void;
-  onAddTask: (draft: PlannerTaskDraft) => void;
+  onAddTask: (draft: PlannerTaskDraft) => boolean | void;
 };
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -140,6 +143,9 @@ export function PlannerPage({ habits, tasks, today, onToggleHabit, onToggleTask,
   const [draftRecurrence, setDraftRecurrence] = useState<Recurrence>('None');
   const [draftPriority, setDraftPriority] = useState<Task['priority']>('Normal');
   const [draftEstimate, setDraftEstimate] = useState(25);
+  const [draftReminderSoundUrl, setDraftReminderSoundUrl] = useState('');
+  const [draftReminderSoundFile, setDraftReminderSoundFile] = useState<File | null>(null);
+  const [draftReminderSoundError, setDraftReminderSoundError] = useState('');
 
   const selected = fromKey(selectedDate);
   const monthTitle = selected.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -178,13 +184,16 @@ export function PlannerPage({ habits, tasks, today, onToggleHabit, onToggleTask,
   const openCreate = () => {
     setDraftTitle('');
     setDraftTime('09:00');
+    setDraftReminderSoundUrl('');
+    setDraftReminderSoundFile(null);
+    setDraftReminderSoundError('');
     setShowCreate(true);
   };
   const submitCreate = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const title = draftTitle.trim();
     if (!title) return;
-    onAddTask({
+    const accepted = onAddTask({
       title,
       date: selectedDate,
       time: draftTime,
@@ -192,8 +201,14 @@ export function PlannerPage({ habits, tasks, today, onToggleHabit, onToggleTask,
       recurrence: draftRecurrence,
       priority: draftPriority,
       estimate: Math.max(5, Number(draftEstimate) || 25),
+      reminderSoundUrl: draftReminderSoundUrl.trim() || undefined,
+      reminderSoundFile: draftReminderSoundFile,
     });
+    if (accepted === false) return;
     setDraftTitle('');
+    setDraftReminderSoundUrl('');
+    setDraftReminderSoundFile(null);
+    setDraftReminderSoundError('');
     setShowCreate(false);
   };
 
@@ -333,6 +348,9 @@ export function PlannerPage({ habits, tasks, today, onToggleHabit, onToggleTask,
             <div className="planner-field-row"><label className="planner-field"><span>Date</span><input type="date" value={selectedDate} onChange={(event) => { if (event.target.value) setSelectedDate(event.target.value); }}/></label><label className="planner-field"><span>Time</span><input type="time" value={draftTime} onChange={(event) => setDraftTime(event.target.value)}/></label></div>
             <div className="planner-field-row"><label className="planner-field"><span>Area</span><select value={draftCategory} onChange={(event) => setDraftCategory(event.target.value as TaskCategory)}>{CATEGORIES.map((category) => <option key={category}>{category}</option>)}</select></label><label className="planner-field"><span>Repeat</span><select value={draftRecurrence} onChange={(event) => setDraftRecurrence(event.target.value as Recurrence)}>{RECURRENCES.map((item) => <option key={item}>{item}</option>)}</select></label></div>
             <div className="planner-field-row"><label className="planner-field"><span>Priority</span><select value={draftPriority} onChange={(event) => setDraftPriority(event.target.value as Task['priority'])}><option>Low</option><option>Normal</option><option>High</option></select></label><label className="planner-field"><span>Minutes</span><input type="number" min={5} max={600} step={5} value={draftEstimate} onChange={(event) => setDraftEstimate(Number(event.target.value) || 25)}/></label></div>
+            <label className="planner-field"><span>Custom ringtone link (optional)</span><input type="url" value={draftReminderSoundUrl} onChange={(event) => { setDraftReminderSoundUrl(event.target.value); setDraftReminderSoundFile(null); setDraftReminderSoundError(''); }} placeholder="YouTube or Spotify URL" autoComplete="url"/></label>
+            <label className="planner-field"><span>Upload ringtone (up to 20 MB)</span><input type="file" accept="audio/*" onChange={(event: ChangeEvent<HTMLInputElement>) => { const file = event.target.files?.[0]; event.target.value = ''; if (!file) return; if (!isSupportedAudioMime(file.type)) { setDraftReminderSoundFile(null); setDraftReminderSoundError('Choose a supported audio file.'); return; } if (!isRingtoneUploadSizeAllowed(file.size)) { setDraftReminderSoundFile(null); setDraftReminderSoundError('Choose a non-empty audio file up to 20 MB.'); return; } setDraftReminderSoundFile(file); setDraftReminderSoundUrl(''); setDraftReminderSoundError(''); }}/></label>
+            <p className="planner-repeat-preview" role={draftReminderSoundError ? 'alert' : undefined}>{draftReminderSoundError || (draftReminderSoundFile ? 'Selected: ' + draftReminderSoundFile.name + '. Uploaded audio is available in this browser session, like Focus.' : 'Optional: add a Spotify/YouTube link or upload audio for this browser session. Streaming services may block autoplay; Cadence repeats its alarm as a fallback.')}</p>
             {draftRecurrence !== 'None' && <div className="planner-repeat-preview"><Repeat2 size={14}/><span>Repeats {draftRecurrence.toLowerCase()} from {prettyDate(selectedDate, { month: 'short', day: 'numeric' })}. Completion is tracked separately for each occurrence.</span></div>}
             <button type="submit" className="primary-button planner-save-button"><Check size={15}/> Save activity</button>
           </form>

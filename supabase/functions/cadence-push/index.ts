@@ -1,18 +1,19 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.58.0";
 import webpush from "npm:web-push@3.6.7";
+import { isAllowedCadenceOrigin, normalizePushSubscription, readBodyLimited } from "./push-endpoint.mjs";
 
 type Json = Record<string, any>;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-const APP_ORIGIN = "https://streako-elite.vercel.app";
+const APP_ORIGIN = "https://cadence-elite.vercel.app";
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
-const allowedOrigins = new Set([APP_ORIGIN, "https://streako-elite-ishan-e93e.vercel.app", "http://localhost:5173"]);
+
 
 function reply(value: Json, status = 200, origin = APP_ORIGIN) {
   return new Response(JSON.stringify(value), { status, headers: {
     "Content-Type": "application/json; charset=utf-8",
-    "Access-Control-Allow-Origin": allowedOrigins.has(origin) ? origin : APP_ORIGIN,
+    "Access-Control-Allow-Origin": isAllowedCadenceOrigin(origin) ? origin : APP_ORIGIN,
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cadence-cron",
     "Access-Control-Allow-Methods": "POST, OPTIONS", "Vary": "Origin",
   }});
@@ -122,7 +123,7 @@ function dueReminders(workspace: Json, timezone: string, now: Date) {
     if (!t?.id || !t.time || !t.date || String(t.time) !== time || !taskOccursOn(t, dayKey) || taskIsDone(t, dayKey)) continue;
     output.push({ key: "task:" + t.id + ":" + dayKey + ":" + time, payload: {
       title: "Time for " + String(t.title || "your task"), body: "Your planned time has arrived. Open Cadence and take the next step.",
-      kind: "task", id: String(t.id), url: APP_ORIGIN + "/?cadenceReminder=" + encodeURIComponent("task:" + String(t.id)),
+      kind: "task", id: String(t.id), soundUrl: String(t.reminderSoundUrl || ""), url: APP_ORIGIN + "/?cadenceReminder=" + encodeURIComponent("task:" + String(t.id)),
       tag: "cadence-task-" + String(t.id) + "-" + dayKey,
     }});
   }
@@ -140,8 +141,25 @@ async function handleTick() {
   const { data: subscriptions, error: subError } = await admin.from("cadence_push_subscriptions")
     .select("id,user_id,endpoint,subscription,timezone,created_at");
   if (subError) throw subError;
-  if (!subscriptions?.length) return { delivered: 0, subscriptions: 0 };
-  const ids = Array.from(new Set(subscriptions.map((s: Json) => s.user_id)));
+
+  // Do not deliver to subscription URLs that predate the endpoint allowlist.
+  const safeSubscriptions: Json[] = [];
+  const invalidSubscriptionIds: string[] = [];
+  for (const row of (subscriptions ?? []) as Json[]) {
+    const normalized = normalizePushSubscription(row.subscription);
+    if (!normalized || normalized.endpoint !== row.endpoint) {
+      if (typeof row.id === "string") invalidSubscriptionIds.push(row.id);
+      continue;
+    }
+    safeSubscriptions.push({ ...row, subscription: normalized });
+  }
+  if (invalidSubscriptionIds.length) {
+    const { error } = await admin.from("cadence_push_subscriptions").delete().in("id", invalidSubscriptionIds);
+    if (error) throw error;
+  }
+  if (!safeSubscriptions.length) return { delivered: 0, subscriptions: 0 };
+
+  const ids = Array.from(new Set(safeSubscriptions.map((s: Json) => s.user_id)));
   const { data: workspaces, error: workspaceError } = await admin.from("tracker_workspaces")
     .select("user_id,habits,tasks").in("user_id", ids);
   if (workspaceError) throw workspaceError;
@@ -152,7 +170,7 @@ async function handleTick() {
   if (timerError) throw timerError;
 
   const outgoing: Array<{ row: Json; key: string; payload: Json; focusUser?: string }> = [];
-  for (const row of subscriptions as Json[]) {
+  for (const row of safeSubscriptions as Json[]) {
     const workspace = workspaceByUser.get(row.user_id);
     if (workspace) for (const item of dueReminders(workspace, validTimezone(row.timezone), now)) {
       outgoing.push({ row, key: String(row.id) + ":" + item.key, payload: item.payload });
@@ -166,7 +184,7 @@ async function handleTick() {
       }});
     }
   }
-  if (!outgoing.length) return { delivered: 0, subscriptions: subscriptions.length };
+  if (!outgoing.length) return { delivered: 0, subscriptions: safeSubscriptions.length };
   const keys = outgoing.map((x) => x.key), existing = new Set<string>();
   for (let i = 0; i < keys.length; i += 100) {
     const { data, error } = await admin.from("cadence_push_deliveries").select("delivery_key").in("delivery_key", keys.slice(i, i + 100));
@@ -193,20 +211,35 @@ async function handleTick() {
   for (const userId of focusSucceeded) if (!focusFailed.has(userId)) {
     await admin.from("cadence_push_focus_timers").update({ delivered_at: now.toISOString(), updated_at: now.toISOString() }).eq("user_id", userId).is("delivered_at", null);
   }
-  return { delivered, subscriptions: subscriptions.length };
+  return { delivered, subscriptions: safeSubscriptions.length };
 }
 
 Deno.serve(async (request: Request) => {
   const origin = request.headers.get("Origin") ?? APP_ORIGIN;
   if (request.method === "OPTIONS") return new Response("ok", { headers: {
-    "Access-Control-Allow-Origin": allowedOrigins.has(origin) ? origin : APP_ORIGIN,
+    "Access-Control-Allow-Origin": isAllowedCadenceOrigin(origin) ? origin : APP_ORIGIN,
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cadence-cron",
     "Access-Control-Allow-Methods": "POST, OPTIONS", "Vary": "Origin",
   }});
   if (request.method !== "POST") return reply({ error: "Method not allowed" }, 405, origin);
   if (!SUPABASE_URL || !SERVICE_ROLE_KEY) return reply({ error: "Push service is not configured." }, 500, origin);
   try {
-    const body = await request.json().catch(() => ({})) as Json, action = String(body.action || "");
+    const declaredLength = Number(request.headers.get("content-length") || "0");
+    if (Number.isFinite(declaredLength) && declaredLength > 16_384) {
+      return reply({ error: "Request body is too large." }, 413, origin);
+    }
+    const rawBody = await readBodyLimited(request, 16_384);
+    if (rawBody === null) return reply({ error: "Request body is too large." }, 413, origin);
+    let parsedBody: unknown;
+    try {
+      parsedBody = rawBody ? JSON.parse(rawBody) : {};
+    } catch {
+      return reply({ error: "Request body must be valid JSON." }, 400, origin);
+    }
+    if (!parsedBody || typeof parsedBody !== "object" || Array.isArray(parsedBody)) {
+      return reply({ error: "Request body must be a JSON object." }, 400, origin);
+    }
+    const body = parsedBody as Json, action = String(body.action || "");
     if (action === "tick") {
       const config = await ensurePushConfig();
       if (!request.headers.get("x-cadence-cron") || request.headers.get("x-cadence-cron") !== config.cron_secret) return reply({ error: "Unauthorized scheduler request." }, 401, origin);
@@ -219,14 +252,33 @@ Deno.serve(async (request: Request) => {
     const user = await authenticateUser(request);
     if (!user) return reply({ error: "Sign in to configure background notifications." }, 401, origin);
     if (action === "subscribe") {
-      const subscription = body.subscription;
-      if (!subscription || typeof subscription.endpoint !== "string" || !subscription.endpoint.startsWith("https://") || !subscription.keys?.p256dh || !subscription.keys?.auth) {
-        return reply({ error: "The browser returned an invalid push subscription." }, 400, origin);
+      const subscription = normalizePushSubscription(body.subscription);
+      if (!subscription) {
+        return reply({ error: "The browser returned an unsupported or invalid push subscription." }, 400, origin);
       }
-      const { error } = await admin.from("cadence_push_subscriptions").upsert({
-        user_id: user.id, endpoint: subscription.endpoint, subscription, timezone: validTimezone(body.timezone), updated_at: new Date().toISOString(),
-      }, { onConflict: "endpoint" });
-      if (error) throw error;
+      const { data: existing, error: lookupError } = await admin
+        .from("cadence_push_subscriptions")
+        .select("id, user_id")
+        .eq("endpoint", subscription.endpoint)
+        .maybeSingle();
+      if (lookupError) throw lookupError;
+      if (existing && existing.user_id !== user.id) {
+        return reply({ error: "This push endpoint is already registered to another account." }, 409, origin);
+      }
+
+      const timezone = validTimezone(body.timezone);
+      if (existing) {
+        const { error } = await admin.from("cadence_push_subscriptions")
+          .update({ subscription, timezone, updated_at: new Date().toISOString() })
+          .eq("id", existing.id)
+          .eq("user_id", user.id);
+        if (error) throw error;
+      } else {
+        const { error } = await admin.from("cadence_push_subscriptions").insert({
+          user_id: user.id, endpoint: subscription.endpoint, subscription, timezone,
+        });
+        if (error) throw error;
+      }
       return reply({ ok: true, enabled: true }, 200, origin);
     }
     if (action === "unsubscribe") {
@@ -237,8 +289,10 @@ Deno.serve(async (request: Request) => {
       return reply({ ok: true, enabled: false }, 200, origin);
     }
     if (action === "focus-start") {
-      const seconds = Math.max(1, Math.min(10800, Math.floor(Number(body.seconds) || 0)));
-      if (!Number.isFinite(seconds) || seconds < 1) return reply({ error: "Choose a valid focus duration." }, 400, origin);
+      if (typeof body.seconds !== "number" || !Number.isFinite(body.seconds) || body.seconds < 1) {
+        return reply({ error: "Choose a valid focus duration." }, 400, origin);
+      }
+      const seconds = Math.min(10800, Math.floor(body.seconds));
       const label = String(body.label || "Focus session").trim().slice(0, 100) || "Focus session";
       const { error } = await admin.from("cadence_push_focus_timers").upsert({
         user_id: user.id, ends_at: new Date(Date.now() + seconds * 1000).toISOString(), label,
@@ -255,6 +309,6 @@ Deno.serve(async (request: Request) => {
     return reply({ error: "Unknown action." }, 400, origin);
   } catch (error) {
     console.error("cadence-push error:", error);
-    return reply({ error: error instanceof Error ? error.message : "Unexpected push service error." }, 500, origin);
+    return reply({ error: "Push service request failed." }, 500, origin);
   }
 });
