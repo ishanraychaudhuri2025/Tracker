@@ -7,6 +7,7 @@
 -- must be updated when intentionally deploying this migration to a different project.
 
 create schema if not exists extensions;
+create extension if not exists pgcrypto with schema extensions;
 
 -- pg_net may already be installed by the Supabase project. IF NOT EXISTS does
 -- not move an existing installation; any relocation should be handled as an
