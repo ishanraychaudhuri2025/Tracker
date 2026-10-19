@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck, Sparkles, Zap } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { AUTH_REDIRECT_URL } from '../lib/auth-redirect.mjs';
 
 type AuthMode = 'signin' | 'signup' | 'reset' | 'update';
 
@@ -41,7 +42,7 @@ export default function AuthScreen({ initialMode = 'signin' }: AuthScreenProps) 
         const { data, error: authError } = await supabase.auth.signUp({
           email: email.trim(),
           password,
-          options: { emailRedirectTo: window.location.origin },
+          options: { emailRedirectTo: AUTH_REDIRECT_URL },
         });
         if (authError) throw authError;
         if (data.session) {
@@ -52,7 +53,7 @@ export default function AuthScreen({ initialMode = 'signin' }: AuthScreenProps) 
         }
       } else if (mode === 'reset') {
         const { error: authError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-          redirectTo: window.location.origin,
+          redirectTo: AUTH_REDIRECT_URL,
         });
         if (authError) throw authError;
         setNotice('If an account exists for that email, a password reset link is on its way.');
