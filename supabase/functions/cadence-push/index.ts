@@ -1,19 +1,19 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.58.0";
 import webpush from "npm:web-push@3.6.7";
-import { normalizePushSubscription } from "./push-endpoint.mjs";
+import { isAllowedCadenceOrigin, normalizePushSubscription } from "./push-endpoint.mjs";
 
 type Json = Record<string, any>;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const APP_ORIGIN = "https://cadence-elite.vercel.app";
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
-const allowedOrigins = new Set([APP_ORIGIN, "https://cadence-elite-git-main-ishan-e93e.vercel.app", "http://localhost:5173"]);
+
 
 function reply(value: Json, status = 200, origin = APP_ORIGIN) {
   return new Response(JSON.stringify(value), { status, headers: {
     "Content-Type": "application/json; charset=utf-8",
-    "Access-Control-Allow-Origin": allowedOrigins.has(origin) ? origin : APP_ORIGIN,
+    "Access-Control-Allow-Origin": isAllowedCadenceOrigin(origin) ? origin : APP_ORIGIN,
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cadence-cron",
     "Access-Control-Allow-Methods": "POST, OPTIONS", "Vary": "Origin",
   }});
