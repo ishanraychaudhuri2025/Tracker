@@ -1,6 +1,6 @@
 # Cadence Elite
 
-A research-informed, local-first habit and task tracker. This is an original implementation inspired by common streak-tracker patterns; it does not include Cadence's proprietary source code, assets, or backend.
+Cadence is a research-informed, local-first habit and task tracker. This repository contains the application source and frontend assets. Authentication and cross-device workspace sync use the connected Supabase project; server-side service-role credentials are not included in frontend code.
 
 ## Monthly execution calendar
 
@@ -15,7 +15,8 @@ The Insights page includes a navigable calendar with per-day completed-task coun
 - **Problem-to-solution plan:** see [docs/PROBLEM_SOLUTION_MAP.md](docs/PROBLEM_SOLUTION_MAP.md) for the user problems, design responses, reference listings, and research basis.
 
 - **Today dashboard:** check habits off, see daily progress, review current/best streaks, and track a small task list.
-- **Habit design:** create routines with a category, cadence, reliable cue, and a minimum version. The form turns those inputs into an if–then plan.
+- **Habit design:** create routines with a category, cadence, reliable cue, and a minimum version.
+- **Custom reminder soundtracks:** use a supported Spotify or YouTube link, or upload an audio file up to 20 MB for habit and task reminders. Uploaded files stay in browser memory for the current session; links sync with the workspace. Browser autoplay restrictions may require a user gesture, so Cadence keeps its repeating alarm tone as a fallback.
 - **Focus room:** a working 15 / 25 / 50-minute focus timer, pause/resume, reset, and completed-session count.
 - **Insights:** completion heatmap, consistency calculation, routine rankings, and a weekly behavior-design reflection.
 - **Responsive UI:** desktop sidebar, mobile layout, dark/light appearance, accessible labels, reduced-motion support.
@@ -23,7 +24,7 @@ The Insights page includes a navigable calendar with per-day completed-task coun
 
 ## Fresh-start workspaces
 
-Cadence no longer seeds sample habits, tasks, completion history, or focus-session statistics. Every new account gets empty `habits` and `tasks` arrays with `focus_sessions = 0`. Existing workspace data was reset for the current rollout. Browser caches using the old `streako-elite-v1` key are cleared, and local guest data is never imported into a signed-in account.
+Cadence does not seed sample habits, tasks, completion history, or focus-session statistics. A newly created cloud workspace starts with empty `habits` and `tasks` arrays and `focus_sessions = 0`. Browser caches using the legacy `streako-elite-v1` key are cleared. Local guest data is intentionally not imported into a signed-in account.
 
 ## Authentication and cloud sync
 
@@ -33,19 +34,19 @@ Cadence supports Supabase email/password accounts and stores each signed-in user
 
 Cadence requires `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (or the legacy `VITE_SUPABASE_ANON_KEY`) to be set explicitly for each deployment environment. The browser client has no production-project fallback: if configuration is missing, cloud authentication stays disabled rather than silently connecting to production. The publishable/anon key is intended for browser use—never expose a service-role or secret key in frontend code.
 
-The workspace table migration is at `supabase/migrations/20261014000100_tracker_workspaces.sql`. It has already been applied to the connected `streako` Supabase project.
+The workspace table migration is `supabase/migrations/20261014174107_create_tracker_workspaces.sql`; the connected project also has `supabase/migrations/20261018200848_cadence_push_notifications.sql` and `supabase/migrations/20261019000100_harden_tracker_workspace_grants.sql` recorded. All three are applied to the connected Supabase project. The grant hardening preserves authenticated CRUD and removes unnecessary `TRUNCATE`, `TRIGGER`, and `REFERENCES` grants; row-level security remains responsible for enforcing account ownership.
 
 **One-time Auth URL configuration:** in [Supabase Auth → URL Configuration](https://supabase.com/dashboard/project/wxyigvitegdnurimmarb/auth/url-configuration), set:
 
 - **Site URL:** `https://cadence-elite.vercel.app`
 - **Additional Redirect URLs:** `https://cadence-elite.vercel.app/**`
 - **Current main deployment:** `https://cadence-elite-git-main-ishan-e93e.vercel.app/**`
-- **Optional Vercel previews:** `https://*-ishan-e93e.vercel.app/**`
+- **Optional Cadence Vercel previews only:** `https://cadence-*-ishan-e93e.vercel.app/**`
 - **Local development:** `http://localhost:5173/**`
 
-The Site URL and redirect allowlist are important for email confirmation and password-recovery links. Confirm these values in the Supabase dashboard before deploying; this pull request updates source documentation but does not change hosted Auth settings. See the [Supabase redirect URL guide](https://supabase.com/docs/guides/auth/redirect-urls).
+The Site URL and redirect allowlist are important for email confirmation and password-recovery links. Hosted Auth URL settings have not been independently verified in this audit session. Confirm the values above in the Supabase dashboard before enabling production sign-ups. The preview pattern is deliberately scoped to this project's `cadence-` deployment names rather than all Vercel projects under the account. See the [Supabase redirect URL guide](https://supabase.com/docs/guides/auth/redirect-urls).
 
-Password recovery includes a dedicated new-password form. Legacy guest-only local data is imported into a new account once and removed from the shared guest slot after successful import so later accounts do not inherit it. After signing in, workspace changes are synced to the user's row; RLS restricts reads and writes to that user.
+Password recovery includes a dedicated new-password form. After signing in, workspace changes are synced to the user's row; the owner-only RLS policies restrict reads and writes to that user. New accounts start with empty cloud workspaces and do not inherit guest-only local data.
 
 For a separate deployment or fork, set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (or legacy `VITE_SUPABASE_ANON_KEY`) in its build environment. Never set a service-role key in a `VITE_*` variable.
 
@@ -101,11 +102,11 @@ These are design hypotheses based on published behavior research, not a claim th
 
 ## Current scope / next milestones
 
-1. Add focused tests for scheduling, streak calculations, and date-boundary cases, and test reminders with real devices.
-2. Complete least-privilege database migration and validate cross-account access isolation.
-3. Verify deployed Supabase Auth URL settings and the Vercel production/preview environment configuration.
-4. Add optional opt-in accountability, careful gamification, and a weekly review flow.
-5. Treat production launch as gated on browser-level accessibility, privacy, and end-to-end notification testing.
+1. Add automated tests for schedule recurrence, streak calculations, and date-boundary behavior, plus account-isolation tests using separate authenticated users.
+2. Verify the hosted Supabase Auth Site URL and redirect allowlist, and test sign-up, confirmation, sign-in, reset, and password update in a real browser.
+3. Exercise browser-level accessibility, focus behavior, audio autoplay fallback, notification timing, and background push on supported devices.
+4. Resolve or explicitly accept the remaining Supabase security advisories after dependency and operational impact review.
+5. Treat production launch as gated on end-to-end tests; CI and a ready preview are necessary but not sufficient.
 
 ## License
 
