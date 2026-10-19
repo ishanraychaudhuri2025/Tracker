@@ -50,3 +50,30 @@ export function normalizePushSubscription(value) {
 
   return { endpoint: endpoint.href, keys: { p256dh, auth } };
 }
+
+const EXACT_CADENCE_ORIGINS = new Set([
+  "https://cadence-elite.vercel.app",
+  "https://cadence-elite-git-main-ishan-e93e.vercel.app",
+  "http://localhost:5173",
+]);
+
+/**
+ * Allow the production site, local development, and Vercel-generated preview
+ * URLs belonging to this Cadence project/team namespace. Require origin-only
+ * strings so paths, credentials, and spoofed suffixes cannot widen the policy.
+ *
+ * @param {string} value
+ */
+export function isAllowedCadenceOrigin(value) {
+  if (EXACT_CADENCE_ORIGINS.has(value)) return true;
+  let origin;
+  try {
+    origin = new URL(value);
+  } catch {
+    return false;
+  }
+  if (origin.protocol !== "https:" || origin.origin !== value || origin.username || origin.password) return false;
+  const hostname = origin.hostname.toLowerCase();
+  return /^cadence(?:-elite)?-git-[a-z0-9-]+-ishan-e93e\.vercel\.app$/.test(hostname)
+    || /^cadence-[a-z0-9]+-ishan-e93e\.vercel\.app$/.test(hostname);
+}
