@@ -78,3 +78,37 @@ export function isAllowedCadenceOrigin(value) {
   return /^cadence(?:-elite)?-git-[a-z0-9-]+-ishan-e93e\.vercel\.app$/.test(hostname)
     || /^cadence-[a-z0-9]+-ishan-e93e\.vercel\.app$/.test(hostname);
 }
+
+/**
+ * Read a request body without buffering unbounded client-controlled input.
+ * Returns null when the byte limit is exceeded.
+ *
+ * @param {Request} request
+ * @param {number} maxBytes
+ * @returns {Promise<string | null>}
+ */
+export async function readBodyLimited(request, maxBytes) {
+  if (!Number.isSafeInteger(maxBytes) || maxBytes < 0) throw new TypeError("maxBytes must be a non-negative safe integer");
+  if (!request.body) return "";
+  const reader = request.body.getReader();
+  const chunks = [];
+  let totalBytes = 0;
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    if (!value) continue;
+    totalBytes += value.byteLength;
+    if (totalBytes > maxBytes) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder().decode(bytes);
+}
