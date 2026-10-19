@@ -13,6 +13,8 @@ import { PlannerPage, taskIsDone, taskOccursOn } from './Planner';
 import TasksPage from './TasksPage';
 import AuthScreen from './components/AuthScreen';
 import { supabase, supabaseConfigured } from './lib/supabase';
+import { isRingtoneUploadSizeAllowed, isSupportedAudioMime, parseReminderMedia as parseReminderMediaUrl } from './lib/reminder-media.mjs';
+import type { ReminderMedia } from './lib/reminder-media.mjs';
 
 const STORAGE_KEY = 'streako-elite-v2';
 const todayKey = () => toKey(new Date());
@@ -83,44 +85,9 @@ function ProfileGlyph({ logo, name, size = 17 }: { logo: ProfileLogoKey; name: s
   return <Activity {...iconProps} />;
 }
 
-type ReminderMedia = { provider: 'YouTube' | 'Spotify'; originalUrl: string; embedUrl: string };
-
 function parseReminderMedia(input?: string): ReminderMedia | null {
-  if (!input?.trim()) return null;
-  try {
-    const parsed = new URL(input.trim());
-    // Accept only secure, credential-free provider URLs with no custom port.
-    if (parsed.protocol !== 'https:' || parsed.username || parsed.password || (parsed.port && parsed.port !== '443')) return null;
-    const host = parsed.hostname.toLowerCase().replace(/^www\./, '');
-    if (host === 'youtu.be' || host === 'youtube.com' || host === 'm.youtube.com' || host === 'youtube-nocookie.com') {
-      const segments = parsed.pathname.split('/').filter(Boolean);
-      const videoId = host === 'youtu.be'
-        ? segments[0]
-        : parsed.searchParams.get('v') || (['embed', 'shorts', 'live'].includes(segments[0] || '') ? segments[1] : undefined);
-      if (!videoId || !/^[a-zA-Z0-9_-]{6,20}$/.test(videoId)) return null;
-      return {
-        provider: 'YouTube',
-        originalUrl: parsed.toString(),
-        embedUrl: 'https://www.youtube-nocookie.com/embed/' + videoId + '?autoplay=1&mute=0&controls=1&rel=0&playsinline=1&loop=1&playlist=' + videoId + '&enablejsapi=1&origin=' + encodeURIComponent(window.location.origin),
-      };
-    }
-    if (host === 'open.spotify.com') {
-      const segments = parsed.pathname.split('/').filter(Boolean);
-      const types = ['track', 'album', 'playlist', 'episode', 'show'];
-      const typeIndex = segments.findIndex((segment) => types.includes(segment));
-      const type = segments[typeIndex];
-      const mediaId = segments[typeIndex + 1];
-      if (!type || !mediaId || !/^[a-zA-Z0-9]+$/.test(mediaId)) return null;
-      return {
-        provider: 'Spotify',
-        originalUrl: parsed.toString(),
-        embedUrl: 'https://open.spotify.com/embed/' + type + '/' + mediaId + '?utm_source=generator&autoplay=1',
-      };
-    }
-  } catch {
-    return null;
-  }
-  return null;
+  const origin = typeof window === 'undefined' ? 'https://cadence-elite.vercel.app' : window.location.origin;
+  return parseReminderMediaUrl(input, origin);
 }
 
 const formatReminderTime = (time: string) => {
@@ -857,12 +824,12 @@ function App() {
     const file = event.target.files?.[0];
     if (!file) return;
     event.target.value = '';
-    if (!file.type.startsWith('audio/')) {
+    if (!isSupportedAudioMime(file.type)) {
       setHabitRingtoneFile(null);
       setToast('Choose a valid audio file.');
       return;
     }
-    if (file.size > 20 * 1024 * 1024) {
+    if (!isRingtoneUploadSizeAllowed(file.size)) {
       setHabitRingtoneFile(null);
       setToast('Choose an audio file 20 MB or smaller.');
       return;
