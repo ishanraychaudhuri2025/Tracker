@@ -842,13 +842,13 @@ function App() {
   const handleFocusAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith('audio/')) {
+    if (!isSupportedAudioMime(file.type)) {
       setToast('Choose a valid audio file.');
       event.target.value = '';
       return;
     }
-    if (file.size > 20 * 1024 * 1024) {
-      setToast('Choose an audio file 20 MB or smaller.');
+    if (!isRingtoneUploadSizeAllowed(file.size)) {
+      setToast('Choose a non-empty audio file up to 20 MB.');
       event.target.value = '';
       return;
     }
