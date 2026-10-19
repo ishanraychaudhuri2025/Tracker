@@ -2181,6 +2181,10 @@ function App() {
           <span className="reminder-alarm-kicker">CADENCE REMINDER · {formatReminderTime(activeReminder.reminderTime)}</span>
           <h2 id="reminder-alarm-title">Time for {activeReminder.habitName}</h2>
           <p>A small step counts. Check in now, or snooze this reminder for ten minutes.</p>
+          {activeReminder.localRingtone && !reminderSoundStopped && <section className="reminder-media-player" aria-label="Uploaded reminder audio">
+            <div className="reminder-media-heading"><span className="reminder-media-wave"><CadenceMark /></span><div><b>{activeReminder.localRingtone.name}</b><small>Uploaded ringtone · browser-session audio</small></div></div>
+            <p className="reminder-music-help">Your selected track loops until you stop the reminder or mark the habit done.</p>
+          </section>}
           {activeReminderMedia && !reminderSoundStopped && <section className="reminder-media-player" aria-label="Custom reminder music">
             <div className="reminder-media-heading"><span className="reminder-media-wave"><CadenceMark /></span><div><b>Your reminder soundtrack</b><small>{activeReminderMedia?.provider} player</small></div></div>
             <iframe
@@ -2200,7 +2204,7 @@ function App() {
             <button type="button" className="secondary-button" onClick={snoozeReminderAlarm}><Clock3 size={15} /> Snooze 10 min</button>
             <button type="button" className="primary-button" onClick={() => { toggleHabit(activeReminder.habitId); stopReminderAlarm(); }}><Check size={15} /> Mark done</button>
           </div>
-          <div className="reminder-sound-controls">{activeReminderMedia && <button type="button" className="reminder-replay-button" onClick={() => { setReminderSoundStopped(false); setReminderMediaReload((value) => value + 1); }}>Play soundtrack again</button>}<button type="button" className="reminder-stop-button" onClick={() => setReminderSoundStopped(true)}>Stop sound</button></div>
+          <div className="reminder-sound-controls">{activeReminder.localRingtone && <button type="button" className="reminder-replay-button" onClick={() => { const ringtone = activeReminder.localRingtone; if (ringtone) { ringtone.audio.pause(); try { ringtone.audio.currentTime = 0; } catch { /* Ignore non-seekable audio. */ } setReminderSoundStopped(false); startLocalRingtonePlayback(ringtone); } }}>Play uploaded ringtone again</button>}{activeReminderMedia && <button type="button" className="reminder-replay-button" onClick={() => { setReminderSoundStopped(false); setReminderMediaReload((value) => value + 1); }}>Play soundtrack again</button>}<button type="button" className="reminder-stop-button" onClick={() => setReminderSoundStopped(true)}>Stop sound</button></div>
         </section>
       </div>}
       {pushArrival && <div className="reminder-alarm-backdrop" role="presentation">
@@ -2209,6 +2213,8 @@ function App() {
           <span className="reminder-alarm-kicker">CADENCE BACKGROUND REMINDER</span>
           <h2 id="push-arrival-title">{pushArrival.title}</h2>
           <p>{pushArrival.body}</p>
+          {pushArrival.kind === 'task' && pushArrival.localRingtone && <section className="reminder-media-player" aria-label="Uploaded task ringtone"><div className="reminder-media-heading"><span className="reminder-media-wave"><CadenceMark /></span><div><b>{pushArrival.localRingtone.name}</b><small>Uploaded task ringtone · browser-session audio</small></div></div><p className="reminder-music-help">Your selected track loops until you stop the alarm.</p></section>}
+          {pushArrival.kind === 'task' && pushArrivalMedia && <div className="focus-music-embed focus-completion-embed" aria-label="Task reminder soundtrack"><iframe src={pushArrivalMedia.embedUrl} title={'Task reminder soundtrack from ' + pushArrivalMedia.provider} allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen /><a href={pushArrivalMedia.originalUrl} target="_blank" rel="noreferrer">Open in {pushArrivalMedia.provider} <ArrowUpRight size={13} /></a></div>}
           {pushArrival.kind === 'focus' && focusRingtoneKind === 'custom' && !focusLocalAudioUrl && parseReminderMedia(focusRingtoneData) && <div className="focus-music-embed focus-completion-embed" aria-label="Focus completion soundtrack">
             <iframe
               src={parseReminderMedia(focusRingtoneData)?.embedUrl}
@@ -2225,6 +2231,7 @@ function App() {
             <button type="button" className="secondary-button" onClick={() => {
               unlockReminderAudio();
               if (pushArrival.kind === 'focus') startFocusAlarmPlayback();
+              else if (pushArrival.localRingtone) startLocalRingtonePlayback(pushArrival.localRingtone);
               else playReminderMelody();
             }}>Play alert sound</button>
             <button type="button" className="primary-button" onClick={() => {
@@ -2232,6 +2239,7 @@ function App() {
               setPushArrival(null);
             }}>Open {pushArrival.kind === 'focus' ? 'Focus' : 'Tasks'}</button>
           </div>
+          {pushArrival.kind === 'task' && <div className="reminder-sound-controls">{pushArrival.localRingtone && <button type="button" className="reminder-replay-button" onClick={() => { const ringtone = pushArrival.localRingtone; if (ringtone) { ringtone.audio.pause(); try { ringtone.audio.currentTime = 0; } catch { /* Ignore non-seekable audio. */ } startLocalRingtonePlayback(ringtone); } }}>Play uploaded ringtone again</button>}{pushArrivalMedia && <a className="reminder-replay-button" href={pushArrivalMedia.originalUrl} target="_blank" rel="noreferrer">Open soundtrack <ArrowUpRight size={13} /></a>}</div>}
           <p className="reminder-footnote">The alarm repeats until you press Stop alarm. Uploaded audio loops in Cadence; streaming players may block autoplay, so a repeating Cadence alarm tone is used as a fallback.</p>
           <button type="button" className="reminder-stop-button" onClick={() => setPushArrival(null)}>Stop alarm</button>
         </section>
