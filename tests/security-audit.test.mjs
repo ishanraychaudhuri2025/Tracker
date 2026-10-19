@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import testCase from 'node:test';
 
-const migrationPath = new URL('../supabase/migrations/20261019053000_harden_phase3_security_and_pg_net.sql', import.meta.url);
+const migrationPath = new URL('../supabase/migrations/20261019051602_harden_phase3_security_and_pg_net.sql', import.meta.url);
 
 testCase('push tables keep a restrictive deny-all policy for browser roles', async () => {
   const sql = await readFile(migrationPath, 'utf8');
