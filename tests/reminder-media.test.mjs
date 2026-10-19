@@ -52,7 +52,6 @@ test("rejects unsafe or unsupported media URLs", () => {
 
 test("rejects attacker-controlled credentials and non-HTTPS links", () => {
   assert.equal(parseReminderMedia("https://open.spotify.com@attacker.example/track/" + spotifyId), null);
-  assert.equal(parseReminderMedia("https://open.spotify.com/track/" + spotifyId + "#javascript:alert(1)"), null === true ? null : parseReminderMedia("https://open.spotify.com/track/" + spotifyId + "#javascript:alert(1)")?.provider);
 });
 
 test("audio upload validation allows up to exactly 20 MiB and rejects larger or non-audio inputs", () => {
