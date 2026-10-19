@@ -1608,8 +1608,32 @@ function App() {
     return { ...task, completedDates: completedDates.includes(dayKey) ? completedDates.filter((key) => key !== dayKey) : [...completedDates, dayKey] };
   }));
   const addPlannerTask = (draft: import('./Planner').PlannerTaskDraft) => {
-    setTasks((current) => [...current, { ...draft, id: `t-${crypto.randomUUID()}`, completed: false, completedDates: [] }]);
+    const reminderMedia = parseReminderMedia(draft.reminderSoundUrl);
+    if (draft.reminderSoundUrl?.trim() && !reminderMedia) {
+      setToast('Add a valid YouTube or Spotify track, album, or playlist link.');
+      return false;
+    }
+    const id = `t-${crypto.randomUUID()}`;
+    const nextTask: Task = {
+      id,
+      title: draft.title,
+      date: draft.date,
+      time: draft.time,
+      category: draft.category,
+      recurrence: draft.recurrence,
+      priority: draft.priority,
+      estimate: draft.estimate,
+      completed: false,
+      completedDates: [],
+      ...(reminderMedia ? { reminderSoundUrl: reminderMedia.originalUrl } : {}),
+    };
+    setTasks((current) => [...current, nextTask]);
+    if (draft.reminderSoundFile) {
+      const ringtone = createLocalRingtone(draft.reminderSoundFile);
+      setTaskLocalRingtones((current) => ({ ...current, [id]: ringtone }));
+    }
     setToast('Added to your calendar');
+    return true;
   };
   const syncRemoteFocusTimer = async (action: 'focus-start' | 'focus-stop', seconds = 0) => {
     if (!supabase || !authSession || !backgroundPushEnabled) return;
