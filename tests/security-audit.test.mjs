@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import testCase from 'node:test';
 
 const migrationPath = new URL('../supabase/migrations/20261019051602_harden_phase3_security_and_pg_net.sql', import.meta.url);
+const sequenceMigrationPath = new URL('../supabase/migrations/20261019052000_realign_pg_net_request_sequence.sql', import.meta.url);
 
 testCase('push tables keep a restrictive deny-all policy for browser roles', async () => {
   const sql = await readFile(migrationPath, 'utf8');
@@ -42,4 +43,14 @@ testCase('index retained for user-deletion cascade is documented and unused deli
   const sql = await readFile(migrationPath, 'utf8');
   assert.match(sql, /drop index if exists public\.cadence_push_deliveries_created_idx/i);
   assert.match(sql, /intentionally retained for auth\.users on delete cascade/i);
+});
+
+
+testCase('pg_net request sequence advances beyond all retained response ids', async () => {
+  const sql = await readFile(sequenceMigrationPath, 'utf8');
+  assert.match(sql, /max\(id\)/i);
+  assert.match(sql, /last_value/i);
+  assert.match(sql, /greatest\(max_response_id, current_sequence_value\)/i);
+  assert.match(sql, /pg_catalog\.setval/i);
+  assert.match(sql, /current_sequence_value < max_response_id/i);
 });
