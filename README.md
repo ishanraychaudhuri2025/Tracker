@@ -34,7 +34,7 @@ Cadence supports Supabase email/password accounts and stores each signed-in user
 
 Cadence requires `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (or the legacy `VITE_SUPABASE_ANON_KEY`) to be set explicitly for each deployment environment. The browser client has no production-project fallback: if configuration is missing, cloud authentication stays disabled rather than silently connecting to production. The publishable/anon key is intended for browser use—never expose a service-role or secret key in frontend code.
 
-The workspace table migration is `supabase/migrations/20261014174107_create_tracker_workspaces.sql`; the connected project also has `supabase/migrations/20261018200848_cadence_push_notifications.sql` and `supabase/migrations/20261019000100_harden_tracker_workspace_grants.sql` recorded. All three are applied to the connected Supabase project. The grant hardening preserves authenticated CRUD and removes unnecessary `TRUNCATE`, `TRIGGER`, and `REFERENCES` grants; row-level security remains responsible for enforcing account ownership.
+The workspace migration is `supabase/migrations/20261014174107_create_tracker_workspaces.sql`; the push schema is `supabase/migrations/20261018200848_cadence_push_notifications.sql`. The connected project also has `supabase/migrations/20261019040302_harden_tracker_workspace_grants.sql` and `supabase/migrations/20261019041017_harden_cadence_push_table_grants.sql`. All four versions are applied to the connected Supabase project and are now tracked in the repository under matching migration versions. The hardening migrations preserve authenticated workspace CRUD with owner-only RLS and narrow the server-side push table grants to the operations required by the Edge Function.
 
 **One-time Auth URL configuration:** in [Supabase Auth → URL Configuration](https://supabase.com/dashboard/project/wxyigvitegdnurimmarb/auth/url-configuration), set:
 
@@ -44,11 +44,11 @@ The workspace table migration is `supabase/migrations/20261014174107_create_trac
 - **Optional Cadence Vercel previews only:** `https://cadence-*-ishan-e93e.vercel.app/**`
 - **Local development:** `http://localhost:5173/**`
 
-The Site URL and redirect allowlist are important for email confirmation and password-recovery links. Hosted Auth URL settings have not been independently verified in this audit session. Confirm the values above in the Supabase dashboard before enabling production sign-ups. The preview pattern is deliberately scoped to this project's `cadence-` deployment names rather than all Vercel projects under the account. See the [Supabase redirect URL guide](https://supabase.com/docs/guides/auth/redirect-urls).
+The Site URL and redirect allowlist are important for email confirmation and password-recovery links. Hosted Auth URL settings have not been independently verified in this audit session. Confirm the values above in the Supabase dashboard before enabling production sign-ups. The preview pattern is deliberately scoped to this project's `cadence-` deployment names rather than all Vercel projects under the account. See the [Supabase redirect URL guide](https://supabase.com/docs/guides/auth/redirect-urls).\n\n**Remaining hosted security settings:** leaked-password protection is disabled and must be enabled under Supabase Auth → Attack Protection. Supabase also warns that `pg_net` is registered under `public`; because re-creating this managed extension removes its retained response records, this audit left it unchanged for a planned maintenance window rather than risking push diagnostics or live delivery.
 
 Password recovery includes a dedicated new-password form. After signing in, workspace changes are synced to the user's row; the owner-only RLS policies restrict reads and writes to that user. New accounts start with empty cloud workspaces and do not inherit guest-only local data.
 
-For a separate deployment or fork, set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (or legacy `VITE_SUPABASE_ANON_KEY`) in its build environment. Never set a service-role key in a `VITE_*` variable.
+For a separate deployment or fork, set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (or legacy `VITE_SUPABASE_ANON_KEY`) in its build environment. Never set a service-role key in a `VITE_*` variable. Before applying the push migration to another project, update its project-specific Edge Function URL in the cron command.
 
 ## Run locally
 
