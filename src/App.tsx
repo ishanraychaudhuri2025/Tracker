@@ -275,6 +275,7 @@ function App() {
   const [reminderSoundStopped, setReminderSoundStopped] = useState(false);
   const [reminderMediaReload, setReminderMediaReload] = useState(0);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const localRingtoneRegistryRef = useRef<Set<LocalRingtone>>(new Set());
   const focusCompletionAudioRef = useRef<HTMLAudioElement | null>(null);
   // Detached media survives page changes and can keep sounding in a background tab.
   const focusAlarmAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -666,7 +667,9 @@ function App() {
         audio.volume = 1;
       }, 120);
     }).catch(() => { audio.volume = 1; });
-    return { url, name: file.name, audio };
+    const ringtone = { url, name: file.name, audio };
+    localRingtoneRegistryRef.current.add(ringtone);
+    return ringtone;
   };
 
   const releaseLocalRingtone = (ringtone: LocalRingtone) => {
@@ -675,6 +678,7 @@ function App() {
     ringtone.audio.removeAttribute('src');
     ringtone.audio.load();
     URL.revokeObjectURL(ringtone.url);
+    localRingtoneRegistryRef.current.delete(ringtone);
   };
 
   const startLocalRingtonePlayback = (ringtone: LocalRingtone) => {
@@ -1380,6 +1384,7 @@ function App() {
       focusAlarmAudioRef.current.loop = false;
       focusAlarmAudioRef.current = null;
     }
+    for (const ringtone of localRingtoneRegistryRef.current) releaseLocalRingtone(ringtone);
   }, []);
 
   useEffect(() => {
@@ -1607,6 +1612,18 @@ function App() {
     const completedDates = task.completedDates ?? [];
     return { ...task, completedDates: completedDates.includes(dayKey) ? completedDates.filter((key) => key !== dayKey) : [...completedDates, dayKey] };
   }));
+  const deleteTask = (taskId: string) => {
+    const ringtone = taskLocalRingtones[taskId];
+    if (ringtone) releaseLocalRingtone(ringtone);
+    setTaskLocalRingtones((current) => {
+      const updated = { ...current };
+      delete updated[taskId];
+      return updated;
+    });
+    setTasks((current) => current.filter((task) => task.id !== taskId));
+    setToast('Task removed.');
+  };
+
   const addPlannerTask = (draft: import('./Planner').PlannerTaskDraft) => {
     const reminderMedia = parseReminderMedia(draft.reminderSoundUrl);
     if (draft.reminderSoundUrl?.trim() && !reminderMedia) {
@@ -1945,7 +1962,7 @@ function App() {
           <footer className="analytics-footer"><span><img className="cadence-footer-lockup" src="/cadence-icon.svg" alt="Cadence" width="36" height="36" /> <i>/</i> PERSONAL PERFORMANCE SYSTEM</span><span>YOUR PROGRESS, WITHOUT THE NOISE.</span></footer>
         </>}
   
-        {page === 'Tasks' && <TasksPage tasks={tasks} today={today} onToggleTask={toggleTask} onAddTask={addPlannerTask} onDeleteTask={(taskId) => { setTasks((current) => current.filter((task) => task.id !== taskId)); setToast('Task removed.'); }} />}
+        {page === 'Tasks' && <TasksPage tasks={tasks} today={today} onToggleTask={toggleTask} onAddTask={addPlannerTask} onDeleteTask={deleteTask} />}
 
         {page === 'Planner' && <PlannerPage habits={habits} tasks={tasks} today={today} onToggleHabit={toggleHabit} onToggleTask={toggleTask} onAddTask={addPlannerTask} />}
 
