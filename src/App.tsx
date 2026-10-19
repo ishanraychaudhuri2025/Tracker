@@ -89,6 +89,8 @@ function parseReminderMedia(input?: string): ReminderMedia | null {
   if (!input?.trim()) return null;
   try {
     const parsed = new URL(input.trim());
+    // Accept only secure, credential-free provider URLs with no custom port.
+    if (parsed.protocol !== 'https:' || parsed.username || parsed.password || (parsed.port && parsed.port !== '443')) return null;
     const host = parsed.hostname.toLowerCase().replace(/^www\./, '');
     if (host === 'youtu.be' || host === 'youtube.com' || host === 'm.youtube.com' || host === 'youtube-nocookie.com') {
       const segments = parsed.pathname.split('/').filter(Boolean);
