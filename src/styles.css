@@ -11432,3 +11432,19 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   }
   #root .app-shell .focus-music-embed > iframe { height: 138px !important; }
 }
+
+/* Keep habit streak labels neutral instead of using the orange/highlight accent. */
+#root .app-shell .habit-streak,
+#root .app-shell .rank-streak,
+#root .app-shell .habits-library .detail-stats,
+#root .app-shell .habits-library .detail-stats b {
+  color: #e2d9ee !important;
+}
+#root .app-shell .habit-streak svg,
+#root .app-shell .rank-streak svg,
+#root .app-shell .habits-library .detail-stats svg {
+  color: #b9abc9 !important;
+}
+#root .app-shell .habit-streak small {
+  color: #ab9bb9 !important;
+}
