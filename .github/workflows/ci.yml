@@ -13,5 +13,7 @@ jobs:
         with:
           node-version: 22
       - run: npm install
+      - run: npm audit --audit-level=high
+      - run: node --test tests/push-endpoint.test.mjs
       - run: npm run typecheck
       - run: npm run build
