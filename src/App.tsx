@@ -1471,6 +1471,7 @@ function App() {
 
   const openEditHabit = (habit: Habit) => {
     setEditingHabitId(habit.id);
+    setHabitRingtoneFile(null);
     setHabitDraft({
       name: habit.name,
       category: habit.category,
@@ -1489,6 +1490,7 @@ function App() {
 
   const openCreateHabit = () => {
     setEditingHabitId(null);
+    setHabitRingtoneFile(null);
     setHabitDraft({ ...emptyHabitDraft });
     setShowHabitModal(true);
   };
@@ -1537,11 +1539,27 @@ function App() {
     } else {
       setHabits((current) => [next, ...current]);
     }
+    if (habitDraft.reminderEnabled && habitRingtoneFile) {
+      const previousRingtone = habitLocalRingtones[next.id];
+      if (previousRingtone) releaseLocalRingtone(previousRingtone);
+      const uploadedRingtone = createLocalRingtone(habitRingtoneFile);
+      setHabitLocalRingtones((current) => ({ ...current, [next.id]: uploadedRingtone }));
+    } else if (habitDraft.reminderEnabled && reminderMedia) {
+      const previousRingtone = habitLocalRingtones[next.id];
+      if (previousRingtone) releaseLocalRingtone(previousRingtone);
+      setHabitLocalRingtones((current) => {
+        const updated = { ...current };
+        delete updated[next.id];
+        return updated;
+      });
+    }
+    setHabitRingtoneFile(null);
     const wasEditing = Boolean(existing);
     const reminderMessage = habitDraft.reminderEnabled
       ? ' Reminder set for ' + formatReminderTime(habitDraft.reminderTime) + '; keep Cadence open for alerts.'
       : '';
     setHabitDraft({ ...emptyHabitDraft });
+    setHabitRingtoneFile(null);
     setEditingHabitId(null);
     setShowHabitModal(false);
     setPage('Habits');
@@ -2052,7 +2070,7 @@ function App() {
         </div>
       </main>
 
-      {showHabitModal && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) { setShowHabitModal(false); setEditingHabitId(null); setHabitDraft({ ...emptyHabitDraft }); } }}><section className="habit-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div className="modal-top"><div><div className="panel-overline">START SMALL, STAY CONSISTENT</div><h2 id="modal-title">{editingHabitId ? 'Edit habit' : 'Create a habit'}</h2><p>{editingHabitId ? 'Update your routine without losing its history.' : 'Design the start, not just the finish line.'}</p></div><IconButton label="Close modal" onClick={() => setShowHabitModal(false)}><X size={18} /></IconButton></div><form onSubmit={addHabit}><label className="field-label">Habit name<input autoFocus value={habitDraft.name} onChange={(event) => setHabitDraft((draft) => ({ ...draft, name: event.target.value }))} placeholder="e.g. Practice coding" maxLength={70} required /></label><label className="field-label">Area of life<div className="category-select">{categories.map((category) => <button type="button" key={category} className={habitDraft.category === category ? `selected ${categoryTone[category]}` : ''} onClick={() => setHabitDraft((draft) => ({ ...draft, category }))}><CategoryGlyph category={category} size={15} />{category}</button>)}</div></label><label className="field-label">Frequency<select value={habitDraft.frequency} onChange={(event) => setHabitDraft((draft) => ({ ...draft, frequency: event.target.value as Frequency }))}>{frequencies.map((frequency) => <option key={frequency}>{frequency}</option>)}</select></label>
+      {showHabitModal && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) { setShowHabitModal(false); setEditingHabitId(null); setHabitRingtoneFile(null); setHabitDraft({ ...emptyHabitDraft }); } }}><section className="habit-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div className="modal-top"><div><div className="panel-overline">START SMALL, STAY CONSISTENT</div><h2 id="modal-title">{editingHabitId ? 'Edit habit' : 'Create a habit'}</h2><p>{editingHabitId ? 'Update your routine without losing its history.' : 'Design the start, not just the finish line.'}</p></div><IconButton label="Close modal" onClick={() => setShowHabitModal(false)}><X size={18} /></IconButton></div><form onSubmit={addHabit}><label className="field-label">Habit name<input autoFocus value={habitDraft.name} onChange={(event) => setHabitDraft((draft) => ({ ...draft, name: event.target.value }))} placeholder="e.g. Practice coding" maxLength={70} required /></label><label className="field-label">Area of life<div className="category-select">{categories.map((category) => <button type="button" key={category} className={habitDraft.category === category ? `selected ${categoryTone[category]}` : ''} onClick={() => setHabitDraft((draft) => ({ ...draft, category }))}><CategoryGlyph category={category} size={15} />{category}</button>)}</div></label><label className="field-label">Frequency<select value={habitDraft.frequency} onChange={(event) => setHabitDraft((draft) => ({ ...draft, frequency: event.target.value as Frequency }))}>{frequencies.map((frequency) => <option key={frequency}>{frequency}</option>)}</select></label>
           {habitDraft.frequency === 'Custom' && <fieldset className="habit-schedule-days"><legend>Repeat on these days</legend><div className="habit-weekday-picker">{[{ label: 'Sun', value: 0 }, { label: 'Mon', value: 1 }, { label: 'Tue', value: 2 }, { label: 'Wed', value: 3 }, { label: 'Thu', value: 4 }, { label: 'Fri', value: 5 }, { label: 'Sat', value: 6 }].map(({ label, value }) => <button type="button" key={value} className={habitDraft.customDays.includes(value) ? 'selected' : ''} aria-pressed={habitDraft.customDays.includes(value)} onClick={() => setHabitDraft((draft) => ({ ...draft, customDays: draft.customDays.includes(value) ? draft.customDays.filter((day) => day !== value) : [...draft.customDays, value].sort((left, right) => left - right) }))}>{label}</button>)}</div><p>Choose one or more weekdays. Only selected days count toward consistency and reminders.</p></fieldset>}<label className="field-label">When will you do it? <span className="field-hint">A reliable cue</span><input value={habitDraft.cue} onChange={(event) => setHabitDraft((draft) => ({ ...draft, cue: event.target.value }))} placeholder="After I finish breakfast…" maxLength={100} /></label><label className="field-label">Your minimum version <span className="field-hint">Make it hard to say no</span><input value={habitDraft.minimum} onChange={(event) => setHabitDraft((draft) => ({ ...draft, minimum: event.target.value }))} placeholder="Read one page, write one line…" maxLength={100} /></label>
           <div className="habit-configuration-grid">
             <label className="field-label">Duration<select value={String(habitDraft.durationMonths)} onChange={(event) => setHabitDraft((draft) => ({ ...draft, durationMonths: Number(event.target.value) }))}><option value="0">Forever</option><option value="1">1 month</option><option value="3">3 months</option><option value="6">6 months</option><option value="12">12 months</option></select><span className="field-hint">Starts on the creation date. Your history stays saved after it ends.</span></label>
@@ -2073,9 +2091,14 @@ function App() {
                 <input type="time" value={habitDraft.reminderTime} onChange={(event) => setHabitDraft((draft) => ({ ...draft, reminderTime: event.target.value }))} required />
               </label>
               <label className="field-label reminder-sound-label">Custom music link <span className="field-hint">Optional · YouTube or Spotify</span>
-                <input type="url" value={habitDraft.reminderSoundUrl} onChange={(event) => setHabitDraft((draft) => ({ ...draft, reminderSoundUrl: event.target.value }))} placeholder="https://open.spotify.com/track/…" autoComplete="url" />
+                <input type="url" value={habitDraft.reminderSoundUrl} onChange={(event) => { setHabitRingtoneFile(null); setHabitDraft((draft) => ({ ...draft, reminderSoundUrl: event.target.value })); }} placeholder="https://open.spotify.com/track/…" autoComplete="url" />
               </label>
-              <p className="reminder-music-help">YouTube links attempt to autoplay and loop. Browsers can block audible autoplay until you interact with the player; Spotify playback is controlled by its embed. The repeating Cadence chime stays active as a fallback until you stop it or mark the habit done.</p>
+              <label className="field-label reminder-sound-label">Upload audio (under 20 MB)
+                <input id="habit-ringtone-upload" type="file" accept="audio/*" onChange={handleHabitRingtoneUpload} aria-describedby="habit-ringtone-help" />
+                <span className="field-hint">{habitRingtoneFile ? 'Selected: ' + habitRingtoneFile.name : editingHabitId && habitLocalRingtones[editingHabitId] ? 'Current upload: ' + habitLocalRingtones[editingHabitId].name : 'MP3, M4A, WAV, or another browser-supported audio format.'}</span>
+              </label>
+              {editingHabitId && habitLocalRingtones[editingHabitId] && !habitRingtoneFile && <button type="button" className="text-button" onClick={() => { const current = habitLocalRingtones[editingHabitId]; if (current) releaseLocalRingtone(current); setHabitLocalRingtones((items) => { const updated = { ...items }; delete updated[editingHabitId]; return updated; }); setHabitRingtoneFile(null); setHabitDraft((draft) => ({ ...draft, reminderSoundUrl: '' })); }}>Remove uploaded audio</button>}
+              <p id="habit-ringtone-help" className="reminder-music-help">Uploaded audio is available for this browser session, just like Focus. YouTube and Spotify attempt autoplay when the reminder appears; browsers may block it, so the repeating Cadence alarm remains as a fallback until you stop it or mark the habit done.</p>
               <div className="reminder-notification-option">
                 <span className="reminder-permission-status">{notificationPermission === 'granted' ? 'Desktop notifications enabled' : notificationPermission === 'denied' ? 'Browser notifications are blocked' : notificationPermission === 'unsupported' ? 'Desktop notifications unavailable' : 'Allow desktop notifications'}</span>
                 <button type="button" className="secondary-button notification-permission-button" onClick={() => { void enableDesktopNotifications(); }}>{notificationPermission === 'granted' ? 'Enabled' : notificationPermission === 'denied' ? 'How to allow' : notificationPermission === 'unsupported' ? 'Not supported' : 'Enable'}</button>
@@ -2092,7 +2115,7 @@ function App() {
               <p className="reminder-footnote">While Cadence is open, in-app reminders can play the selected sound. Use Stop sound to silence the looping habit alarm, or Mark done to close it.</p>
             </div>}
           </section>
-          <div className="if-then-preview"><span><Sparkles size={15} /></span><p><b>Your if–then plan</b><br />If {habitDraft.cue.trim() || 'my cue happens'}, then I’ll {habitDraft.minimum.trim() || 'do the smallest version'}.</p></div><div className="modal-actions"><button className="secondary-button" type="button" onClick={() => { setShowHabitModal(false); setEditingHabitId(null); setHabitDraft({ ...emptyHabitDraft }); }}>Cancel</button><button className="primary-button" type="submit">{editingHabitId ? <><Check size={15} /> Save changes</> : <><Plus size={15} /> Create habit</>}</button></div></form></section></div>}
+          <div className="modal-actions"><button className="secondary-button" type="button" onClick={() => { setShowHabitModal(false); setEditingHabitId(null); setHabitRingtoneFile(null); setHabitDraft({ ...emptyHabitDraft }); }}>Cancel</button><button className="primary-button" type="submit">{editingHabitId ? <><Check size={15} /> Save changes</> : <><Plus size={15} /> Create habit</>}</button></div></form></section></div>}
       {activeReminder && <div className="reminder-alarm-backdrop" role="presentation">
         <section className="reminder-alarm" role="alertdialog" aria-modal="true" aria-labelledby="reminder-alarm-title">
           <span className="reminder-alarm-icon"><Bell size={22} /></span>
