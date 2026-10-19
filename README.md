@@ -54,18 +54,17 @@ For a separate deployment or fork, set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PU
 Requirements: Node.js 20.19+ (Node 22 LTS is a good choice) and npm.
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
 Open the URL Vite prints (usually `http://localhost:5173`). To make a production build:
 
 ```bash
+npm run typecheck
 npm run build
 npm run preview
 ```
-
-The first open seeds example routines and sample check-in history so the interface is useful immediately. Data lives in the current browser only; there is no account system, server database, cross-device sync, or scheduled notification backend yet. A future production release should add authentication, a database, backups/export, and server-side reminder scheduling before it is used as a multi-device personal tracker.
 
 ## Publish to GitHub
 
@@ -102,11 +101,11 @@ These are design hypotheses based on published behavior research, not a claim th
 
 ## Current scope / next milestones
 
-1. Verify the build in CI and add focused tests for scheduling, streak calculations, and date-boundary cases.
-2. Add account-backed persistence and a database (Postgres/Supabase or equivalent), plus row-level authorization.
-3. Add time-zone-aware reminders, export/import, and privacy-friendly backups.
+1. Add focused tests for scheduling, streak calculations, and date-boundary cases, and test reminders with real devices.
+2. Complete least-privilege database migration and validate cross-account access isolation.
+3. Verify deployed Supabase Auth URL settings and the Vercel production/preview environment configuration.
 4. Add optional opt-in accountability, careful gamification, and a weekly review flow.
-5. Deploy only after the build, basic accessibility, and data-handling model are reviewed.
+5. Treat production launch as gated on browser-level accessibility, privacy, and end-to-end notification testing.
 
 ## License
 
