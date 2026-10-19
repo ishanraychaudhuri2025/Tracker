@@ -123,7 +123,7 @@ function dueReminders(workspace: Json, timezone: string, now: Date) {
     if (!t?.id || !t.time || !t.date || String(t.time) !== time || !taskOccursOn(t, dayKey) || taskIsDone(t, dayKey)) continue;
     output.push({ key: "task:" + t.id + ":" + dayKey + ":" + time, payload: {
       title: "Time for " + String(t.title || "your task"), body: "Your planned time has arrived. Open Cadence and take the next step.",
-      kind: "task", id: String(t.id), url: APP_ORIGIN + "/?cadenceReminder=" + encodeURIComponent("task:" + String(t.id)),
+      kind: "task", id: String(t.id), soundUrl: String(t.reminderSoundUrl || ""), url: APP_ORIGIN + "/?cadenceReminder=" + encodeURIComponent("task:" + String(t.id)),
       tag: "cadence-task-" + String(t.id) + "-" + dayKey,
     }});
   }
