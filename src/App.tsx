@@ -482,6 +482,7 @@ function App() {
           habitName: habit.name,
           reminderTime: habit.reminderTime || (String(new Date().getHours()).padStart(2, '0') + ':' + String(new Date().getMinutes()).padStart(2, '0')),
           reminderSoundUrl: habit.reminderSoundUrl || payload.soundUrl || '',
+          localRingtone: habitLocalRingtones[habit.id],
         });
         return;
       }
@@ -492,6 +493,9 @@ function App() {
           kind: 'task',
           title: payload.title || (task ? 'Time for ' + task.title : 'Your task reminder'),
           body: payload.body || 'Your planned time has arrived. Start with the smallest useful next step.',
+          taskId: task?.id ?? payload.id,
+          reminderSoundUrl: task?.reminderSoundUrl || payload.soundUrl || '',
+          localRingtone: task ? taskLocalRingtones[task.id] : undefined,
         });
         return;
       }
@@ -505,7 +509,7 @@ function App() {
     };
     navigator.serviceWorker.addEventListener('message', onPushMessage);
     return () => navigator.serviceWorker.removeEventListener('message', onPushMessage);
-  }, [habits, tasks, today]);
+  }, [habits, tasks, today, habitLocalRingtones, taskLocalRingtones]);
 
   // The service worker adds this query parameter when a user clicks a
   // background notification. Route the click into the correct workspace view.
@@ -552,6 +556,7 @@ function App() {
           habitName: habit.name,
           reminderTime: habit.reminderTime || (String(new Date().getHours()).padStart(2, '0') + ':' + String(new Date().getMinutes()).padStart(2, '0')),
           reminderSoundUrl: habit.reminderSoundUrl || '',
+          localRingtone: habitLocalRingtones[habit.id],
         });
       }
       setPendingPushReminder(null);
@@ -564,10 +569,13 @@ function App() {
         kind: 'task',
         title: task ? 'Time for ' + task.title : 'Your task reminder',
         body: task ? 'Your planned time has arrived. Start with the smallest useful next step.' : 'A scheduled task reminder arrived. Review Tasks to see what is next.',
+        taskId: task?.id,
+        reminderSoundUrl: task?.reminderSoundUrl || '',
+        localRingtone: task ? taskLocalRingtones[task.id] : undefined,
       });
       setPendingPushReminder(null);
     }
-  }, [pendingPushReminder, workspaceReady, habits, tasks, today]);
+  }, [pendingPushReminder, workspaceReady, habits, tasks, today, habitLocalRingtones, taskLocalRingtones]);
 
   useEffect(() => {
     const pageRoot = document.querySelector<HTMLElement>('.page-transition-shell');
@@ -1258,6 +1266,7 @@ function App() {
           habitName: fresh[0].name,
           reminderTime: currentTime,
           reminderSoundUrl: fresh[0].reminderSoundUrl,
+          localRingtone: habitLocalRingtones[fresh[0].id],
         });
       }
 
@@ -1291,6 +1300,9 @@ function App() {
             body: freshTasks.length === 1
               ? 'Your planned time has arrived. Start with the smallest useful next step.'
               : 'Several planned tasks are due. Open Cadence to review what is next.',
+            taskId: freshTasks.length === 1 ? freshTasks[0].id : undefined,
+            reminderSoundUrl: freshTasks.length === 1 ? freshTasks[0].reminderSoundUrl || '' : '',
+            localRingtone: freshTasks.length === 1 ? taskLocalRingtones[freshTasks[0].id] : undefined,
           });
         }
       }
@@ -1298,26 +1310,44 @@ function App() {
     const interval = window.setInterval(checkReminders, 10000);
     checkReminders();
     return () => window.clearInterval(interval);
-  }, [habits, tasks]);
+  }, [habits, tasks, habitLocalRingtones, taskLocalRingtones]);
 
   useEffect(() => {
-    if (!activeReminder || reminderSoundStopped) return undefined;
-    // Repeat the native alarm while the reminder is open. Linked YouTube audio
-    // also attempts autoplay + loop; this chime is the fallback if the browser
-    // refuses audible autoplay for the embedded player.
-    playReminderMelody();
-    const interval = window.setInterval(playReminderMelody, 2800);
-    return () => window.clearInterval(interval);
+    if (!activeReminder || reminderSoundStopped) {
+      activeReminder?.localRingtone?.audio.pause();
+      return undefined;
+    }
+    localRingtoneFallbackNotifiedRef.current = false;
+    const play = () => {
+      if (activeReminder.localRingtone) {
+        const audio = activeReminder.localRingtone.audio;
+        if (audio.paused || audio.ended) startLocalRingtonePlayback(activeReminder.localRingtone);
+      } else playReminderMelody();
+    };
+    play();
+    const interval = window.setInterval(play, 2800);
+    return () => {
+      window.clearInterval(interval);
+      if (activeReminder.localRingtone) {
+        const audio = activeReminder.localRingtone.audio;
+        audio.pause();
+        audio.loop = false;
+        try { audio.currentTime = 0; } catch { /* Ignore non-seekable audio. */ }
+      }
+    };
   }, [activeReminder, reminderSoundStopped]);
 
   useEffect(() => {
     if (!pushArrival) return undefined;
     focusAudioFallbackNotifiedRef.current = false;
+    localRingtoneFallbackNotifiedRef.current = false;
     const play = () => {
       if (pushArrival.kind === 'focus') startFocusAlarmPlayback();
-      else playReminderMelody();
+      else if (pushArrival.localRingtone) {
+        const audio = pushArrival.localRingtone.audio;
+        if (audio.paused || audio.ended) startLocalRingtonePlayback(pushArrival.localRingtone);
+      } else playReminderMelody();
     };
-    // Start immediately, then repeat until Stop alarm clears pushArrival.
     play();
     const interval = window.setInterval(play, 2800);
     return () => {
@@ -1333,6 +1363,11 @@ function App() {
           focusCompletionAudioRef.current.loop = false;
           try { focusCompletionAudioRef.current.currentTime = 0; } catch { /* Ignore non-seekable media. */ }
         }
+      } else if (pushArrival.localRingtone) {
+        const audio = pushArrival.localRingtone.audio;
+        audio.pause();
+        audio.loop = false;
+        try { audio.currentTime = 0; } catch { /* Ignore non-seekable audio. */ }
       }
     };
   }, [pushArrival, focusRingtoneKind, focusRingtoneData, focusLocalAudioUrl]);
