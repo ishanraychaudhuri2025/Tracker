@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import type { FormEvent } from 'react';
+import type { FormEvent, ChangeEvent } from 'react';
 import {
   ArrowUpRight, CalendarDays, Check, CheckCircle2, Clock3, ListTodo,
   Plus, Search, Trash2, X,
@@ -14,7 +14,7 @@ type TasksPageProps = {
   tasks: Task[];
   today: string;
   onToggleTask: (taskId: string, dayKey?: string) => void;
-  onAddTask: (draft: PlannerTaskDraft) => void;
+  onAddTask: (draft: PlannerTaskDraft) => boolean | void;
   onDeleteTask: (taskId: string) => void;
 };
 
@@ -55,6 +55,8 @@ export default function TasksPage({ tasks, today, onToggleTask, onAddTask, onDel
   const [recurrence, setRecurrence] = useState<Recurrence>('None');
   const [priority, setPriority] = useState<Task['priority']>('Normal');
   const [estimate, setEstimate] = useState(25);
+  const [reminderSoundUrl, setReminderSoundUrl] = useState('');
+  const [reminderSoundFile, setReminderSoundFile] = useState<File | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const stats = useMemo(() => {
@@ -91,7 +93,7 @@ export default function TasksPage({ tasks, today, onToggleTask, onAddTask, onDel
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!title.trim()) return;
-    onAddTask({
+    const accepted = onAddTask({
       title: title.trim(),
       date,
       time,
@@ -99,7 +101,10 @@ export default function TasksPage({ tasks, today, onToggleTask, onAddTask, onDel
       recurrence,
       priority,
       estimate: Math.max(5, Math.min(600, Number(estimate) || 25)),
+      reminderSoundUrl: reminderSoundUrl.trim() || undefined,
+      reminderSoundFile,
     });
+    if (accepted === false) return;
     setTitle('');
     setDate(today);
     setTime('09:00');
@@ -107,6 +112,8 @@ export default function TasksPage({ tasks, today, onToggleTask, onAddTask, onDel
     setRecurrence('None');
     setPriority('Normal');
     setEstimate(25);
+    setReminderSoundUrl('');
+    setReminderSoundFile(null);
     setShowCreate(false);
   };
 
@@ -198,6 +205,9 @@ export default function TasksPage({ tasks, today, onToggleTask, onAddTask, onDel
             <label className="field-label">Priority<select value={priority} onChange={(event) => setPriority(event.target.value as Task['priority'])}><option>Low</option><option>Normal</option><option>High</option></select></label>
             <label className="field-label">Estimate (minutes)<input type="number" min="5" max="600" step="5" value={estimate} onChange={(event) => setEstimate(Number(event.target.value) || 25)}/></label>
           </div>
+          <label className="field-label">Custom ringtone link <span className="field-hint">Optional · YouTube or Spotify</span><input type="url" value={reminderSoundUrl} onChange={(event) => { setReminderSoundUrl(event.target.value); setReminderSoundFile(null); }} placeholder="https://open.spotify.com/track/…" autoComplete="url"/></label>
+          <label className="field-label">Upload ringtone (under 20 MB)<input type="file" accept="audio/*" onChange={(event: ChangeEvent<HTMLInputElement>) => { const file = event.target.files?.[0]; event.target.value = ''; if (!file) return; if (!file.type.startsWith('audio/')) { setReminderSoundFile(null); return; } if (file.size >= 20 * 1024 * 1024) { setReminderSoundFile(null); return; } setReminderSoundFile(file); setReminderSoundUrl(''); }} /></label>
+          <p className="field-hint">{reminderSoundFile ? 'Selected: ' + reminderSoundFile.name + '. Uploaded audio is available for this browser session, just like Focus.' : 'At the scheduled time, the uploaded track loops until stopped. Spotify/YouTube attempt autoplay; the repeating Cadence alarm remains as a fallback.'}</p>
           <div className="modal-actions"><button className="secondary-button" type="button" onClick={() => setShowCreate(false)}>Cancel</button><button className="primary-button" type="submit"><Plus size={15}/> Save task</button></div>
         </form>
       </section>
