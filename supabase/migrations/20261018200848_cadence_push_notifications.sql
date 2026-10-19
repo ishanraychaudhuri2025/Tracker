@@ -63,10 +63,12 @@ revoke all on table public.cadence_push_subscriptions from public, anon, authent
 revoke all on table public.cadence_push_deliveries from public, anon, authenticated;
 revoke all on table public.cadence_push_focus_timers from public, anon, authenticated;
 
-grant select, update on table public.cadence_push_config to service_role;
-grant select, insert, update, delete on table public.cadence_push_subscriptions to service_role;
-grant select, insert, delete on table public.cadence_push_deliveries to service_role;
-grant select, insert, update, delete on table public.cadence_push_focus_timers to service_role;
+-- The historical migration granted service_role table access; the later
+-- hardening migration narrows these to the exact operations needed by the function.
+grant all on table public.cadence_push_config to service_role;
+grant all on table public.cadence_push_subscriptions to service_role;
+grant all on table public.cadence_push_deliveries to service_role;
+grant all on table public.cadence_push_focus_timers to service_role;
 
 insert into public.cadence_push_config (id)
 values (true)
