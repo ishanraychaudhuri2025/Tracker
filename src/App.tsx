@@ -51,7 +51,9 @@ function HabitGlyph({ habit, size = 17 }: { habit: Habit; size?: number }) {
   if (habit.category === 'Craft') return <PenTool {...iconProps} />;
   return <Compass {...iconProps} />;
 }
-type ActiveReminder = { habitId: string; habitName: string; reminderTime: string; reminderSoundUrl?: string };
+type LocalRingtone = { url: string; name: string; audio: HTMLAudioElement };
+type ActiveReminder = { habitId: string; habitName: string; reminderTime: string; reminderSoundUrl?: string; localRingtone?: LocalRingtone };
+type PushArrival = { kind: 'task' | 'focus'; title: string; body: string; taskId?: string; reminderSoundUrl?: string; localRingtone?: LocalRingtone };
 
 type ProfileLogoKey = 'initials' | 'wave' | 'zap' | 'sparkles' | 'target' | 'flame' | 'leaf' | 'code' | 'heart' | 'brain' | 'compass';
 type LocalProfile = { name: string; logo: ProfileLogoKey; avatarData?: string };
@@ -265,8 +267,11 @@ function App() {
   const [backgroundPushEnabled, setBackgroundPushEnabled] = useState(false);
   const [backgroundPushBusy, setBackgroundPushBusy] = useState(false);
   const [pendingPushReminder, setPendingPushReminder] = useState<string | null>(null);
-  const [pushArrival, setPushArrival] = useState<{ kind: 'task' | 'focus'; title: string; body: string } | null>(null);
+  const [pushArrival, setPushArrival] = useState<PushArrival | null>(null);
   const [activeReminder, setActiveReminder] = useState<ActiveReminder | null>(null);
+  const [habitRingtoneFile, setHabitRingtoneFile] = useState<File | null>(null);
+  const [habitLocalRingtones, setHabitLocalRingtones] = useState<Record<string, LocalRingtone>>({});
+  const [taskLocalRingtones, setTaskLocalRingtones] = useState<Record<string, LocalRingtone>>({});
   const [reminderSoundStopped, setReminderSoundStopped] = useState(false);
   const [reminderMediaReload, setReminderMediaReload] = useState(0);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -276,6 +281,7 @@ function App() {
   const focusAudioFallbackNotifiedRef = useRef(false);
   const firedRemindersRef = useRef<Set<string>>(new Set());
   const firedTaskRemindersRef = useRef<Set<string>>(new Set());
+  const localRingtoneFallbackNotifiedRef = useRef(false);
   const snoozeTimeoutRef = useRef<number | null>(null);
   const [dark, setDark] = useState(true);
   const [focusRunning, setFocusRunning] = useState(false);
@@ -441,6 +447,7 @@ function App() {
   const rawExperimentAction = experimentHabit?.minimum?.trim() || 'do the smallest version for two minutes';
   const experimentAction = rawExperimentAction.charAt(0).toLowerCase() + rawExperimentAction.slice(1);
   const activeReminderMedia = parseReminderMedia(activeReminder?.reminderSoundUrl);
+  const pushArrivalMedia = parseReminderMedia(pushArrival?.kind === 'task' ? pushArrival.reminderSoundUrl : undefined);
 
   useEffect(() => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
@@ -637,6 +644,47 @@ function App() {
     });
   };
 
+  const createLocalRingtone = (file: File): LocalRingtone => {
+    const url = URL.createObjectURL(file);
+    const audio = new Audio(url);
+    audio.preload = 'auto';
+    audio.loop = true;
+    audio.volume = 0;
+    // Prime this media element from the user's Save gesture for browser autoplay permission.
+    void audio.play().then(() => {
+      window.setTimeout(() => {
+        audio.pause();
+        try { audio.currentTime = 0; } catch { /* Ignore non-seekable audio. */ }
+        audio.volume = 1;
+      }, 120);
+    }).catch(() => { audio.volume = 1; });
+    return { url, name: file.name, audio };
+  };
+
+  const releaseLocalRingtone = (ringtone: LocalRingtone) => {
+    ringtone.audio.pause();
+    ringtone.audio.loop = false;
+    ringtone.audio.removeAttribute('src');
+    ringtone.audio.load();
+    URL.revokeObjectURL(ringtone.url);
+  };
+
+  const startLocalRingtonePlayback = (ringtone: LocalRingtone) => {
+    unlockReminderAudio();
+    const audio = ringtone.audio;
+    if (!audio.paused && !audio.ended) return;
+    audio.loop = true;
+    audio.volume = 1;
+    try { audio.currentTime = 0; } catch { /* Use current position if the format is not seekable. */ }
+    void audio.play().catch(() => {
+      playReminderMelody();
+      if (!localRingtoneFallbackNotifiedRef.current) {
+        localRingtoneFallbackNotifiedRef.current = true;
+        setToast('The browser blocked the uploaded track, so Cadence is repeating its alarm tone instead.');
+      }
+    });
+  };
+
   // Unlock Web Audio during a real user gesture, so a reminder can sound even
   // while Cadence is in a background tab or the browser is minimized.
   useEffect(() => {
@@ -789,6 +837,25 @@ function App() {
       try { window.localStorage.setItem('cadence-focus-ringtone-kind', 'chime'); } catch { /* Storage may be unavailable. */ }
     }
     setToast('Custom soundtrack link removed.');
+  };
+
+  const handleHabitRingtoneUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    event.target.value = '';
+    if (!file.type.startsWith('audio/')) {
+      setHabitRingtoneFile(null);
+      setToast('Choose a valid audio file.');
+      return;
+    }
+    if (file.size >= 20 * 1024 * 1024) {
+      setHabitRingtoneFile(null);
+      setToast('Choose an audio file smaller than 20 MB.');
+      return;
+    }
+    setHabitRingtoneFile(file);
+    setHabitDraft((draft) => ({ ...draft, reminderSoundUrl: '' }));
+    setToast('Ringtone selected. Save the habit to use it during this browser session.');
   };
 
   const handleFocusAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
