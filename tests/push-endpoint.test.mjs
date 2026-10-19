@@ -35,7 +35,7 @@ test("rejects non-HTTPS, user-info tricks, arbitrary hosts, and internal IP targ
 test("rejects malformed or oversized subscription payloads", () => {
   assert.equal(normalizePushSubscription(null), null);
   assert.equal(normalizePushSubscription([]), null);
-  assert.equal(normalizePushSubscription({ endpoint: "https://fcm.googleapis.com/x", keys }), null);
+  assert.equal(normalizePushSubscription({ endpoint: "https://fcm.googleapis.com/x" }), null);
   assert.equal(normalizePushSubscription(validSubscription("https://fcm.googleapis.com/" + "x".repeat(5000))), null);
   assert.equal(normalizePushSubscription({ ...validSubscription(), keys: { p256dh: "invalid", auth: "invalid" } }), null);
 });
