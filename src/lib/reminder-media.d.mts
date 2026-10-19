@@ -1,5 +1,3 @@
-import type {} from "./reminder-media.mjs";
-
 export type ReminderMedia = {
   provider: "YouTube" | "Spotify";
   originalUrl: string;
