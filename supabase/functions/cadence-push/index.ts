@@ -289,8 +289,10 @@ Deno.serve(async (request: Request) => {
       return reply({ ok: true, enabled: false }, 200, origin);
     }
     if (action === "focus-start") {
-      const seconds = Math.max(1, Math.min(10800, Math.floor(Number(body.seconds) || 0)));
-      if (!Number.isFinite(seconds) || seconds < 1) return reply({ error: "Choose a valid focus duration." }, 400, origin);
+      if (typeof body.seconds !== "number" || !Number.isFinite(body.seconds) || body.seconds < 1) {
+        return reply({ error: "Choose a valid focus duration." }, 400, origin);
+      }
+      const seconds = Math.min(10800, Math.floor(body.seconds));
       const label = String(body.label || "Focus session").trim().slice(0, 100) || "Focus session";
       const { error } = await admin.from("cadence_push_focus_timers").upsert({
         user_id: user.id, ends_at: new Date(Date.now() + seconds * 1000).toISOString(), label,
