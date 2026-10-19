@@ -208,7 +208,7 @@ async function handleTick() {
       }});
     }
   }
-  if (!outgoing.length) return { delivered: 0, subscriptions: subscriptions.length };
+  if (!outgoing.length) return { delivered: 0, subscriptions: safeSubscriptions.length };
   const keys = outgoing.map((x) => x.key), existing = new Set<string>();
   for (let i = 0; i < keys.length; i += 100) {
     const { data, error } = await admin.from("cadence_push_deliveries").select("delivery_key").in("delivery_key", keys.slice(i, i + 100));
