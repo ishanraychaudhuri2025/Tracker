@@ -59,7 +59,7 @@ test("audio upload validation allows up to exactly 20 MiB and rejects larger or 
   assert.equal(isSupportedAudioMime("audio/mpeg"), true);
   assert.equal(isSupportedAudioMime("image/png"), false);
   assert.equal(isSupportedAudioMime(""), false);
-  assert.equal(isRingtoneUploadSizeAllowed(0), true);
+  assert.equal(isRingtoneUploadSizeAllowed(0), false);
   assert.equal(isRingtoneUploadSizeAllowed(MAX_RINGTONE_UPLOAD_BYTES), true);
   assert.equal(isRingtoneUploadSizeAllowed(MAX_RINGTONE_UPLOAD_BYTES + 1), false);
   assert.equal(isRingtoneUploadSizeAllowed(-1), false);
