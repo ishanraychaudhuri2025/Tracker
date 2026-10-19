@@ -34,7 +34,7 @@ export function parseReminderMedia(input, origin = "https://cadence-elite.vercel
     const parsed = new URL(input.trim());
     // Accept only secure, credential-free provider URLs with no custom port.
     if (parsed.protocol !== "https:" || parsed.username || parsed.password || (parsed.port && parsed.port !== "443")) return null;
-    const host = parsed.hostname.toLowerCase().replace(/^www\\./, "");
+    const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
     if (host === "youtu.be" || host === "youtube.com" || host === "m.youtube.com" || host === "youtube-nocookie.com") {
       const segments = parsed.pathname.split("/").filter(Boolean);
       const videoId = host === "youtu.be"
