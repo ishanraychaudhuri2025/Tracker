@@ -39,7 +39,8 @@ The workspace table migration is at `supabase/migrations/20261014000100_tracker_
 
 - **Site URL:** `https://cadence-elite.vercel.app`
 - **Additional Redirect URLs:** `https://cadence-elite.vercel.app/**`
-- **Current main deployment:** `https://cadence-elite-git-main-ishan-e93e.vercel.app/**`\n- **Optional Vercel previews:** `https://*-ishan-e93e.vercel.app/**`
+- **Current main deployment:** `https://cadence-elite-git-main-ishan-e93e.vercel.app/**`
+- **Optional Vercel previews:** `https://*-ishan-e93e.vercel.app/**`
 - **Local development:** `http://localhost:5173/**`
 
 The Site URL and redirect allowlist are important for email confirmation and password-recovery links. Confirm these values in the Supabase dashboard before deploying; this pull request updates source documentation but does not change hosted Auth settings. See the [Supabase redirect URL guide](https://supabase.com/docs/guides/auth/redirect-urls).
