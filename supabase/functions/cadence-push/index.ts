@@ -1,7 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.58.0";
 import webpush from "npm:web-push@3.6.7";
-import { isAllowedCadenceOrigin, normalizePushSubscription } from "./push-endpoint.mjs";
+import { isAllowedCadenceOrigin, normalizePushSubscription, readBodyLimited } from "./push-endpoint.mjs";
 
 type Json = Record<string, any>;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
@@ -135,30 +135,6 @@ async function sendPush(subscription: Json, config: Json, payload: Json) {
     title: payload.title, body: payload.body, kind: payload.kind, id: payload.id, soundUrl: payload.soundUrl || "",
     url: payload.url || APP_ORIGIN + "/", tag: payload.tag || "cadence-notification",
   }), { TTL: 3600 });
-}
-async function readBodyLimited(request: Request, maxBytes: number): Promise<string | null> {
-  if (!request.body) return "";
-  const reader = request.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let totalBytes = 0;
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    if (!value) continue;
-    totalBytes += value.byteLength;
-    if (totalBytes > maxBytes) {
-      await reader.cancel();
-      return null;
-    }
-    chunks.push(value);
-  }
-  const bytes = new Uint8Array(totalBytes);
-  let offset = 0;
-  for (const chunk of chunks) {
-    bytes.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return new TextDecoder().decode(bytes);
 }
 async function handleTick() {
   const config = await ensurePushConfig();
@@ -331,6 +307,6 @@ Deno.serve(async (request: Request) => {
     return reply({ error: "Unknown action." }, 400, origin);
   } catch (error) {
     console.error("cadence-push error:", error);
-    return reply({ error: error instanceof Error ? error.message : "Unexpected push service error." }, 500, origin);
+    return reply({ error: "Push service request failed." }, 500, origin);
   }
 });
