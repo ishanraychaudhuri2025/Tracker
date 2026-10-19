@@ -862,9 +862,9 @@ function App() {
       setToast('Choose a valid audio file.');
       return;
     }
-    if (file.size >= 20 * 1024 * 1024) {
+    if (file.size > 20 * 1024 * 1024) {
       setHabitRingtoneFile(null);
-      setToast('Choose an audio file smaller than 20 MB.');
+      setToast('Choose an audio file 20 MB or smaller.');
       return;
     }
     setHabitRingtoneFile(file);
@@ -880,8 +880,8 @@ function App() {
       event.target.value = '';
       return;
     }
-    if (file.size >= 20 * 1024 * 1024) {
-      setToast('Choose an audio file smaller than 20 MB.');
+    if (file.size > 20 * 1024 * 1024) {
+      setToast('Choose an audio file 20 MB or smaller.');
       event.target.value = '';
       return;
     }
@@ -2079,7 +2079,7 @@ function App() {
               </div>
               {focusRingtoneKind === 'custom' && <div className="focus-music-link-row">
                 <div className="focus-upload-label">Use a streaming link or your own audio</div>
-                <label className="focus-upload-label" htmlFor="focus-audio-upload">Upload audio (under 20 MB)</label>
+                <label className="focus-upload-label" htmlFor="focus-audio-upload">Upload audio (up to 20 MB)</label>
                 <input id="focus-audio-upload" type="file" accept="audio/*" onChange={handleFocusAudioUpload} aria-describedby="focus-audio-upload-help" />
                 <p id="focus-audio-upload-help" className="focus-sound-note">MP3, M4A, WAV, or another browser-supported audio format. Uploaded audio is available for this browser session; choose the file again after refreshing.</p>
                 {focusLocalAudioUrl && <div className="focus-music-saved">
@@ -2171,7 +2171,7 @@ function App() {
               <label className="field-label reminder-sound-label">Custom music link <span className="field-hint">Optional · YouTube or Spotify</span>
                 <input type="url" value={habitDraft.reminderSoundUrl} onChange={(event) => { setHabitRingtoneFile(null); setHabitDraft((draft) => ({ ...draft, reminderSoundUrl: event.target.value })); }} placeholder="https://open.spotify.com/track/…" autoComplete="url" />
               </label>
-              <label className="field-label reminder-sound-label">Upload audio (under 20 MB)
+              <label className="field-label reminder-sound-label">Upload audio (up to 20 MB)
                 <input id="habit-ringtone-upload" type="file" accept="audio/*" onChange={handleHabitRingtoneUpload} aria-describedby="habit-ringtone-help" />
                 <span className="field-hint">{habitRingtoneFile ? 'Selected: ' + habitRingtoneFile.name : editingHabitId && habitLocalRingtones[editingHabitId] ? 'Current upload: ' + habitLocalRingtones[editingHabitId].name : 'MP3, M4A, WAV, or another browser-supported audio format.'}</span>
               </label>
