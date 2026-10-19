@@ -14,7 +14,7 @@ export function isSupportedAudioMime(mime) {
 export function isRingtoneUploadSizeAllowed(size) {
   return typeof size === "number"
     && Number.isFinite(size)
-    && size >= 0
+    && size > 0
     && size <= MAX_RINGTONE_UPLOAD_BYTES;
 }
 
