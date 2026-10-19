@@ -73,6 +73,7 @@ export function isAllowedCadenceOrigin(value) {
     return false;
   }
   if (origin.protocol !== "https:" || origin.origin !== value || origin.username || origin.password) return false;
+  if (origin.port && origin.port !== "443") return false;
   const hostname = origin.hostname.toLowerCase();
   return /^cadence(?:-elite)?-git-[a-z0-9-]+-ishan-e93e\.vercel\.app$/.test(hostname)
     || /^cadence-[a-z0-9]+-ishan-e93e\.vercel\.app$/.test(hostname);
