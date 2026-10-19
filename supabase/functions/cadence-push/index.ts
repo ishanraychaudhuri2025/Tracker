@@ -241,7 +241,7 @@ async function handleTick() {
 Deno.serve(async (request: Request) => {
   const origin = request.headers.get("Origin") ?? APP_ORIGIN;
   if (request.method === "OPTIONS") return new Response("ok", { headers: {
-    "Access-Control-Allow-Origin": allowedOrigins.has(origin) ? origin : APP_ORIGIN,
+    "Access-Control-Allow-Origin": isAllowedCadenceOrigin(origin) ? origin : APP_ORIGIN,
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cadence-cron",
     "Access-Control-Allow-Methods": "POST, OPTIONS", "Vary": "Origin",
   }});
