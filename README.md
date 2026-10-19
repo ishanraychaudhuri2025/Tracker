@@ -31,18 +31,18 @@ Cadence supports Supabase email/password accounts and stores each signed-in user
 
 ### Configure this Supabase project
 
-The configured Cadence deployment uses the public Supabase project URL and publishable key as fallbacks in `src/lib/supabase.ts`; these can be overridden with build-time environment variables. The publishable/anon key is intended for browser use—never expose a service-role or secret key in frontend code.
+Cadence requires `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (or the legacy `VITE_SUPABASE_ANON_KEY`) to be set explicitly for each deployment environment. The browser client has no production-project fallback: if configuration is missing, cloud authentication stays disabled rather than silently connecting to production. The publishable/anon key is intended for browser use—never expose a service-role or secret key in frontend code.
 
 The workspace table migration is at `supabase/migrations/20261014000100_tracker_workspaces.sql`. It has already been applied to the connected `streako` Supabase project.
 
 **One-time Auth URL configuration:** in [Supabase Auth → URL Configuration](https://supabase.com/dashboard/project/wxyigvitegdnurimmarb/auth/url-configuration), set:
 
-- **Site URL:** `https://streako-elite.vercel.app`
-- **Additional Redirect URLs:** `https://streako-elite.vercel.app/**`
-- **Optional Vercel previews:** `https://*-ishan-e93e.vercel.app/**`
+- **Site URL:** `https://cadence-elite.vercel.app`
+- **Additional Redirect URLs:** `https://cadence-elite.vercel.app/**`
+- **Current main deployment:** `https://cadence-elite-git-main-ishan-e93e.vercel.app/**`\n- **Optional Vercel previews:** `https://*-ishan-e93e.vercel.app/**`
 - **Local development:** `http://localhost:5173/**`
 
-The Site URL and redirect allowlist are important for email confirmation and password-recovery links. See the [Supabase redirect URL guide](https://supabase.com/docs/guides/auth/redirect-urls).
+The Site URL and redirect allowlist are important for email confirmation and password-recovery links. Confirm these values in the Supabase dashboard before deploying; this pull request updates source documentation but does not change hosted Auth settings. See the [Supabase redirect URL guide](https://supabase.com/docs/guides/auth/redirect-urls).
 
 Password recovery includes a dedicated new-password form. Legacy guest-only local data is imported into a new account once and removed from the shared guest slot after successful import so later accounts do not inherit it. After signing in, workspace changes are synced to the user's row; RLS restricts reads and writes to that user.
 
