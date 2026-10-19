@@ -1,13 +1,14 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.58.0";
 import webpush from "npm:web-push@3.6.7";
+import { normalizePushSubscription } from "./push-endpoint.mjs";
 
 type Json = Record<string, any>;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-const APP_ORIGIN = "https://streako-elite.vercel.app";
+const APP_ORIGIN = "https://cadence-elite.vercel.app";
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
-const allowedOrigins = new Set([APP_ORIGIN, "https://streako-elite-ishan-e93e.vercel.app", "http://localhost:5173"]);
+const allowedOrigins = new Set([APP_ORIGIN, "https://cadence-elite-git-main-ishan-e93e.vercel.app", "http://localhost:5173"]);
 
 function reply(value: Json, status = 200, origin = APP_ORIGIN) {
   return new Response(JSON.stringify(value), { status, headers: {
@@ -206,7 +207,24 @@ Deno.serve(async (request: Request) => {
   if (request.method !== "POST") return reply({ error: "Method not allowed" }, 405, origin);
   if (!SUPABASE_URL || !SERVICE_ROLE_KEY) return reply({ error: "Push service is not configured." }, 500, origin);
   try {
-    const body = await request.json().catch(() => ({})) as Json, action = String(body.action || "");
+    const declaredLength = Number(request.headers.get("content-length") || "0");
+    if (Number.isFinite(declaredLength) && declaredLength > 16_384) {
+      return reply({ error: "Request body is too large." }, 413, origin);
+    }
+    const rawBody = await request.text();
+    if (new TextEncoder().encode(rawBody).byteLength > 16_384) {
+      return reply({ error: "Request body is too large." }, 413, origin);
+    }
+    let parsedBody: unknown;
+    try {
+      parsedBody = rawBody ? JSON.parse(rawBody) : {};
+    } catch {
+      return reply({ error: "Request body must be valid JSON." }, 400, origin);
+    }
+    if (!parsedBody || typeof parsedBody !== "object" || Array.isArray(parsedBody)) {
+      return reply({ error: "Request body must be a JSON object." }, 400, origin);
+    }
+    const body = parsedBody as Json, action = String(body.action || "");
     if (action === "tick") {
       const config = await ensurePushConfig();
       if (!request.headers.get("x-cadence-cron") || request.headers.get("x-cadence-cron") !== config.cron_secret) return reply({ error: "Unauthorized scheduler request." }, 401, origin);
@@ -219,14 +237,33 @@ Deno.serve(async (request: Request) => {
     const user = await authenticateUser(request);
     if (!user) return reply({ error: "Sign in to configure background notifications." }, 401, origin);
     if (action === "subscribe") {
-      const subscription = body.subscription;
-      if (!subscription || typeof subscription.endpoint !== "string" || !subscription.endpoint.startsWith("https://") || !subscription.keys?.p256dh || !subscription.keys?.auth) {
-        return reply({ error: "The browser returned an invalid push subscription." }, 400, origin);
+      const subscription = normalizePushSubscription(body.subscription);
+      if (!subscription) {
+        return reply({ error: "The browser returned an unsupported or invalid push subscription." }, 400, origin);
       }
-      const { error } = await admin.from("cadence_push_subscriptions").upsert({
-        user_id: user.id, endpoint: subscription.endpoint, subscription, timezone: validTimezone(body.timezone), updated_at: new Date().toISOString(),
-      }, { onConflict: "endpoint" });
-      if (error) throw error;
+      const { data: existing, error: lookupError } = await admin
+        .from("cadence_push_subscriptions")
+        .select("id, user_id")
+        .eq("endpoint", subscription.endpoint)
+        .maybeSingle();
+      if (lookupError) throw lookupError;
+      if (existing && existing.user_id !== user.id) {
+        return reply({ error: "This push endpoint is already registered to another account." }, 409, origin);
+      }
+
+      const timezone = validTimezone(body.timezone);
+      if (existing) {
+        const { error } = await admin.from("cadence_push_subscriptions")
+          .update({ subscription, timezone, updated_at: new Date().toISOString() })
+          .eq("id", existing.id)
+          .eq("user_id", user.id);
+        if (error) throw error;
+      } else {
+        const { error } = await admin.from("cadence_push_subscriptions").insert({
+          user_id: user.id, endpoint: subscription.endpoint, subscription, timezone,
+        });
+        if (error) throw error;
+      }
       return reply({ ok: true, enabled: true }, 200, origin);
     }
     if (action === "unsubscribe") {
