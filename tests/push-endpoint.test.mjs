@@ -63,3 +63,17 @@ test("rejects untrusted, malformed, insecure, or non-origin CORS values", () => 
     "not-an-origin",
   ]) assert.equal(isAllowedCadenceOrigin(origin), false, origin);
 });
+
+import { readBodyLimited } from "../supabase/functions/cadence-push/push-endpoint.mjs";
+
+test("reads a request body up to the exact byte limit", async () => {
+  const body = JSON.stringify({ action: "public-key" });
+  const result = await readBodyLimited(new Request("https://example.test", { method: "POST", body }), new TextEncoder().encode(body).byteLength);
+  assert.equal(result, body);
+});
+
+test("streams and rejects bodies exceeding the byte limit, including UTF-8 bytes", async () => {
+  assert.equal(await readBodyLimited(new Request("https://example.test", { method: "POST", body: "12345" }), 4), null);
+  assert.equal(await readBodyLimited(new Request("https://example.test", { method: "POST", body: "😀" }), 3), null);
+  assert.equal(await readBodyLimited(new Request("https://example.test", { method: "POST", body: "😀" }), 4), "😀");
+});
