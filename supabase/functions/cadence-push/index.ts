@@ -136,13 +136,54 @@ async function sendPush(subscription: Json, config: Json, payload: Json) {
     url: payload.url || APP_ORIGIN + "/", tag: payload.tag || "cadence-notification",
   }), { TTL: 3600 });
 }
+async function readBodyLimited(request: Request, maxBytes: number): Promise<string | null> {
+  if (!request.body) return "";
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    if (!value) continue;
+    totalBytes += value.byteLength;
+    if (totalBytes > maxBytes) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder().decode(bytes);
+}
 async function handleTick() {
   const config = await ensurePushConfig();
   const { data: subscriptions, error: subError } = await admin.from("cadence_push_subscriptions")
     .select("id,user_id,endpoint,subscription,timezone,created_at");
   if (subError) throw subError;
-  if (!subscriptions?.length) return { delivered: 0, subscriptions: 0 };
-  const ids = Array.from(new Set(subscriptions.map((s: Json) => s.user_id)));
+
+  // Do not deliver to subscription URLs that predate the endpoint allowlist.
+  const safeSubscriptions: Json[] = [];
+  const invalidSubscriptionIds: string[] = [];
+  for (const row of (subscriptions ?? []) as Json[]) {
+    const normalized = normalizePushSubscription(row.subscription);
+    if (!normalized || normalized.endpoint !== row.endpoint) {
+      if (typeof row.id === "string") invalidSubscriptionIds.push(row.id);
+      continue;
+    }
+    safeSubscriptions.push({ ...row, subscription: normalized });
+  }
+  if (invalidSubscriptionIds.length) {
+    const { error } = await admin.from("cadence_push_subscriptions").delete().in("id", invalidSubscriptionIds);
+    if (error) throw error;
+  }
+  if (!safeSubscriptions.length) return { delivered: 0, subscriptions: 0 };
+
+  const ids = Array.from(new Set(safeSubscriptions.map((s: Json) => s.user_id)));
   const { data: workspaces, error: workspaceError } = await admin.from("tracker_workspaces")
     .select("user_id,habits,tasks").in("user_id", ids);
   if (workspaceError) throw workspaceError;
@@ -153,7 +194,7 @@ async function handleTick() {
   if (timerError) throw timerError;
 
   const outgoing: Array<{ row: Json; key: string; payload: Json; focusUser?: string }> = [];
-  for (const row of subscriptions as Json[]) {
+  for (const row of safeSubscriptions as Json[]) {
     const workspace = workspaceByUser.get(row.user_id);
     if (workspace) for (const item of dueReminders(workspace, validTimezone(row.timezone), now)) {
       outgoing.push({ row, key: String(row.id) + ":" + item.key, payload: item.payload });
@@ -194,7 +235,7 @@ async function handleTick() {
   for (const userId of focusSucceeded) if (!focusFailed.has(userId)) {
     await admin.from("cadence_push_focus_timers").update({ delivered_at: now.toISOString(), updated_at: now.toISOString() }).eq("user_id", userId).is("delivered_at", null);
   }
-  return { delivered, subscriptions: subscriptions.length };
+  return { delivered, subscriptions: safeSubscriptions.length };
 }
 
 Deno.serve(async (request: Request) => {
@@ -211,10 +252,8 @@ Deno.serve(async (request: Request) => {
     if (Number.isFinite(declaredLength) && declaredLength > 16_384) {
       return reply({ error: "Request body is too large." }, 413, origin);
     }
-    const rawBody = await request.text();
-    if (new TextEncoder().encode(rawBody).byteLength > 16_384) {
-      return reply({ error: "Request body is too large." }, 413, origin);
-    }
+    const rawBody = await readBodyLimited(request, 16_384);
+    if (rawBody === null) return reply({ error: "Request body is too large." }, 413, origin);
     let parsedBody: unknown;
     try {
       parsedBody = rawBody ? JSON.parse(rawBody) : {};
