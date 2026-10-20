@@ -14,14 +14,13 @@
 
 <p align="center">
   <a href="https://cadence-elite.vercel.app"><strong>Open the live app ↗</strong></a>
-  &nbsp; · &nbsp;
+  &nbsp; - &nbsp;
   <a href="#features">Explore features</a>
-  &nbsp; · &nbsp;
+  &nbsp; - &nbsp;
   <a href="#get-started">Run locally</a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/ishanraychaudhuri2025/Cadence/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/ishanraychaudhuri2025/Cadence/actions/workflows/ci.yml/badge.svg?branch=main" /></a>
   <img alt="React 19" src="https://img.shields.io/badge/React-19-149eca?logo=react&logoColor=white" />
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.9-3178c6?logo=typescript&logoColor=white" />
   <img alt="Vite" src="https://img.shields.io/badge/Vite-7-8b5cf6?logo=vite&logoColor=white" />
