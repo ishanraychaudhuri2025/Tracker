@@ -1,113 +1,185 @@
-# Cadence Elite
+<p align="center">
+  <img src="public/cadence-icon.svg" width="72" alt="Cadence waveform icon" />
+</p>
 
-Cadence is a research-informed, local-first habit and task tracker. This repository contains the application source and frontend assets. Authentication and cross-device workspace sync use the connected Supabase project; server-side service-role credentials are not included in frontend code.
+<p align="center">
+  <img src="public/cadence-wordmark.svg" width="230" alt="CADENCE" />
+</p>
 
-## Monthly execution calendar
+<h3 align="center">Build momentum. Keep what matters.</h3>
 
-The Insights page includes a navigable calendar with per-day completed-task counts, habit check-ins, month totals, and a selected-day checklist for reviewing and correcting past check-ins.
+<p align="center">
+  A considered, research-informed space for building habits, managing daily work, and making steady progress.
+</p>
 
-## What is here
+<p align="center">
+  <a href="https://cadence-elite.vercel.app"><strong>Open the live app ↗</strong></a>
+  &nbsp; · &nbsp;
+  <a href="#features">Explore features</a>
+  &nbsp; · &nbsp;
+  <a href="#get-started">Run locally</a>
+</p>
 
-- **Planner:** selectable weekly and monthly calendars, date navigation, day-by-day activity summaries, and clickable checklists.
-- **Recurring activities:** schedule tasks daily, on weekdays/weekends, weekly, or monthly; each occurrence has its own completion state.
-- **Time and life-area grouping:** organize tasks by Morning / Afternoon / Evening / Anytime or by Study, Work, Health, Personal, and Admin.
-- **Progress matrix:** weekly habit tick marks plus daily and monthly visual progress.
-- **Problem-to-solution plan:** see [docs/PROBLEM_SOLUTION_MAP.md](docs/PROBLEM_SOLUTION_MAP.md) for the user problems, design responses, reference listings, and research basis.
+<p align="center">
+  <a href="https://github.com/ishanraychaudhuri2025/Cadence/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/ishanraychaudhuri2025/Cadence/actions/workflows/ci.yml/badge.svg?branch=main" /></a>
+  <img alt="React 19" src="https://img.shields.io/badge/React-19-149eca?logo=react&logoColor=white" />
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.9-3178c6?logo=typescript&logoColor=white" />
+  <img alt="Vite" src="https://img.shields.io/badge/Vite-7-8b5cf6?logo=vite&logoColor=white" />
+  <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-8b5cf6.svg" /></a>
+</p>
 
-- **Today dashboard:** check habits off, see daily progress, review current/best streaks, and track a small task list.
-- **Habit design:** create routines with a category, cadence, reliable cue, and a minimum version.
-- **Custom reminder soundtracks:** use a supported Spotify or YouTube link, or upload an audio file up to 20 MB for habit and task reminders. Uploaded files stay in browser memory for the current session; links sync with the workspace. Browser autoplay restrictions may require a user gesture, so Cadence keeps its repeating alarm tone as a fallback.
-- **Focus room:** a working 15 / 25 / 50-minute focus timer, pause/resume, reset, and completed-session count.
-- **Insights:** completion heatmap, consistency calculation, routine rankings, and a weekly behavior-design reflection.
-- **Responsive UI:** desktop sidebar, mobile layout, dark/light appearance, accessible labels, reduced-motion support.
-- **Local persistence:** habits, task state, and check-ins persist in this browser using `localStorage`.
+---
 
-## Fresh-start workspaces
+## Product overview
 
-Cadence does not seed sample habits, tasks, completion history, or focus-session statistics. A newly created cloud workspace starts with empty `habits` and `tasks` arrays and `focus_sessions = 0`. Browser caches using the legacy `streako-elite-v1` key are cleared. Local guest data is intentionally not imported into a signed-in account.
+<p align="center">
+  <a href="https://cadence-elite.vercel.app">
+    <img src="docs/cadence-product-overview.svg" width="100%" alt="Illustrative Cadence workspace overview showing habits, tasks, weekly consistency, and a focus timer" />
+  </a>
+</p>
 
-## Authentication and cloud sync
+<p align="center"><sub>Illustrative visual overview — not a screenshot of the live interface. Open Cadence to explore the current product.</sub></p>
 
-Cadence supports Supabase email/password accounts and stores each signed-in user's habits, recurring tasks, focus-session count, and appearance preferences in a user-scoped workspace row. Workspace access is enforced by PostgreSQL Row Level Security using `auth.uid()`.
+Cadence brings routines, recurring tasks, calendar planning, focus sessions, and progress insights into one personal workspace. Its design principle is simple: make the next useful action clear, keep the starting step small, and treat consistency as feedback—not a judgment.
 
-### Configure this Supabase project
+## Features
 
-Cadence requires `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (or the legacy `VITE_SUPABASE_ANON_KEY`) to be set explicitly for each deployment environment. The browser client has no production-project fallback: if configuration is missing, cloud authentication stays disabled rather than silently connecting to production. The publishable/anon key is intended for browser use—never expose a service-role or secret key in frontend code.
+| Area | What it does |
+| --- | --- |
+| **Today** | Review the day's routines, completion progress, current and best streaks, and priority tasks. |
+| **Habits** | Build routines with a category, cadence, cue, minimum version, and reminder settings. Supports daily, weekday/weekend, weekly, and custom schedules. |
+| **Tasks & Planner** | Manage one-off and recurring tasks, review a weekly or monthly calendar, and track individual occurrences. |
+| **Focus** | Use a 15 / 25 / 50-minute session, pause or reset a timer, and track completed focus sessions. |
+| **Insights** | Review completion trends, activity history, habit consistency, routine rankings, and behavior-design reflections. |
+| **Personal reminders** | Configure supported Spotify or YouTube links or upload an audio file up to 20 MB. Uploaded audio is kept in browser memory for the current session; linked soundtracks can sync with the workspace. |
+| **Notifications** | Use browser notifications and the push-notification flow on supported devices. Browser permissions, background execution, and audio autoplay vary by browser and operating system. |
+| **Account & sync** | Sign in with email/password and sync habits, tasks, focus counts, and appearance preferences to a user-scoped Supabase workspace. |
+| **Fresh start** | New workspaces start without demo habits, tasks, completion history, or focus statistics. |
+| **Responsive interface** | Dark, violet-accented visual system with desktop navigation, mobile layouts, readable controls, and reduced-motion support. |
 
-The workspace migration is `supabase/migrations/20261014174107_create_tracker_workspaces.sql`; the push schema is `supabase/migrations/20261018200848_cadence_push_notifications.sql`. The connected project also has `supabase/migrations/20261019040302_harden_tracker_workspace_grants.sql` and `supabase/migrations/20261019041017_harden_cadence_push_table_grants.sql`. All four versions are applied to the connected Supabase project and are now tracked in the repository under matching migration versions. The hardening migrations preserve authenticated workspace CRUD with owner-only RLS and narrow the server-side push table grants to the operations required by the Edge Function.
+## Design principles
 
-**One-time Auth URL configuration:** in [Supabase Auth → URL Configuration](https://supabase.com/dashboard/project/wxyigvitegdnurimmarb/auth/url-configuration), set:
+Cadence is designed around practical behavior-design principles rather than streak pressure:
 
-- **Site URL:** `https://cadence-elite.vercel.app`
-- **Additional Redirect URLs:** `https://cadence-elite.vercel.app/**`
-- **Current main deployment:** `https://cadence-elite-git-main-ishan-e93e.vercel.app/**`
-- **Optional Cadence Vercel previews only:** `https://cadence-*-ishan-e93e.vercel.app/**`
-- **Local development:** `http://localhost:5173/**`
+- **Make the next action obvious.** Keep the cue and next step close to the habit.
+- **Lower the starting cost.** A minimum version makes it easier to begin on low-energy days.
+- **Use context intentionally.** Tie actions to repeatable moments such as after breakfast or before closing a laptop.
+- **Make progress visible.** Check-ins and history help users notice patterns without treating a missed day as failure.
+- **Avoid universal habit timelines.** Automaticity varies across people, behaviors, and contexts; Cadence does not promise that every habit forms in 21 days.
 
-The Site URL and redirect allowlist are important for email confirmation and password-recovery links. Hosted Auth URL settings have not been independently verified in this audit session. Confirm the values above in the Supabase dashboard before enabling production sign-ups. The preview pattern is deliberately scoped to this project's `cadence-` deployment names rather than all Vercel projects under the account. See the [Supabase redirect URL guide](https://supabase.com/docs/guides/auth/redirect-urls).\n\n**Remaining hosted security settings:** leaked-password protection is disabled and must be enabled under Supabase Auth → Attack Protection. Supabase also warns that `pg_net` is registered under `public`; because re-creating this managed extension removes its retained response records, this audit left it unchanged for a planned maintenance window rather than risking push diagnostics or live delivery.
+These principles are informed by published behavior research. They are product-design hypotheses, not a claim that Cadence itself has been clinically tested.
 
-Password recovery includes a dedicated new-password form. After signing in, workspace changes are synced to the user's row; the owner-only RLS policies restrict reads and writes to that user. New accounts start with empty cloud workspaces and do not inherit guest-only local data.
+### Research starting points
 
-For a separate deployment or fork, set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (or legacy `VITE_SUPABASE_ANON_KEY`) in its build environment. Never set a service-role key in a `VITE_*` variable. Before applying the push migration to another project, update its project-specific Edge Function URL in the cron command.
+- **[Fogg Behavior Model — Stanford Behavior Design Lab](https://behaviordesign.stanford.edu/resources/fogg-behavior-model):** behavior is more likely when motivation, ability, and a prompt converge.
+- **[Harkin et al. (2016)](https://doi.org/10.1037/bul0000025), _Does monitoring goal progress promote goal attainment?_:** meta-analysis of 138 studies and 19,951 participants reporting a positive average effect of progress monitoring on goal attainment.
+- **[Gollwitzer & Sheeran (2006)](https://doi.org/10.1016/S0065-2601(06)38002-1), _Implementation Intentions and Goal Achievement_:** evidence on planning actions using concrete “if–then” cues.
+- **[Lally et al. (2010)](https://doi.org/10.1002/ejsp.674), _How are habits formed?_:** habit automaticity follows individual trajectories rather than a universal timetable.
+- **[Neal, Wood & Quinn (2006)](https://doi.org/10.1111/j.1467-8721.2006.00435.x), _Habits—A Repeat Performance_:** how stable contexts can trigger repeated actions.
 
-## Run locally
+See [docs/PROBLEM_SOLUTION_MAP.md](docs/PROBLEM_SOLUTION_MAP.md) for the problem-to-feature map and further references.
 
-Requirements: Node.js 20.19+ (Node 22 LTS is a good choice) and npm.
+## Technology
+
+- **Frontend:** React 19, TypeScript, Vite 7, Lucide icons, custom CSS.
+- **Authentication and data:** Supabase Auth and PostgreSQL with Row Level Security (RLS).
+- **Reminders:** browser notification/audio support, service worker, and a Supabase Edge Function for push-related server work.
+- **Quality checks:** GitHub Actions runs dependency auditing, Node tests, Deno type-checking, TypeScript checks, Vercel configuration validation, and a production build.
+
+## Get started
+
+### Requirements
+
+- Node.js **20.19+** (Node 22 LTS recommended)
+- npm
+
+### Install and run
 
 ```bash
+git clone https://github.com/ishanraychaudhuri2025/Cadence.git
+cd Cadence
 npm ci
 npm run dev
 ```
 
-Open the URL Vite prints (usually `http://localhost:5173`). To make a production build:
+Open the local URL printed by Vite (typically `http://localhost:5173`).
+
+### Environment configuration
+
+Cloud authentication and sync require these variables in a local `.env` file and in each deployment environment:
+
+```dotenv
+VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
+```
+
+The app also accepts the legacy `VITE_SUPABASE_ANON_KEY` variable. Use a **publishable/anon** key only in the browser. Never place a Supabase service-role key or another secret in a `VITE_*` variable or commit it to source control.
+
+The Supabase client intentionally has no hard-coded production fallback: if the required configuration is absent, cloud authentication stays disabled rather than silently connecting to the production project.
+
+### Validate a change
+
+Run the same core checks used by CI:
 
 ```bash
+npm ci
+npm audit --audit-level=high
+node --test tests/*.test.mjs
+npx deno check --no-lock supabase/functions/cadence-push/index.ts
 npm run typecheck
 npm run build
 npm run preview
 ```
 
-## Publish to GitHub
+`npm run preview` serves the built app locally after `npm run build`.
 
-The source is maintained in [ishanraychaudhuri2025/Tracker](https://github.com/ishanraychaudhuri2025/Tracker). To push local changes from your machine, install GitHub CLI, sign in once, then run the included script from the project folder:
+## Supabase setup and security
 
-```bash
-gh auth login
-./scripts/publish-to-github.sh Tracker
+The application stores a signed-in user's workspace in a row protected by PostgreSQL RLS using `auth.uid()`. Push-related tables are restricted to server-side access; they are not meant to be opened up to browser roles simply to silence an advisor warning.
+
+The repository tracks the workspace, notification, grant-hardening, RLS, and `pg_net` maintenance migrations under `supabase/migrations/`. The latest tracked security migrations:
+
+- `20261019040302_harden_tracker_workspace_grants.sql`
+- `20261019041017_harden_cadence_push_table_grants.sql`
+- `20261019051602_harden_phase3_security_and_pg_net.sql`
+- `20261019052019_realign_pg_net_request_sequence.sql`
+
+The `pg_net` maintenance migration moves the extension to the `extensions` schema without `CASCADE`, preserves historical HTTP response diagnostics, and restores the scheduled push job. The sequence follow-up keeps new request IDs beyond retained response IDs. Review migration contents and your target project's state before applying these changes to another database.
+
+### Auth URL configuration
+
+In [Supabase Auth → URL Configuration](https://supabase.com/dashboard/project/wxyigvitegdnurimmarb/auth/url-configuration), set the Site URL to:
+
+```text
+https://cadence-elite.vercel.app
 ```
 
-The script targets the existing `Tracker` repository and pushes the current branch to `main`. Pass a different repository name as the first argument only when you intentionally want another destination.
+Allow this exact production origin for confirmation and password-reset redirects. Add preview or local-development URLs only when you actively use those environments, and keep the allowlist scoped to known origins. Verify the hosted values in the dashboard before enabling public sign-ups.
 
-## Behavior-design principles
+**Production note:** Supabase's Security Advisor has reported leaked-password protection disabled for the current project. Check [Supabase password security](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection) and your plan's feature availability before launching to a broader audience.
 
-The product deliberately emphasizes consistency over streak perfection:
+## Repository layout
 
-1. **Prompt + ability + motivation:** keep the next action visible, lower the effort with a minimum version, and use progress as feedback.
-2. **Context cues:** habits can be tied to a reliable moment such as after breakfast or before closing a laptop.
-3. **Implementation intentions:** habit creation captures the form “If [cue], then I’ll [small action].”
-4. **Self-monitoring:** check-ins and the activity heatmap make behavior visible without implying that a missed day is a moral failure.
-5. **Flexible habit formation:** no universal “21-day” promise; automaticity varies substantially by behavior and person.
-
-These are design hypotheses based on published behavior research, not a claim that this application has itself been clinically or experimentally validated.
-
-## Research starting points
-
-- **Stanford Behavior Design Lab — Fogg Behavior Model.** Behavior occurs when motivation, ability, and a prompt converge. This informs visible prompts and the “minimum version” field. https://behaviordesign.stanford.edu/resources/fogg-behavior-model
-- **Harkin, Webb, Chang et al. (2016), _Does monitoring goal progress promote goal attainment? A meta-analysis of the experimental evidence_, Psychological Bulletin 142(2), 198–229.** The meta-analysis covered 138 studies with 19,951 participants and reported a positive average effect of progress-monitoring interventions on goal attainment. DOI: https://doi.org/10.1037/bul0000025
-- **Stanford SPARQ — Plan to Succeed.** Summarizes an implementation-intentions study in which students who specified concrete completion strategies were more likely to submit the assignment than controls. The page describes plans for time, place, and action. https://sparq.stanford.edu/solutions/plan-succeed
-- **Gollwitzer & Sheeran (2006), _Implementation Intentions and Goal Achievement: A Meta-analysis of Effects and Processes_, Advances in Experimental Social Psychology 38, 69–119.** Reviews if–then plans specifying when, where, and how to act. DOI: https://doi.org/10.1016/S0065-2601(06)38002-1
-- **Lally, van Jaarsveld, Potts & Wardle (2010), _How are habits formed: Modelling habit formation in the real world_, European Journal of Social Psychology 40(6), 998–1009.** Habit automaticity followed individual curves; estimated times varied widely. DOI: https://doi.org/10.1002/ejsp.674
-- **Neal, Wood & Quinn (2006), _Habits—A Repeat Performance_, Current Directions in Psychological Science 15(4), 198–202.** Reviews how stable context cues can trigger repeated actions. DOI: https://doi.org/10.1111/j.1467-8721.2006.00435.x
-- **Wood, Mazar & Neal (2022), _Habits and Goals in Human Behavior: Separate but Interacting Systems_, Perspectives on Psychological Science 17(2), 590–605.** Explores how habits and goals can interact. DOI: https://doi.org/10.1177/1745691621994226
-
-## Current scope / next milestones
-
-1. Add automated tests for schedule recurrence, streak calculations, and date-boundary behavior, plus account-isolation tests using separate authenticated users.
-2. Verify the hosted Supabase Auth Site URL and redirect allowlist, and test sign-up, confirmation, sign-in, reset, and password update in a real browser.
-3. Exercise browser-level accessibility, focus behavior, audio autoplay fallback, notification timing, and background push on supported devices.
-4. Resolve or explicitly accept the remaining Supabase security advisories after dependency and operational impact review.
-5. Treat production launch as gated on end-to-end tests; CI and a ready preview are necessary but not sufficient.
+```text
+.
+├── public/                    # App icon, wordmark, manifest, service worker
+├── src/
+│   ├── components/            # Authentication and reusable UI
+│   ├── lib/                   # Supabase client and reminder helpers
+│   ├── App.tsx                # Main workspace
+│   ├── Planner.tsx            # Calendar and recurring-task planner
+│   └── TasksPage.tsx          # Task overview
+├── docs/
+│   ├── cadence-product-overview.svg
+│   └── PROBLEM_SOLUTION_MAP.md
+├── scripts/                   # Local GitHub publishing helper
+├── supabase/
+│   ├── functions/cadence-push/
+│   ├── migrations/
+│   └── tests/                 # SQL account-isolation checks
+└── tests/                     # Node regression tests
+```
 
 ## License
 
-MIT for this original code scaffold. Third-party packages retain their own licenses.
+Released under the [MIT License](LICENSE). Third-party packages retain their respective licenses.
