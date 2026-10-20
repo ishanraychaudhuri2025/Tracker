@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_NAME="${1:-Tracker}"
+REPO_NAME="${1:-Cadence}"
 
 if ! command -v gh >/dev/null 2>&1; then
   echo "GitHub CLI (gh) is required. Install it from https://cli.github.com/ and run: gh auth login" >&2
@@ -23,19 +23,20 @@ fi
 git branch -M main
 if ! git rev-parse --verify HEAD >/dev/null 2>&1; then
   git add -A
-  git commit -m "Initial Streako Elite scaffold"
+  git commit -m "Initial Cadence scaffold"
 fi
 
-if gh repo view "$FULL_REPO" >/dev/null 2>&1; then
-  URL="https://github.com/$FULL_REPO.git"
-  if git remote get-url origin >/dev/null 2>&1; then
-    git remote set-url origin "$URL"
-  else
-    git remote add origin "$URL"
-  fi
-  git push -u origin HEAD:main
-  echo "Updated existing repository: https://github.com/$FULL_REPO"
-else
-  gh repo create "$FULL_REPO" --private --source=. --remote=origin --push
-  echo "Created private repository: https://github.com/$FULL_REPO"
+if ! gh repo view "$FULL_REPO" >/dev/null 2>&1; then
+  echo "Target repository not found: $FULL_REPO" >&2
+  echo "Rename the existing repository to Cadence in GitHub Settings first. No new repository was created." >&2
+  exit 1
 fi
+
+URL="https://github.com/$FULL_REPO.git"
+if git remote get-url origin >/dev/null 2>&1; then
+  git remote set-url origin "$URL"
+else
+  git remote add origin "$URL"
+fi
+git push -u origin HEAD:main
+echo "Updated existing repository: https://github.com/$FULL_REPO"
