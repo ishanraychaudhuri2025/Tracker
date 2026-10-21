@@ -1676,7 +1676,7 @@ function App() {
 
   if (supabaseConfigured && passwordRecovery) return <AuthScreen initialMode="update" />;
     if (supabaseConfigured && !authReady) {
-    return <div className="auth-loading-screen"><div className="auth-loading-mark"><CadenceMark /></div><h1>Preparing your workspace</h1><p>Securely loading your routines and task history…</p></div>;
+    return <div className="auth-loading-screen"><div className="auth-loading-mark"><img className="cadence-mark-svg" src="/cadence-icon.svg" alt="Cadence waveform" /></div><h1>Preparing your workspace</h1><p>Securely loading your routines and task history…</p></div>;
   }
   if (supabaseConfigured && !authSession) return <AuthScreen />;
   if (supabaseConfigured && authSession && !workspaceReady) {
