@@ -459,6 +459,7 @@ function App() {
       if (payload.kind === 'task') {
         const task = tasks.find((item) => item.id === payload.id);
         if (task && taskIsDone(task, today)) return;
+        setReminderSoundStopped(false);
         setPushArrival((current) => current || {
           kind: 'task',
           title: payload.title || (task ? 'Time for ' + task.title : 'Your task reminder'),
@@ -470,6 +471,7 @@ function App() {
         return;
       }
       if (payload.kind === 'focus') {
+        setReminderSoundStopped(false);
         setPushArrival((current) => current || {
           kind: 'focus',
           title: payload.title || 'Focus block complete',
