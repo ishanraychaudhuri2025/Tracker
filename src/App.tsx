@@ -1267,7 +1267,10 @@ function App() {
 
   useEffect(() => {
     if (!pendingReviewOpen || reminderSoundStopped) return undefined;
-    const play = () => playReminderMelody();
+    const play = () => {
+      unlockReminderAudio();
+      playReminderMelody();
+    };
     play();
     const interval = window.setInterval(play, 2800);
     return () => window.clearInterval(interval);
