@@ -1299,6 +1299,7 @@ function App() {
         }
       });
       if (fresh.length) {
+        setReminderSoundStopped(false);
         setActiveReminder((current) => current || {
           habitId: fresh[0].id,
           habitName: fresh[0].name,
@@ -2275,9 +2276,9 @@ function App() {
             <button type="button" className="reminder-replay-button" onClick={() => { setReminderSoundStopped(false); unlockReminderAudio(); playReminderMelody(); }}>Replay sound</button>
           </div>
           <div className="reminder-alarm-actions">
-            {pendingOpenHabits.length > 0 && <button type="button" className="secondary-button" onClick={() => { pendingReviewActiveRef.current = false; setPendingReviewOpen(false); setPage('Habits'); }}>Review habits</button>}
-            {pendingOpenTasks.length > 0 && <button type="button" className="secondary-button" onClick={() => { pendingReviewActiveRef.current = false; setPendingReviewOpen(false); setPage('Tasks'); }}>Review tasks</button>}
-            <button type="button" className="primary-button" onClick={() => { pendingReviewActiveRef.current = false; setPendingReviewOpen(false); setPage('Today'); }}>I’ll take care of these</button>
+            {pendingOpenHabits.length > 0 && <button type="button" className="secondary-button" onClick={() => { pendingReviewActiveRef.current = false; setPendingReviewOpen(false); setReminderSoundStopped(false); setPage('Habits'); }}>Review habits</button>}
+            {pendingOpenTasks.length > 0 && <button type="button" className="secondary-button" onClick={() => { pendingReviewActiveRef.current = false; setPendingReviewOpen(false); setReminderSoundStopped(false); setPage('Tasks'); }}>Review tasks</button>}
+            <button type="button" className="primary-button" onClick={() => { pendingReviewActiveRef.current = false; setPendingReviewOpen(false); setReminderSoundStopped(false); setPage('Today'); }}>I’ll take care of these</button>
           </div>
           <p className="reminder-footnote">Audio may require one click if your browser blocks autoplay. Disabling “Pending alerts” in the sidebar turns off this on-open reminder without affecting scheduled habit and task alarms.</p>
         </section>
