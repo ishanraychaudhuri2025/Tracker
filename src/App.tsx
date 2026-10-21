@@ -1216,10 +1216,12 @@ function App() {
       const now = new Date();
       const currentTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
       const day = toKey(now);
-      const due = habits.filter((habit) => habit.reminderEnabled && isDue(habit, day) && habit.reminderTime === currentTime && !habit.logs[day]);
-      const fresh = due.filter((habit) => !firedRemindersRef.current.has(`${habit.id}:${day}:${currentTime}`));
+      // Catch up on reminders that passed while the laptop/browser was asleep or closed.
+      // The day-level key prevents the same overdue reminder firing every minute.
+      const due = habits.filter((habit) => habit.reminderEnabled && isDue(habit, day) && Boolean(habit.reminderTime) && habit.reminderTime! <= currentTime && !habit.logs[day]);
+      const fresh = due.filter((habit) => !firedRemindersRef.current.has(`${habit.id}:${day}`));
       fresh.forEach((habit) => {
-        firedRemindersRef.current.add(`${habit.id}:${day}:${currentTime}`);
+        firedRemindersRef.current.add(`${habit.id}:${day}`);
         if ('Notification' in window && Notification.permission === 'granted') {
           try {
             const notification = new Notification(`Time for ${habit.name}`, {
@@ -1237,7 +1239,7 @@ function App() {
         setActiveReminder((current) => current || {
           habitId: fresh[0].id,
           habitName: fresh[0].name,
-          reminderTime: currentTime,
+          reminderTime: fresh[0].reminderTime || currentTime,
           reminderSoundUrl: fresh[0].reminderSoundUrl,
           localRingtone: habitLocalRingtones[fresh[0].id],
         });
@@ -1245,10 +1247,11 @@ function App() {
 
       // Planner tasks can have timed reminders too. Keep them independent from
       // habit reminders so a task still alerts when no habit alarm is configured.
-      const dueTasks = tasks.filter((task) => task.time === currentTime && taskOccursOn(task, day) && !taskIsDone(task, day));
-      const freshTasks = dueTasks.filter((task) => !firedTaskRemindersRef.current.has(`${task.id}:${day}:${currentTime}`));
+      // Tasks are also recovered if their scheduled minute passed while Cadence was closed.
+      const dueTasks = tasks.filter((task) => Boolean(task.time) && task.time! <= currentTime && taskOccursOn(task, day) && !taskIsDone(task, day));
+      const freshTasks = dueTasks.filter((task) => !firedTaskRemindersRef.current.has(`${task.id}:${day}`));
       freshTasks.forEach((task) => {
-        firedTaskRemindersRef.current.add(`${task.id}:${day}:${currentTime}`);
+        firedTaskRemindersRef.current.add(`${task.id}:${day}`);
         if ('Notification' in window && Notification.permission === 'granted') {
           try {
             const notification = new Notification('Time for ' + task.title, {
@@ -1263,6 +1266,7 @@ function App() {
         }
       });
       if (freshTasks.length) {
+        setReminderSoundStopped(false);
         setToast(freshTasks.length === 1 ? 'Time for ' + freshTasks[0].title : freshTasks.length + ' tasks are due now.');
         // If a habit is due at the same moment, its alarm already loops;
         // otherwise keep a task alarm open until it is acknowledged.
@@ -1311,7 +1315,18 @@ function App() {
   }, [activeReminder, reminderSoundStopped]);
 
   useEffect(() => {
-    if (!pushArrival) return undefined;
+    if (!pushArrival || reminderSoundStopped) {
+      if (pushArrival?.localRingtone) {
+        pushArrival.localRingtone.audio.pause();
+        pushArrival.localRingtone.audio.loop = false;
+        try { pushArrival.localRingtone.audio.currentTime = 0; } catch { /* Ignore non-seekable audio. */ }
+      }
+      if (pushArrival?.kind === 'focus') {
+        if (focusAlarmAudioRef.current) focusAlarmAudioRef.current.pause();
+        if (focusCompletionAudioRef.current) focusCompletionAudioRef.current.pause();
+      }
+      return undefined;
+    }
     focusAudioFallbackNotifiedRef.current = false;
     localRingtoneFallbackNotifiedRef.current = false;
     const play = () => {
@@ -1343,7 +1358,7 @@ function App() {
         try { audio.currentTime = 0; } catch { /* Ignore non-seekable audio. */ }
       }
     };
-  }, [pushArrival, focusRingtoneKind, focusRingtoneData, focusLocalAudioUrl]);
+  }, [pushArrival, reminderSoundStopped, focusRingtoneKind, focusRingtoneData, focusLocalAudioUrl]);
 
   useEffect(() => () => {
     if (snoozeTimeoutRef.current !== null) window.clearTimeout(snoozeTimeoutRef.current);
@@ -2190,7 +2205,7 @@ function App() {
             <button type="button" className="secondary-button" onClick={snoozeReminderAlarm}><Clock3 size={15} /> Snooze 10 min</button>
             <button type="button" className="primary-button" onClick={() => { toggleHabit(activeReminder.habitId); stopReminderAlarm(); }}><Check size={15} /> Mark done</button>
           </div>
-          <div className="reminder-sound-controls">{activeReminder.localRingtone && <button type="button" className="reminder-replay-button" onClick={() => { const ringtone = activeReminder.localRingtone; if (ringtone) { ringtone.audio.pause(); try { ringtone.audio.currentTime = 0; } catch { /* Ignore non-seekable audio. */ } setReminderSoundStopped(false); startLocalRingtonePlayback(ringtone); } }}>Play uploaded ringtone again</button>}{activeReminderMedia && <button type="button" className="reminder-replay-button" onClick={() => { setReminderSoundStopped(false); setReminderMediaReload((value) => value + 1); }}>Play soundtrack again</button>}<button type="button" className="reminder-stop-button" onClick={() => setReminderSoundStopped(true)}>Stop sound</button></div>
+          <div className="reminder-sound-controls">{activeReminder.localRingtone && !reminderSoundStopped && <button type="button" className="reminder-replay-button" onClick={() => { const ringtone = activeReminder.localRingtone; if (ringtone) { ringtone.audio.pause(); try { ringtone.audio.currentTime = 0; } catch { /* Ignore non-seekable audio. */ } setReminderSoundStopped(false); startLocalRingtonePlayback(ringtone); } }}>Play uploaded ringtone again</button>}{activeReminderMedia && !reminderSoundStopped && <button type="button" className="reminder-replay-button" onClick={() => { setReminderSoundStopped(false); setReminderMediaReload((value) => value + 1); }}>Play soundtrack again</button>}<button type="button" className="reminder-stop-button" onClick={() => setReminderSoundStopped(true)}>{reminderSoundStopped ? 'Music Closed' : 'Close Music'}</button></div>
         </section>
       </div>}
       {pushArrival && <div className="reminder-alarm-backdrop" role="presentation">
@@ -2200,7 +2215,7 @@ function App() {
           <h2 id="push-arrival-title">{pushArrival.title}</h2>
           <p>{pushArrival.body}</p>
           {pushArrival.kind === 'task' && pushArrival.localRingtone && <section className="reminder-media-player" aria-label="Uploaded task ringtone"><div className="reminder-media-heading"><span className="reminder-media-wave"><CadenceMark /></span><div><b>{pushArrival.localRingtone.name}</b><small>Uploaded task ringtone · browser-session audio</small></div></div><p className="reminder-music-help">Your selected track loops until you stop the alarm.</p></section>}
-          {pushArrival.kind === 'task' && pushArrivalMedia && <div className="focus-music-embed focus-completion-embed" aria-label="Task reminder soundtrack"><iframe src={pushArrivalMedia.embedUrl} title={'Task reminder soundtrack from ' + pushArrivalMedia.provider} allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen /><a href={pushArrivalMedia.originalUrl} target="_blank" rel="noreferrer">Open in {pushArrivalMedia.provider} <ArrowUpRight size={13} /></a></div>}
+          {pushArrival.kind === 'task' && pushArrivalMedia && !reminderSoundStopped && <div className="focus-music-embed focus-completion-embed" aria-label="Task reminder soundtrack"><iframe src={pushArrivalMedia.embedUrl} title={'Task reminder soundtrack from ' + pushArrivalMedia.provider} allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen /><a href={pushArrivalMedia.originalUrl} target="_blank" rel="noreferrer">Open in {pushArrivalMedia.provider} <ArrowUpRight size={13} /></a></div>}
           {pushArrival.kind === 'focus' && focusRingtoneKind === 'custom' && !focusLocalAudioUrl && parseReminderMedia(focusRingtoneData) && <div className="focus-music-embed focus-completion-embed" aria-label="Focus completion soundtrack">
             <iframe
               src={parseReminderMedia(focusRingtoneData)?.embedUrl}
@@ -2216,6 +2231,7 @@ function App() {
           <div className="reminder-alarm-actions">
             <button type="button" className="secondary-button" onClick={() => {
               unlockReminderAudio();
+              setReminderSoundStopped(false);
               if (pushArrival.kind === 'focus') startFocusAlarmPlayback();
               else if (pushArrival.localRingtone) startLocalRingtonePlayback(pushArrival.localRingtone);
               else playReminderMelody();
@@ -2225,9 +2241,9 @@ function App() {
               setPushArrival(null);
             }}>Open {pushArrival.kind === 'focus' ? 'Focus' : 'Tasks'}</button>
           </div>
-          {pushArrival.kind === 'task' && <div className="reminder-sound-controls">{pushArrival.localRingtone && <button type="button" className="reminder-replay-button" onClick={() => { const ringtone = pushArrival.localRingtone; if (ringtone) { ringtone.audio.pause(); try { ringtone.audio.currentTime = 0; } catch { /* Ignore non-seekable audio. */ } startLocalRingtonePlayback(ringtone); } }}>Play uploaded ringtone again</button>}{pushArrivalMedia && <a className="reminder-replay-button" href={pushArrivalMedia.originalUrl} target="_blank" rel="noreferrer">Open soundtrack <ArrowUpRight size={13} /></a>}</div>}
-          <p className="reminder-footnote">The alarm repeats until you press Stop alarm. Uploaded audio loops in Cadence; streaming players may block autoplay, so a repeating Cadence alarm tone is used as a fallback.</p>
-          <button type="button" className="reminder-stop-button" onClick={() => setPushArrival(null)}>Stop alarm</button>
+          {pushArrival.kind === 'task' && <div className="reminder-sound-controls">{pushArrival.localRingtone && !reminderSoundStopped && <button type="button" className="reminder-replay-button" onClick={() => { const ringtone = pushArrival.localRingtone; if (ringtone) { ringtone.audio.pause(); try { ringtone.audio.currentTime = 0; } catch { /* Ignore non-seekable audio. */ } setReminderSoundStopped(false); startLocalRingtonePlayback(ringtone); } }}>Play uploaded ringtone again</button>}{pushArrivalMedia && <a className="reminder-replay-button" href={pushArrivalMedia.originalUrl} target="_blank" rel="noreferrer">Open soundtrack <ArrowUpRight size={13} /></a>}</div>}
+          <p className="reminder-footnote">The alarm keeps repeating until you press Close Music. Uploaded audio loops in Cadence; streaming players may block autoplay, so a repeating Cadence alarm tone is used as a fallback.</p>
+          <button type="button" className="reminder-stop-button" onClick={() => setReminderSoundStopped(true)}>{reminderSoundStopped ? 'Music Closed' : 'Close Music'}</button>
         </section>
       </div>}
       {showProfileModal && <div className="profile-settings-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowProfileModal(false); }}>
