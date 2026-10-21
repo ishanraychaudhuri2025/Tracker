@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, FormEvent, ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
+import { Analytics } from '@vercel/analytics/react';
 import {
   Activity, ArrowRight, ArrowUpRight, BarChart3, Bell, BookOpen, Brain, Coffee, Compass, Code2, Droplets, Dumbbell, Flower2,
   CalendarDays, Check, CheckCheck, ChevronDown, CircleHelp, Clock3, Flame, Focus, Upload,
@@ -2397,6 +2398,7 @@ function App() {
         </section>
       </div>}
       {toast && <div className="toast" role="status"><span><Check size={15} /></span>{toast}<button type="button" aria-label="Dismiss message" onClick={() => setToast('')}><X size={14} /></button></div>}
+      <Analytics />
     </div>
   );
 }
