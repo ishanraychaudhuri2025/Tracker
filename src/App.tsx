@@ -614,29 +614,46 @@ function App() {
 
   const unlockReminderAudio = () => {
     if (typeof window === 'undefined' || !window.AudioContext) return;
-    if (!audioContextRef.current) audioContextRef.current = new window.AudioContext();
-    const context = audioContextRef.current;
-    if (context.state === 'suspended') void context.resume().catch(() => undefined);
+    try {
+      if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
+        audioContextRef.current = new window.AudioContext();
+      }
+      const context = audioContextRef.current;
+      if (context.state === 'suspended') {
+        void context.resume().catch(() => undefined);
+      }
+    } catch {
+      // Audio can be unavailable in restricted browser contexts; the alert UI still works.
+    }
   };
 
   const playReminderMelody = () => {
     const context = audioContextRef.current;
-    if (!context) return;
-    if (context.state === 'suspended') void context.resume().catch(() => undefined);
-    [784, 988, 1175, 988].forEach((frequency, index) => {
-      const startAt = context.currentTime + index * 0.22;
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(frequency, startAt);
-      gain.gain.setValueAtTime(0.0001, startAt);
-      gain.gain.exponentialRampToValueAtTime(0.15, startAt + 0.035);
-      gain.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.19);
-      oscillator.connect(gain);
-      gain.connect(context.destination);
-      oscillator.start(startAt);
-      oscillator.stop(startAt + 0.21);
-    });
+    if (!context || context.state === 'closed') return;
+
+    const playNotes = () => {
+      if (context.state !== 'running') return;
+      [784, 988, 1175, 988].forEach((frequency, index) => {
+        const startAt = context.currentTime + index * 0.22;
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(frequency, startAt);
+        gain.gain.setValueAtTime(0.0001, startAt);
+        gain.gain.exponentialRampToValueAtTime(0.15, startAt + 0.035);
+        gain.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.19);
+        oscillator.connect(gain);
+        gain.connect(context.destination);
+        oscillator.start(startAt);
+        oscillator.stop(startAt + 0.21);
+      });
+    };
+
+    if (context.state === 'suspended') {
+      void context.resume().then(playNotes).catch(() => undefined);
+      return;
+    }
+    playNotes();
   };
 
   const createLocalRingtone = (file: File): LocalRingtone => {
