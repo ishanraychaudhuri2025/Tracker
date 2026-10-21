@@ -11448,3 +11448,30 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 #root .app-shell .habit-streak small {
   color: #ab9bb9 !important;
 }
+
+
+/* Pending-on-open reminder: compact, scroll-safe and consistent with Cadence alarms. */
+.pending-alert-setting[aria-pressed="true"] { color: var(--text); background: color-mix(in srgb, var(--violet) 10%, transparent); }
+.pending-alert-setting[aria-pressed="true"] > span { color: var(--violet); }
+.pending-review-backdrop { z-index: 70; }
+.pending-review-alarm { width: min(100%, 520px); max-height: min(90vh, 860px); overflow-y: auto; overscroll-behavior: contain; }
+.pending-review-alarm > p:first-of-type { max-width: 46ch; }
+.pending-review-group { width: 100%; margin-top: 18px; padding: 14px; text-align: left; border: 1px solid var(--border-soft); border-radius: 13px; background: color-mix(in srgb, var(--panel) 78%, transparent); }
+.pending-review-group-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.pending-review-group-heading b { color: var(--text); font-size: 12px; }
+.pending-review-group-heading > span { color: var(--violet); font-size: 10px; font-weight: 650; white-space: nowrap; }
+.pending-review-group ul { display: grid; gap: 2px; list-style: none; margin: 0; padding: 0; }
+.pending-review-group li { display: flex; align-items: center; gap: 11px; padding: 9px 0; border-top: 1px solid var(--border-soft); }
+.pending-review-group li > span:last-child { display: grid; min-width: 0; gap: 2px; }
+.pending-review-group li b { color: var(--text); font-size: 12px; line-height: 1.4; overflow-wrap: anywhere; }
+.pending-review-group li small, .pending-review-more { color: var(--muted); font-size: 10px; line-height: 1.4; }
+.pending-review-item-icon { flex: 0 0 30px; width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid color-mix(in srgb, var(--violet) 24%, var(--border)); border-radius: 9px; color: var(--violet); background: color-mix(in srgb, var(--violet) 9%, transparent); font-size: 15px; }
+.pending-review-more { display: block; padding-top: 7px; }
+.pending-review-alarm .pending-review-count { margin-top: 15px; color: var(--text); font-size: 12px; font-weight: 650; }
+.pending-review-alarm .reminder-sound-controls { width: 100%; }
+.pending-review-alarm .reminder-stop-button { margin-top: 0; }
+.pending-review-alarm .reminder-footnote { max-width: 48ch; margin-top: 16px; font-size: 10px; }
+@media (max-width: 560px) {
+  .pending-review-alarm { max-height: 92vh; padding: 22px 15px 18px; }
+  .pending-review-group { padding: 11px; }
+}
