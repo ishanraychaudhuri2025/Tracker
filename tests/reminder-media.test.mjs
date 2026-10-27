@@ -54,8 +54,8 @@ test("rejects attacker-controlled credentials and non-HTTPS links", () => {
   assert.equal(parseReminderMedia("https://open.spotify.com@attacker.example/track/" + spotifyId), null);
 });
 
-test("audio upload validation allows up to exactly 20 MiB and rejects larger or non-audio inputs", () => {
-  assert.equal(MAX_RINGTONE_UPLOAD_BYTES, 20 * 1024 * 1024);
+test("audio upload validation allows up to exactly 50 MiB and rejects larger or non-audio inputs", () => {
+  assert.equal(MAX_RINGTONE_UPLOAD_BYTES, 50 * 1024 * 1024);
   assert.equal(isSupportedAudioMime("audio/mpeg"), true);
   assert.equal(isSupportedAudioMime("image/png"), false);
   assert.equal(isSupportedAudioMime(""), false);
