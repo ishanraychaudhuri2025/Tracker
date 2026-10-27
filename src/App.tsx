@@ -415,8 +415,10 @@ function App() {
   const [cloudStatus, setCloudStatus] = useState(supabaseConfigured ? 'Connecting…' : 'Saved locally');
   const [cloudError, setCloudError] = useState('');
   const today = todayKey();
-  const pendingOpenHabits = habits.filter((habit) => today >= habit.createdAt && isDue(habit, today) && !habit.logs[today]);
-  const pendingOpenTasks = tasks.filter((task) => task.date <= today && (
+  const pendingReviewTime = String(new Date().getHours()).padStart(2, '0') + ':' + String(new Date().getMinutes()).padStart(2, '0');
+  // On-open review must never pre-empt a scheduled reminder. Untimed or overdue work can still be reviewed.
+  const pendingOpenHabits = habits.filter((habit) => today >= habit.createdAt && isDue(habit, today) && !habit.logs[today] && (!habit.reminderTime || habit.reminderTime <= pendingReviewTime));
+  const pendingOpenTasks = tasks.filter((task) => task.date <= today && (!task.time || task.date < today || task.time <= pendingReviewTime) && (
     (task.recurrence ?? 'None') === 'None'
       ? !task.completed
       : taskOccursOn(task, today) && !taskIsDone(task, today)
@@ -865,7 +867,7 @@ function App() {
     }
     if (!isRingtoneUploadSizeAllowed(file.size)) {
       setHabitRingtoneFile(null);
-      setToast('Choose an audio file 20 MB or smaller.');
+      setToast('Choose an audio file 50 MB or smaller.');
       return;
     }
     setHabitRingtoneFile(file);
@@ -882,7 +884,7 @@ function App() {
       return;
     }
     if (!isRingtoneUploadSizeAllowed(file.size)) {
-      setToast('Choose a non-empty audio file up to 20 MB.');
+      setToast('Choose a non-empty audio file up to 50 MB.');
       event.target.value = '';
       return;
     }
@@ -1284,14 +1286,23 @@ function App() {
 
   useEffect(() => {
     if (!pendingReviewOpen || reminderSoundStopped) return undefined;
+    // Prefer the user's uploaded ringtone for an eligible pending habit; fall back to the built-in melody when no uploaded track is available in this browser session.
+    const ringtone = pendingOpenHabits.map((habit) => habitLocalRingtones[habit.id]).find(Boolean);
     const play = () => {
-      unlockReminderAudio();
-      playReminderMelody();
+      if (ringtone) {
+        if (ringtone.audio.paused || ringtone.audio.ended) startLocalRingtonePlayback(ringtone);
+      } else {
+        unlockReminderAudio();
+        playReminderMelody();
+      }
     };
     play();
     const interval = window.setInterval(play, 2800);
-    return () => window.clearInterval(interval);
-  }, [pendingReviewOpen, reminderSoundStopped]);
+    return () => {
+      window.clearInterval(interval);
+      if (ringtone) ringtone.audio.pause();
+    };
+  }, [pendingReviewOpen, reminderSoundStopped, pendingOpenHabits, habitLocalRingtones]);
 
   useEffect(() => {
     const checkReminders = () => {
