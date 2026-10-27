@@ -3,7 +3,7 @@
  * Kept independent of React so security-sensitive input rules can be tested
  * directly with Node's built-in test runner.
  */
-export const MAX_RINGTONE_UPLOAD_BYTES = 20 * 1024 * 1024;
+export const MAX_RINGTONE_UPLOAD_BYTES = 50 * 1024 * 1024;
 
 /** @param {unknown} mime */
 export function isSupportedAudioMime(mime) {
