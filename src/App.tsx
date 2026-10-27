@@ -415,12 +415,6 @@ function App() {
   const [cloudStatus, setCloudStatus] = useState(supabaseConfigured ? 'Connecting…' : 'Saved locally');
   const [cloudError, setCloudError] = useState('');
   const today = todayKey();
-  const pendingOpenHabits = habits.filter((habit) => today >= habit.createdAt && isDue(habit, today) && !habit.logs[today]);
-  const pendingOpenTasks = tasks.filter((task) => task.date <= today && (
-    (task.recurrence ?? 'None') === 'None'
-      ? !task.completed
-      : taskOccursOn(task, today) && !taskIsDone(task, today)
-  ));
   const currentReminderTime = String(new Date().getHours()).padStart(2, '0') + ':' + String(new Date().getMinutes()).padStart(2, '0');
   // On-open review is only for timed items whose scheduled time has passed.
   const pendingReviewHabits = useMemo(
