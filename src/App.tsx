@@ -423,11 +423,15 @@ function App() {
   ));
   const currentReminderTime = String(new Date().getHours()).padStart(2, '0') + ':' + String(new Date().getMinutes()).padStart(2, '0');
   // On-open review is only for timed items whose scheduled time has passed.
-  const pendingReviewHabits = pendingOpenHabits.filter((habit) =>
-    habit.reminderEnabled && Boolean(habit.reminderTime) && habit.reminderTime! <= currentReminderTime
+  const pendingReviewHabits = useMemo(
+    () => habits.filter((habit) => today >= habit.createdAt && isDue(habit, today) && !habit.logs[today]
+      && habit.reminderEnabled && Boolean(habit.reminderTime) && habit.reminderTime! <= currentReminderTime),
+    [habits, today, currentReminderTime],
   );
-  const pendingReviewTasks = pendingOpenTasks.filter((task) =>
-    Boolean(task.time) && task.time! <= currentReminderTime && taskOccursOn(task, today) && !taskIsDone(task, today)
+  const pendingReviewTasks = useMemo(
+    () => tasks.filter((task) => task.date <= today && Boolean(task.time) && task.time! <= currentReminderTime
+      && taskOccursOn(task, today) && !taskIsDone(task, today)),
+    [tasks, today, currentReminderTime],
   );
   const dueTodayHabits = habits.filter((habit) => today >= habit.createdAt && isDue(habit, today));
   const pendingTodayHabits = dueTodayHabits.filter((habit) => !habit.logs[today]);
