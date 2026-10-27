@@ -421,6 +421,14 @@ function App() {
       ? !task.completed
       : taskOccursOn(task, today) && !taskIsDone(task, today)
   ));
+  const currentReminderTime = String(new Date().getHours()).padStart(2, '0') + ':' + String(new Date().getMinutes()).padStart(2, '0');
+  // On-open review is only for timed items whose scheduled time has passed.
+  const pendingReviewHabits = pendingOpenHabits.filter((habit) =>
+    habit.reminderEnabled && Boolean(habit.reminderTime) && habit.reminderTime! <= currentReminderTime
+  );
+  const pendingReviewTasks = pendingOpenTasks.filter((task) =>
+    Boolean(task.time) && task.time! <= currentReminderTime && taskOccursOn(task, today) && !taskIsDone(task, today)
+  );
   const dueTodayHabits = habits.filter((habit) => today >= habit.createdAt && isDue(habit, today));
   const pendingTodayHabits = dueTodayHabits.filter((habit) => !habit.logs[today]);
   const experimentHabit = pendingTodayHabits[0] ?? habits[0] ?? null;
@@ -865,7 +873,7 @@ function App() {
     }
     if (!isRingtoneUploadSizeAllowed(file.size)) {
       setHabitRingtoneFile(null);
-      setToast('Choose an audio file 20 MB or smaller.');
+      setToast('Choose an audio file 50 MB or smaller.');
       return;
     }
     setHabitRingtoneFile(file);
@@ -882,7 +890,7 @@ function App() {
       return;
     }
     if (!isRingtoneUploadSizeAllowed(file.size)) {
-      setToast('Choose a non-empty audio file up to 20 MB.');
+      setToast('Choose a non-empty audio file up to 50 MB.');
       event.target.value = '';
       return;
     }
@@ -1259,31 +1267,31 @@ function App() {
     pendingReviewShownRef.current = true;
     if (!pendingReviewEnabled) return undefined;
 
-    const currentTime = String(new Date().getHours()).padStart(2, '0') + ':' + String(new Date().getMinutes()).padStart(2, '0');
-    const hasPendingHabits = pendingOpenHabits.length > 0;
-    const hasPendingTasks = pendingOpenTasks.length > 0;
+    const hasPendingHabits = pendingReviewHabits.length > 0;
+    const hasPendingTasks = pendingReviewTasks.length > 0;
     if (!hasPendingHabits && !hasPendingTasks) return undefined;
 
-    // The overview alert covers already-due timed reminders, preventing two dialogs
-    // and two alarm loops from appearing on the same app launch.
-    pendingOpenHabits.forEach((habit) => {
-      if (habit.reminderEnabled && habit.reminderTime && habit.reminderTime <= currentTime) {
-        firedRemindersRef.current.add(`${habit.id}:${today}`);
-      }
-    });
-    pendingOpenTasks.forEach((task) => {
-      if (task.time && task.time <= currentTime && taskOccursOn(task, today) && !taskIsDone(task, today)) {
-        firedTaskRemindersRef.current.add(`${task.id}:${today}`);
-      }
-    });
+    // The overview alert covers only already-due timed reminders, preventing
+    // future reminders from appearing early and avoiding duplicate alarm dialogs.
+    pendingReviewHabits.forEach((habit) => firedRemindersRef.current.add(`${habit.id}:${today}`));
+    pendingReviewTasks.forEach((task) => firedTaskRemindersRef.current.add(`${task.id}:${today}`));
     pendingReviewActiveRef.current = true;
     setReminderSoundStopped(false);
     setPendingReviewOpen(true);
     return undefined;
-  }, [splashFinished, workspaceReady, pendingReviewEnabled, pendingOpenHabits, pendingOpenTasks, today]);
+  }, [splashFinished, workspaceReady, pendingReviewEnabled, pendingReviewHabits, pendingReviewTasks, today]);
 
   useEffect(() => {
     if (!pendingReviewOpen || reminderSoundStopped) return undefined;
+    // Prefer the uploaded soundtrack for an overdue habit; use the chime only
+    // when no in-session custom audio is available.
+    const customRingtone = pendingReviewHabits
+      .map((habit) => habitLocalRingtones[habit.id])
+      .find(Boolean);
+    if (customRingtone) {
+      startLocalRingtonePlayback(customRingtone);
+      return () => customRingtone.audio.pause();
+    }
     const play = () => {
       unlockReminderAudio();
       playReminderMelody();
@@ -1291,7 +1299,7 @@ function App() {
     play();
     const interval = window.setInterval(play, 2800);
     return () => window.clearInterval(interval);
-  }, [pendingReviewOpen, reminderSoundStopped]);
+  }, [pendingReviewOpen, reminderSoundStopped, pendingReviewHabits, habitLocalRingtones]);
 
   useEffect(() => {
     const checkReminders = () => {
@@ -2159,9 +2167,9 @@ function App() {
               </div>
               {focusRingtoneKind === 'custom' && <div className="focus-music-link-row">
                 <div className="focus-upload-label">Use a streaming link or your own audio</div>
-                <label className="focus-upload-label" htmlFor="focus-audio-upload">Upload audio (up to 20 MB)</label>
+                <label className="focus-upload-label" htmlFor="focus-audio-upload">Upload audio (up to 50 MB)</label>
                 <input id="focus-audio-upload" type="file" accept="audio/*" onChange={handleFocusAudioUpload} aria-describedby="focus-audio-upload-help" />
-                <p id="focus-audio-upload-help" className="focus-sound-note">MP3, M4A, WAV, or another browser-supported audio format. Uploaded audio is available for this browser session; choose the file again after refreshing.</p>
+                <p id="focus-audio-upload-help" className="focus-sound-note">MP3, M4A, WAV, or another browser-supported audio format, up to 50 MB. Uploaded audio is available for this browser session; choose the file again after refreshing.</p>
                 {focusLocalAudioUrl && <div className="focus-music-saved">
                   <span className="focus-music-provider">{focusLocalAudioName}</span>
                   <button type="button" className="text-button" onClick={() => {
@@ -2280,24 +2288,24 @@ function App() {
           <span className="reminder-alarm-kicker">CADENCE · PENDING CHECK-IN</span>
           <h2 id="pending-review-title">Your unfinished work is waiting.</h2>
           <p>Before you move on, take a look at what is still pending today. The reminder will return the next time you open Cadence if these items remain unfinished.</p>
-          {pendingOpenHabits.length > 0 && <section className="pending-review-group" aria-label="Pending habits">
-            <div className="pending-review-group-heading"><b>Habits to complete</b><span>{pendingOpenHabits.length} pending</span></div>
-            <ul>{pendingOpenHabits.slice(0, 5).map((habit) => <li key={habit.id}><span className="pending-review-item-icon">{habit.emoji || '✦'}</span><span><b>{habit.name}</b><small>{habit.reminderTime ? 'Scheduled for ' + formatReminderTime(habit.reminderTime) : 'Due today'}</small></span></li>)}</ul>
-            {pendingOpenHabits.length > 5 && <small className="pending-review-more">+{pendingOpenHabits.length - 5} more habits</small>}
+          {pendingReviewHabits.length > 0 && <section className="pending-review-group" aria-label="Pending habits">
+            <div className="pending-review-group-heading"><b>Habits to complete</b><span>{pendingReviewHabits.length} pending</span></div>
+            <ul>{pendingReviewHabits.slice(0, 5).map((habit) => <li key={habit.id}><span className="pending-review-item-icon">{habit.emoji || '✦'}</span><span><b>{habit.name}</b><small>{habit.reminderTime ? 'Scheduled for ' + formatReminderTime(habit.reminderTime) : 'Due today'}</small></span></li>)}</ul>
+            {pendingReviewHabits.length > 5 && <small className="pending-review-more">+{pendingReviewHabits.length - 5} more habits</small>}
           </section>}
-          {pendingOpenTasks.length > 0 && <section className="pending-review-group" aria-label="Pending tasks">
-            <div className="pending-review-group-heading"><b>Tasks to finish</b><span>{pendingOpenTasks.length} pending</span></div>
-            <ul>{pendingOpenTasks.slice(0, 5).map((task) => <li key={task.id}><span className="pending-review-item-icon"><ListTodo size={15}/></span><span><b>{task.title}</b><small>{task.date < today ? 'Overdue' : task.time ? 'Scheduled for ' + formatReminderTime(task.time) : 'Due today'}</small></span></li>)}</ul>
-            {pendingOpenTasks.length > 5 && <small className="pending-review-more">+{pendingOpenTasks.length - 5} more tasks</small>}
+          {pendingReviewTasks.length > 0 && <section className="pending-review-group" aria-label="Pending tasks">
+            <div className="pending-review-group-heading"><b>Tasks to finish</b><span>{pendingReviewTasks.length} pending</span></div>
+            <ul>{pendingReviewTasks.slice(0, 5).map((task) => <li key={task.id}><span className="pending-review-item-icon"><ListTodo size={15}/></span><span><b>{task.title}</b><small>{task.date < today ? 'Overdue' : task.time ? 'Scheduled for ' + formatReminderTime(task.time) : 'Due today'}</small></span></li>)}</ul>
+            {pendingReviewTasks.length > 5 && <small className="pending-review-more">+{pendingReviewTasks.length - 5} more tasks</small>}
           </section>}
-          <p className="pending-review-count">{pendingOpenHabits.length + pendingOpenTasks.length} item{pendingOpenHabits.length + pendingOpenTasks.length === 1 ? '' : 's'} still need your attention.</p>
+          <p className="pending-review-count">{pendingReviewHabits.length + pendingReviewTasks.length} item{pendingReviewHabits.length + pendingReviewTasks.length === 1 ? '' : 's'} still need your attention.</p>
           <div className="reminder-sound-controls">
             <button type="button" className="reminder-stop-button" onClick={() => setReminderSoundStopped(true)}>{reminderSoundStopped ? 'Music Closed' : 'Close Music'}</button>
             <button type="button" className="reminder-replay-button" onClick={() => { setReminderSoundStopped(false); unlockReminderAudio(); playReminderMelody(); }}>Replay sound</button>
           </div>
           <div className="reminder-alarm-actions">
-            {pendingOpenHabits.length > 0 && <button type="button" className="secondary-button" onClick={() => { pendingReviewActiveRef.current = false; setPendingReviewOpen(false); setReminderSoundStopped(false); setPage('Habits'); }}>Review habits</button>}
-            {pendingOpenTasks.length > 0 && <button type="button" className="secondary-button" onClick={() => { pendingReviewActiveRef.current = false; setPendingReviewOpen(false); setReminderSoundStopped(false); setPage('Tasks'); }}>Review tasks</button>}
+            {pendingReviewHabits.length > 0 && <button type="button" className="secondary-button" onClick={() => { pendingReviewActiveRef.current = false; setPendingReviewOpen(false); setReminderSoundStopped(false); setPage('Habits'); }}>Review habits</button>}
+            {pendingReviewTasks.length > 0 && <button type="button" className="secondary-button" onClick={() => { pendingReviewActiveRef.current = false; setPendingReviewOpen(false); setReminderSoundStopped(false); setPage('Tasks'); }}>Review tasks</button>}
             <button type="button" className="primary-button" onClick={() => { pendingReviewActiveRef.current = false; setPendingReviewOpen(false); setReminderSoundStopped(false); setPage('Today'); }}>I’ll take care of these</button>
           </div>
           <p className="reminder-footnote">Audio may require one click if your browser blocks autoplay. Disabling “Pending alerts” in the sidebar turns off this on-open reminder without affecting scheduled habit and task alarms.</p>
