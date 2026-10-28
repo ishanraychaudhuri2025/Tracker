@@ -1273,7 +1273,19 @@ function App() {
 
     // The overview alert covers only already-due timed reminders, preventing
     // future reminders from appearing early and avoiding duplicate alarm dialogs.
-    pendingReviewHabits.forEach((habit) => firedRemindersRef.current.add(`${habit.id}:${today}`));
+    pendingReviewHabits.forEach((habit) => {
+      firedRemindersRef.current.add(`${habit.id}:${today}`);
+      // Pending-on-open review is also an overdue scheduled reminder.
+      if ('Notification' in window && Notification.permission === 'granted') {
+        try {
+          new Notification(`Time for ${habit.name}`, {
+            body: 'A small step is enough. Open Cadence to check in.',
+            tag: `cadence-habit-${habit.id}:${today}`,
+            renotify: true,
+          });
+        } catch { /* The in-app pending reminder remains available. */ }
+      }
+    });
     pendingReviewTasks.forEach((task) => {
       const key = `${task.id}:${today}`;
       const alreadyAlerted = firedTaskRemindersRef.current.has(key);
