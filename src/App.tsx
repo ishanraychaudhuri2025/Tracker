@@ -1245,6 +1245,8 @@ function App() {
         title: 'Focus block complete',
         body: 'Your scheduled focus session has ended. Take a short reset before choosing your next step.',
       });
+      // Start the alarm immediately on completion; don't wait for navigation or a later render.
+      startFocusAlarmPlayback();
       if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
         try {
           new Notification('Focus block complete', {
@@ -1327,7 +1329,6 @@ function App() {
       const due = habits.filter((habit) => habit.reminderEnabled && isDue(habit, day) && Boolean(habit.reminderTime) && habit.reminderTime! <= currentTime && !habit.logs[day]);
       const fresh = due.filter((habit) => !firedRemindersRef.current.has(`${habit.id}:${day}`));
       fresh.forEach((habit) => {
-        firedRemindersRef.current.add(`${habit.id}:${day}`);
         if ('Notification' in window && Notification.permission === 'granted') {
           try {
             const notification = new Notification(`Time for ${habit.name}`, {
@@ -1338,8 +1339,10 @@ function App() {
               window.focus();
               notification.close();
             };
-          } catch { /* The in-app alarm remains available if desktop notifications are blocked. */ }
+          } catch { /* Keep the in-app alarm even if desktop delivery fails. */ }
         }
+        // Consume the key only after attempting desktop delivery.
+        firedRemindersRef.current.add(`${habit.id}:${day}`);
       });
       if (fresh.length) {
         setReminderSoundStopped(false);
@@ -1374,6 +1377,8 @@ function App() {
       });
       if (freshTasks.length) {
         setReminderSoundStopped(false);
+        // A custom task ringtone must not overlap a previously active habit chime.
+        if (freshTasks.length === 1 && taskLocalRingtones[freshTasks[0].id]) setActiveReminder(null);
         setToast(freshTasks.length === 1 ? 'Time for ' + freshTasks[0].title : freshTasks.length + ' tasks are due now.');
         // If a habit is due at the same moment, its alarm already loops;
         // otherwise keep a task alarm open until it is acknowledged.
