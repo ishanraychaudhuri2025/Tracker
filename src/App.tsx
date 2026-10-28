@@ -1245,6 +1245,8 @@ function App() {
         title: 'Focus block complete',
         body: 'Your scheduled focus session has ended. Take a short reset before choosing your next step.',
       });
+      // Start the alarm immediately on completion; don't wait for navigation or a later render.
+      startFocusAlarmPlayback();
       if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
         try {
           new Notification('Focus block complete', {
@@ -1271,8 +1273,36 @@ function App() {
 
     // The overview alert covers only already-due timed reminders, preventing
     // future reminders from appearing early and avoiding duplicate alarm dialogs.
-    pendingReviewHabits.forEach((habit) => firedRemindersRef.current.add(`${habit.id}:${today}`));
-    pendingReviewTasks.forEach((task) => firedTaskRemindersRef.current.add(`${task.id}:${today}`));
+    pendingReviewHabits.forEach((habit) => {
+      firedRemindersRef.current.add(`${habit.id}:${today}`);
+      // Pending-on-open review is also an overdue scheduled reminder.
+      if ('Notification' in window && Notification.permission === 'granted') {
+        try {
+          new Notification(`Time for ${habit.name}`, {
+            body: 'A small step is enough. Open Cadence to check in.',
+            tag: `cadence-habit-${habit.id}:${today}`,
+          });
+        } catch { /* The in-app pending reminder remains available. */ }
+      }
+    });
+    pendingReviewTasks.forEach((task) => {
+      const key = `${task.id}:${today}`;
+      const alreadyAlerted = firedTaskRemindersRef.current.has(key);
+      firedTaskRemindersRef.current.add(key);
+      if (!alreadyAlerted && 'Notification' in window && Notification.permission === 'granted') {
+        try {
+          const notification = new Notification('Overdue task: ' + task.title, {
+            body: 'This task is still incomplete. Open Cadence to review it.',
+            tag: 'cadence-task-overdue-' + task.id + '-' + today,
+          });
+          notification.onclick = () => {
+            window.focus();
+            notification.close();
+            setPage('Tasks');
+          };
+        } catch { /* The in-app pending review remains available. */ }
+      }
+    });
     pendingReviewActiveRef.current = true;
     setReminderSoundStopped(false);
     setPendingReviewOpen(true);
@@ -1283,9 +1313,9 @@ function App() {
     if (!pendingReviewOpen || reminderSoundStopped) return undefined;
     // Prefer the uploaded soundtrack for an overdue habit; use the chime only
     // when no in-session custom audio is available.
-    const customRingtone = pendingReviewHabits
-      .map((habit) => habitLocalRingtones[habit.id])
-      .find(Boolean);
+    const customRingtone =
+      pendingReviewHabits.map((habit) => habitLocalRingtones[habit.id]).find(Boolean)
+      ?? pendingReviewTasks.map((task) => taskLocalRingtones[task.id]).find(Boolean);
     if (customRingtone) {
       startLocalRingtonePlayback(customRingtone);
       return () => customRingtone.audio.pause();
@@ -1297,7 +1327,7 @@ function App() {
     play();
     const interval = window.setInterval(play, 2800);
     return () => window.clearInterval(interval);
-  }, [pendingReviewOpen, reminderSoundStopped, pendingReviewHabits, habitLocalRingtones]);
+  }, [pendingReviewOpen, reminderSoundStopped, pendingReviewHabits, pendingReviewTasks, habitLocalRingtones, taskLocalRingtones]);
 
   useEffect(() => {
     const checkReminders = () => {
@@ -1310,7 +1340,6 @@ function App() {
       const due = habits.filter((habit) => habit.reminderEnabled && isDue(habit, day) && Boolean(habit.reminderTime) && habit.reminderTime! <= currentTime && !habit.logs[day]);
       const fresh = due.filter((habit) => !firedRemindersRef.current.has(`${habit.id}:${day}`));
       fresh.forEach((habit) => {
-        firedRemindersRef.current.add(`${habit.id}:${day}`);
         if ('Notification' in window && Notification.permission === 'granted') {
           try {
             const notification = new Notification(`Time for ${habit.name}`, {
@@ -1321,8 +1350,10 @@ function App() {
               window.focus();
               notification.close();
             };
-          } catch { /* The in-app alarm remains available if desktop notifications are blocked. */ }
+          } catch { /* Keep the in-app alarm even if desktop delivery fails. */ }
         }
+        // Consume the key only after attempting desktop delivery.
+        firedRemindersRef.current.add(`${habit.id}:${day}`);
       });
       if (fresh.length) {
         setReminderSoundStopped(false);
@@ -1357,6 +1388,8 @@ function App() {
       });
       if (freshTasks.length) {
         setReminderSoundStopped(false);
+        // A custom task ringtone must not overlap a previously active habit chime.
+        if (freshTasks.length === 1 && taskLocalRingtones[freshTasks[0].id]) setActiveReminder(null);
         setToast(freshTasks.length === 1 ? 'Time for ' + freshTasks[0].title : freshTasks.length + ' tasks are due now.');
         // If a habit is due at the same moment, its alarm already loops;
         // otherwise keep a task alarm open until it is acknowledged.
