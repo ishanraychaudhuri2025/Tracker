@@ -1281,7 +1281,6 @@ function App() {
           new Notification(`Time for ${habit.name}`, {
             body: 'A small step is enough. Open Cadence to check in.',
             tag: `cadence-habit-${habit.id}:${today}`,
-            renotify: true,
           });
         } catch { /* The in-app pending reminder remains available. */ }
       }
